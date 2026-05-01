@@ -1023,7 +1023,7 @@ function update(dt) {
             }
             if (dist2D < 2.5 && Math.abs(p.pos.y - bot.pos.y) < 3.0 && bot.fireCD <= 0) {
                 // Xóa cơ chế bắn, chuyển sang CÀO CẬN CHIẾN
-                takeDamage(p, isLastBots ? 20 : 10);
+                takeDamage(p, (isEnragedLv2 || isEnragedLv3) ? 20 : 10);
                 STATE.shake = 3.0;
                 playAudio('hit');
                 bot.fireCD = 0.8;
