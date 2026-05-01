@@ -1164,11 +1164,14 @@ function update(dt) {
                 b.skillIndex++;
 
                 if (skill === 'chiêu 5') {
-                    b.state = 'teleport_start'; b.skillCD = 1.5; // Giảm "rặn" xuống 1.5s
+                    // [CHỈNH SỬA CHIÊU 5] Thời gian Boss "chìm" xuống (rặn chiêu)
+                    b.state = 'teleport_start'; b.skillCD = 1.5;
                 } else if (skill === 'chiêu 4') {
-                    b.state = 'pillar_prepare'; b.skillCD = 2.5; b.pillarSpots = []; // Giảm xuống 2.5s
+                    // [CHỈNH SỬA CHIÊU 4] Thời gian Boss gồng tay (hiện vòng cảnh báo)
+                    b.state = 'pillar_prepare'; b.skillCD = 2.5; b.pillarSpots = [];
                     b.shotCount = 0;
                 } else if (skill === 'chiêu 3') {
+                    // [CHỈNH SỬA CHIÊU 3] Thời gian Boss rặn trước khi nhảy
                     b.state = 'jump_start'; b.skillCD = 2.0;
                     const tx = p.pos.x, tz = p.pos.z;
                     b.targetPos = V3.create(tx, getHeight(tx, tz), tz);
@@ -1177,7 +1180,8 @@ function update(dt) {
                     b.indicatorMeshParams = { x: b.targetPos.x, z: b.targetPos.z, r: 25 };
                     b.indicatorMesh = genTerrainFollowMesh(b.indicatorMeshParams.x, b.indicatorMeshParams.z, b.indicatorMeshParams.r);
                 } else if (skill === 'chiêu 1') {
-                    b.state = 'dash_prepare'; b.skillCD = 2.0;
+                    // [CHỈNH SỬA CHIÊU 1] Thời gian rặn trước khi lướt
+                    b.state = 'dash_prepare'; b.skillCD = 1;
                     b.targetDir = V3.norm(V3.sub(p.pos, b.pos));
                     b.targetAng = Math.atan2(b.targetDir.x, b.targetDir.z);
                     if (b.dashMesh) deleteMesh(b.dashMesh);
@@ -1185,7 +1189,8 @@ function update(dt) {
                     b.dashMeshParams = { x: b.pos.x, z: b.pos.z, ang: b.targetAng, w: 8, l: 150 };
                     b.dashMesh = genTerrainDashMesh(b.dashMeshParams.x, b.dashMeshParams.z, b.dashMeshParams.ang, b.dashMeshParams.w, b.dashMeshParams.l);
                 } else if (skill === 'chiêu 2') {
-                    b.state = 'shoot_prepare'; b.skillCD = 0.8;
+                    // [CHỈNH SỬA CHIÊU 2] Thời gian rặn trước khi bắn
+                    b.state = 'shoot_prepare'; b.skillCD = 1;
                 }
             } else {
                 const isRage = b.hp < b.maxHp * 0.4;
@@ -1249,9 +1254,16 @@ function update(dt) {
             if (Math.random() < 0.6) spawnParticles(b.pos, 3, [1, 0, 0]);
             STATE.shake = Math.max(STATE.shake, 1.2); // Rung mạnh hơn khi lướt nhanh
 
-            if (V3.dist(b.pos, p.pos) < 12) takeDamage(p, 400 * dt);
+            if (V3.dist(b.pos, p.pos) < 12) {
+                // [CHỈNH SỬA CHIÊU 1] Sát thương khi Boss lướt trúng (400)
+                takeDamage(p, 400 * dt);
+            }
             b.skillCD -= dt;
-            if (b.skillCD <= 0) { b.state = 'fight'; b.skillCD = 3; }
+            if (b.skillCD <= 0) {
+                b.state = 'fight';
+                // [QUAN TRỌNG] Thời gian Boss nghỉ (3s) sau khi lướt xong
+                b.skillCD = 3;
+            }
 
         } else if (b.state === 'pillar_prepare') {
             b.bodyRot = 0;
@@ -1303,7 +1315,8 @@ function update(dt) {
                 }
                 if (s.active && !s.hasHit) {
                     const dist = Math.sqrt((p.pos.x - s.x) ** 2 + (p.pos.z - s.z) ** 2);
-                    if (dist < 9) { // Giảm xuống 9m cho có chỗ né
+                    if (dist < 9) {
+                        // [CHỈNH SỬA CHIÊU 4] Sát thương mỗi cột máu (300)
                         takeDamage(p, 300);
                         s.hasHit = true;
                     }
@@ -1311,7 +1324,9 @@ function update(dt) {
                 if (s.active) s.activeTimer -= dt;
             });
             if (b.skillCD <= 0) {
-                b.state = 'fight'; b.skillCD = 3;
+                b.state = 'fight';
+                // [QUAN TRỌNG] Thời gian Boss nghỉ (3s) sau khi cột máu biến mất
+                b.skillCD = 3;
                 b.pillarSpots.forEach(s => { if (s.mesh) deleteMesh(s.mesh); s.mesh = null; });
                 b.pillarSpots = [];
             }
@@ -1378,14 +1393,17 @@ function update(dt) {
                 if (b.skillCD < 0.35 && !b.hasHit) {
                     let diff = Math.abs(pAng - bYaw);
                     if (diff > Math.PI) diff = 2 * Math.PI - diff;
-                    if (d < 30 && diff < 1.2) { // Giảm tầm đánh xuống 25m và góc 1.2
+                    if (d < 30 && diff < 1.2) {
+                        // [CHỈNH SỬA CHIÊU 3/5] Sát thương cú đập Slam (300)
                         takeDamage(p, 300); STATE.shake = 8.0; playAudio('hit');
                         b.hasHit = true;
                     }
                 }
             }
             if (b.skillCD <= 0) {
-                b.state = 'fight'; b.skillCD = 3;
+                b.state = 'fight';
+                // [QUAN TRỌNG] Thời gian Boss nghỉ (3s) sau cú đập Jump/Teleport
+                b.skillCD = 3;
                 if (b.indicatorMesh) gl.deleteVertexArray(b.indicatorMesh.vao); b.indicatorMesh = null;
                 if (b.fanMesh) gl.deleteVertexArray(b.fanMesh.vao); b.fanMesh = null;
             }
@@ -1410,15 +1428,19 @@ function update(dt) {
                 const targetPoint = V3.add(p.pos, { x: 0, y: 1.5, z: 0 });
                 const spawnPoint = V3.add(b.pos, { x: 0, y: 12, z: 0 });
                 const dir = V3.norm(V3.sub(targetPoint, spawnPoint));
-                // Tăng sát thương lên 300, tăng tốc độ đạn
-                STATE.projectiles.push({ pos: spawnPoint, dir: dir, dmg: 300, speed: 100, life: 3, isPlayer: false, dead: false, isBoss: true });
+                // [CHỈNH SỬA CHIÊU 2] Sát thương mỗi viên đạn (Bác vừa chỉnh xuống 200)
+                STATE.projectiles.push({ pos: spawnPoint, dir: dir, dmg: 200, speed: 100, life: 3, isPlayer: false, dead: false, isBoss: true });
 
                 // HIỆU ỨNG: Té lửa tại đầu nòng
                 spawnParticles(spawnPoint, 15, [1, 0.5, 0]);
                 playAudio('shoot');
                 b.shotCount--;
                 b.skillCD = 0.1;
-                if (b.shotCount <= 0) { b.state = 'fight'; b.skillCD = 3; }
+                if (b.shotCount <= 0) {
+                    b.state = 'fight';
+                    // [QUAN TRỌNG] Thời gian Boss nghỉ (3s) sau khi bắn hết đạn
+                    b.skillCD = 3;
+                }
             }
         }
 
