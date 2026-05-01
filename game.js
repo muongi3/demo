@@ -2612,65 +2612,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     const cdx = Math.max(-150, Math.min(150, dx));
                     const cdy = Math.max(-150, Math.min(150, dy));
 
-                    STATE.camera.rot.y += cdx * 0.005 * (window.aimSensitivity || 1.0);
-                    STATE.camera.rot.x -= cdy * 0.005 * (window.aimSensitivity || 1.0);
-                    STATE.camera.rot.x = Math.max(-1.5, Math.min(1.5, STATE.camera.rot.x));
-                    STATE.camera.rot.y = ((STATE.camera.rot.y + Math.PI) % (Math.PI * 2) + (Math.PI * 2)) % (Math.PI * 2) - Math.PI;
-                }
-            }
-        }, { passive: false });
-
-        aimZone.addEventListener('touchend', e => {
-            e.preventDefault();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === aimTouchId) aimTouchId = null;
-            }
-        }, { passive: false });
-    }
-
-    // Các Nút Hành động
-    window.isEditingHUD = false;
-
-    const btnShoot = document.getElementById('btn-shoot');
-    let shootTouchId = null;
-    let lastShootPos = { x: 0, y: 0 };
-
-    if (btnShoot) {
-        const onShootStart = e => {
-            if (window.isEditingHUD) return;
-            if (e.type === 'touchstart') e.preventDefault();
-            STATE.mouse.down = true;
-            btnShoot.classList.add('pressed');
-            const t = e.changedTouches ? e.changedTouches[0] : e;
-            shootTouchId = e.changedTouches ? t.identifier : 'mouse';
-            lastShootPos = { x: t.clientX, y: t.clientY };
-        };
-        btnShoot.addEventListener('touchstart', onShootStart);
-        btnShoot.addEventListener('mousedown', onShootStart);
-
-        const onShootMove = e => {
-            if (window.isEditingHUD || (!shootTouchId)) return;
-            if (shootTouchId === 'mouse') return;
-
-            const touches = e.changedTouches ? e.changedTouches : [e];
-            for (let i = 0; i < touches.length; i++) {
-                const t = touches[i];
-                const id = e.changedTouches ? t.identifier : 'mouse';
-
-                if (id === shootTouchId) {
-                    const dx = t.clientX - lastShootPos.x;
-                    const dy = t.clientY - lastShootPos.y;
-
-                    lastShootPos.x = t.clientX;
-                    lastShootPos.y = t.clientY;
-
-                    const cdx = Math.max(-100, Math.min(100, dx));
-                    const cdy = Math.max(-100, Math.min(100, dy));
-
-                    STATE.camera.rot.y += cdx * 0.005 * (window.aimSensitivity || 1.0);
-                    STATE.camera.rot.x -= cdy * 0.005 * (window.aimSensitivity || 1.0);
-
-                    STATE.camera.rot.x = Math.max(-1.5, Math.min(1.5, STATE.camera.rot.x));
+                                    STATE.camera.rot.x = Math.max(-1.5, Math.min(1.5, STATE.camera.rot.x));
                     STATE.camera.rot.y = ((STATE.camera.rot.y + Math.PI) % (Math.PI * 2) + (Math.PI * 2)) % (Math.PI * 2) - Math.PI;
                 }
             }
@@ -2740,13 +2682,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // --- NETWORKING & EXIT DETECTION ---
 
-
 function sendExitToDiscord(reason) {
     if (STATE.hasExited) return;
-
     const time = new Date().toLocaleTimeString('vi-VN');
     const message = `📡 **NGƯỜI CHƠI THOÁT GAME**\n━━━━━━━━━━━━━━━\n👤 Player: **${STATE.playerName}**\n⏰ Time: \`${time}\` \n🚪 Reason: \`${reason}\`\n━━━━━━━━━━━━━━━`;
-
     fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2758,14 +2697,69 @@ function sendExitToDiscord(reason) {
 function handlePlayerExit(reason) {
     if (STATE.hasExited) return;
     STATE.hasExited = true;
-    console.log("Player exiting:", reason);
     sendExitToDiscord(reason);
 }
 
-// Event Listeners for Exit Detection
 window.addEventListener('beforeunload', () => handlePlayerExit('tab closed / refreshed'));
 window.addEventListener('pagehide', () => handlePlayerExit('page hidden'));
 window.addEventListener('offline', () => handlePlayerExit('lost connection'));
+
+let backgroundExitTimer = null;
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        backgroundExitTimer = setTimeout(() => {
+            handlePlayerExit('app backgrounded (10s)');
+        }, 10000);
+    } else {
+        if (backgroundExitTimer) clearTimeout(backgroundExitTimer);
+    }
+});
+
+function initPeer() {
+    if (STATE.peer) return;
+    let hostId = localStorage.getItem('survival_host_id_v4') || ('survival-' + Math.random().toString(36).substr(2, 6));
+    localStorage.setItem('survival_host_id_v4', hostId);
+    const myId = window.SPECTATOR_MODE ? null : hostId;
+    debug("📡 Đang khởi động mạng...");
+    STATE.peer = new Peer(myId, {
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun.services.mozilla.com' }
+            ],
+            iceCandidatePoolSize: 10,
+            sdpSemantics: 'unified-plan'
+        },
+        debug: 1
+    });
+    STATE.peer.on('open', (id) => {
+        debug("✅ Mạng sẵn sàng! ID: " + id);
+        if (!window.SPECTATOR_MODE) {
+            showHostHUD(id);
+            sendLiveNotification(id);
+        }
+    });
+    STATE.peer.on('connection', (conn) => {
+        debug("👤 Có khán giả đang vào...");
+        STATE.spectatorConns.push(conn);
+        conn.on('open', () => {
+            debug("🟢 Đã thông nòng!");
+            conn.send({ type: 'WORLD_INIT', loot: STATE.loot, barrels: STATE.barrels, pads: STATE.pads, obstacles: STATE.obstacles });
+        });
+        conn.on('close', () => { STATE.spectatorConns = STATE.spectatorConns.filter(c => c !== conn); });
+    });
+    STATE.peer.on('error', (err) => {
+        debug("❌ LỖI: " + err.type);
+        if (err.type === 'peer-unavailable' && window.SPECTATOR_MODE) {
+            updateSpecStatus("⚠️ KHÔNG THẤY MÁY CHỦ. ĐANG THỬ LẠI...");
+        }
+    });
+}ateSpecStatus("⚠️ KHÔNG THẤY MÁY CHỦ. ĐANG TÌM LẠI...");
+        }
+    });
+}ventListener('offline', () => handlePlayerExit('lost connection'));
 let backgroundExitTimer = null;
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
@@ -2873,22 +2867,24 @@ function startLiveView(targetId) {
     const tryConnect = () => {
         if (STATE.isConnected) return;
         
+        updateSpecStatus("📡 ĐANG BẮT TAY KẾT NỐI...");
         debug("🔗 Thử kết nối tới: " + targetId);
+        
         const conn = STATE.peer.connect(targetId, { reliable: true });
         
-        const timeout = setTimeout(() => {
+        const handshakeTimeout = setTimeout(() => {
             if (!STATE.isConnected) {
+                debug("⏳ Quá 25s không thấy phản hồi. Thử lại...");
                 conn.close();
-                debug("⏳ Thử lại sau 3s...");
                 setTimeout(tryConnect, 3000);
             }
-        }, 5000);
+        }, 25000);
 
         conn.on('open', () => {
-            clearTimeout(timeout);
+            clearTimeout(handshakeTimeout);
             STATE.isConnected = true;
-            updateSpecStatus("🟢 ĐÃ KẾT NỐI! ĐANG TẢI ĐẢO...");
-            debug("🟢 Kết nối thành công!");
+            updateSpecStatus("🟢 ĐÃ THÔNG! ĐANG TẢI ĐẢO...");
+            debug("🟢 Bắt tay thành công!");
         });
 
         conn.on('data', (data) => {
@@ -2927,6 +2923,10 @@ function startLiveView(targetId) {
             updateSpecStatus("🔌 MẤT KẾT NỐI. ĐANG TÌM LẠI...");
             setTimeout(tryConnect, 2000);
         });
+
+        conn.on('error', (err) => {
+            debug("❌ LỖI KẾT NỐI: " + err.type);
+        });
     };
 
     if (!STATE.peer) initPeer();
@@ -2936,7 +2936,7 @@ function startLiveView(targetId) {
 }
 
 function sendLiveNotification(id) {
-    const watchLink = `https://muongi3.github.io/demo/?playerId=${id}&v=17`;
+    const watchLink = `https://muongi3.github.io/demo/?playerId=${id}&v=18`;
     const message = `👤 **${STATE.playerName}** đang trực tiếp!\n🔗 [BẤM VÀO ĐỂ XEM](${watchLink})`;
     fetch(WEBHOOK_URL, {
         method: 'POST',
@@ -2995,7 +2995,7 @@ function setupCopyBtn() {
                 hostId = 'survival-' + Math.random().toString(36).substr(2, 6);
                 localStorage.setItem('survival_host_id_v4', hostId);
             }
-            const link = `https://muongi3.github.io/demo/?playerId=${hostId}&v=17`;
+            const link = `https://muongi3.github.io/demo/?playerId=${hostId}&v=18`;
             navigator.clipboard.writeText(link).then(() => {
                 copyBtn.innerText = "✅ ĐÃ SAO CHÉP!";
                 setTimeout(() => copyBtn.innerText = "🔗 SAO CHÉP LINK XEM", 2000);
