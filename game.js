@@ -1514,6 +1514,11 @@ function endGame(win) {
     document.getElementById('end-stats').innerText = `Kills: ${STATE.player.kills} | Thời gian: ${duration}s`;
 }
 
+function finishGameAndSendToDiscord() {
+    // Đơn giản là nạp lại trang để về Menu
+    location.reload();
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     // Logic Cài đặt HUD
