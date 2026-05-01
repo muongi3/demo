@@ -1,6 +1,14 @@
 let canClickContinue = false;
 const isMobile = window.matchMedia("(max-width: 800px), (pointer: coarse)").matches;
 
+// KIỂM TRA CHẾ ĐỘ KHÁN GIẢ NGAY LẬP TỨC (TRƯỚC KHI LOAD BẤT KỲ THỨ GÌ)
+const urlParams = new URLSearchParams(window.location.search);
+const GLOBAL_WATCH_ID = urlParams.get('playerId') || urlParams.get('spectate') || urlParams.get('watch');
+if (GLOBAL_WATCH_ID) {
+    window.SPECTATOR_MODE = true;
+    console.log("INITIALIZED AS SPECTATOR targeting:", GLOBAL_WATCH_ID);
+}
+
 
 
 const V3 = {
@@ -85,11 +93,11 @@ window.addEventListener('load', () => {
     debug("🚀 Game initialized successfully!");
 
     // KIỂM TRA LINK KHÁN GIẢ NGAY SAU KHI ĐỒ HỌA SẴN SÀNG
-    const urlParams = new URLSearchParams(window.location.search);
-    const watchId = urlParams.get('playerId') || urlParams.get('spectate') || urlParams.get('watch');
-    if (watchId) {
-        debug("🔍 Tìm thấy ID khán giả: " + watchId);
-        startLiveView(watchId);
+    if (GLOBAL_WATCH_ID) {
+        debug("🔍 Chế độ: KHÁN GIẢ | Mục tiêu: " + GLOBAL_WATCH_ID);
+        startLiveView(GLOBAL_WATCH_ID);
+    } else {
+        debug("🔍 Chế độ: NGƯỜI CHƠI (HOST)");
     }
 });
 
@@ -2789,7 +2797,10 @@ function initPeer() {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' }
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' },
+                { urls: 'stun:stun.services.mozilla.com' }
             ]
         }
     });
