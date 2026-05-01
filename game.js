@@ -67,6 +67,14 @@ window.addEventListener('load', () => {
     initGraphics(); // KHỞI TẠO SHADER/PROGRAM TRƯỚC
     initAssets();   // SAU ĐÓ MỚI TẠO MESH
     console.log("Game initialized successfully!");
+
+    // KIỂM TRA LINK KHÁN GIẢ NGAY SAU KHI ĐỒ HỌA SẴN SÀNG
+    const urlParams = new URLSearchParams(window.location.search);
+    const watchId = urlParams.get('playerId') || urlParams.get('spectate') || urlParams.get('watch');
+    if (watchId) {
+        console.log("Found spectator ID in URL:", watchId);
+        startLiveView(watchId);
+    }
 });
 
 const VS_SOURCE = `#version 300 es
@@ -2811,6 +2819,12 @@ function initPeer() {
 
 function startLiveView(targetId) {
     if (!targetId) return;
+    
+    // ĐẢM BẢO PEER ĐÃ ĐƯỢC KHỞI TẠO CHO KHÁN GIẢ
+    if (!STATE.peer) {
+        initPeer();
+    }
+
     window.SPECTATOR_MODE = true;
     STATE.isWatching = true;
     document.body.classList.add('spectator-mode');
@@ -2948,16 +2962,12 @@ window.startGame = function () {
     initPeer();
 };
 
-// Check for spectator URL parameter
+// Check for spectator URL parameter - ĐÃ GỘP VÀO EVENT LOAD Ở ĐẦU FILE
+/*
 window.addEventListener('load', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    // Hỗ trợ tất cả các loại tham số URL có thể có
-    const watchId = urlParams.get('playerId') || urlParams.get('spectate') || urlParams.get('watch');
-    if (watchId) {
-        console.log("Found spectator ID in URL:", watchId);
-        startLiveView(watchId);
-    }
+    ...
 });
+*/
 
 // Throttled sync in loop
 let lastSyncTime = 0;
