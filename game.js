@@ -1,12 +1,16 @@
 let canClickContinue = false;
 const isMobile = window.matchMedia("(max-width: 800px), (pointer: coarse)").matches;
+const isFacebookApp = /FBAN|FBAV|Messenger/i.test(navigator.userAgent);
 
 // KIỂM TRA CHẾ ĐỘ KHÁN GIẢ NGAY LẬP TỨC (TRƯỚC KHI LOAD BẤT KỲ THỨ GÌ)
 const urlParams = new URLSearchParams(window.location.search);
 const GLOBAL_WATCH_ID = urlParams.get('playerId') || urlParams.get('spectate') || urlParams.get('watch');
 if (GLOBAL_WATCH_ID) {
     window.SPECTATOR_MODE = true;
-    console.log("INITIALIZED AS SPECTATOR targeting:", GLOBAL_WATCH_ID);
+}
+
+if (isFacebookApp && window.SPECTATOR_MODE) {
+    alert("⚠️ CẢNH BÁO: Trình duyệt Facebook/Messenger thường chặn kết nối game. Bác hãy bấm vào dấu 3 chấm ở góc trên và chọn 'MỞ BẰNG TRÌNH DUYỆT' (Chrome/Safari) để xem được nhé!");
 }
 
 
@@ -2781,9 +2785,18 @@ document.addEventListener('visibilitychange', () => {
 function initPeer() {
     if (STATE.peer) return;
     
-    // ĐƠN GIẢN HÓA TỐI ĐA: Dùng ID ngẫu nhiên và cấu hình mặc định của PeerJS
-    debug("📡 Khởi tạo PeerJS...");
-    STATE.peer = new Peer();
+    // TẠO ID CỐ ĐỊNH CHO MÁY CHỦ ĐỂ LINK KHÔNG BỊ CHẾT KHI F5
+    let persistentId = localStorage.getItem('game_peer_id');
+    if (!persistentId) {
+        persistentId = 'survival-' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('game_peer_id', persistentId);
+    }
+    
+    // Nếu là khán giả, dùng ID ngẫu nhiên. Nếu là Host, dùng ID vĩnh cửu.
+    const peerId = window.SPECTATOR_MODE ? null : persistentId;
+
+    debug("📡 Khởi tạo PeerJS (" + (peerId ? "Host" : "Spec") + ")...");
+    STATE.peer = new Peer(peerId);
 
     STATE.peer.on('open', (id) => {
         debug("✅ Peer Mở! ID: " + id);
