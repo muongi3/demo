@@ -2775,6 +2775,18 @@ function initPeer() {
         console.log('New spectator connected');
         STATE.spectatorConns.push(conn);
 
+        // GỬI DỮ LIỆU THẾ GIỚI BAN ĐẦU CHO KHÁN GIẢ MỚI
+        const worldData = {
+            type: 'WORLD_INIT',
+            loot: STATE.loot,
+            barrels: STATE.barrels,
+            pads: STATE.pads,
+            obstacles: STATE.obstacles
+        };
+        setTimeout(() => {
+            if (conn.open) conn.send(worldData);
+        }, 1000); 
+
         conn.on('close', () => {
             STATE.spectatorConns = STATE.spectatorConns.filter(c => c !== conn);
         });
@@ -2828,6 +2840,13 @@ function startLiveView(targetId) {
         });
 
         conn.on('data', (data) => {
+            if (data.type === 'WORLD_INIT') {
+                console.log("Received world data!");
+                STATE.loot = data.loot;
+                STATE.barrels = data.barrels;
+                STATE.pads = data.pads;
+                STATE.obstacles = data.obstacles;
+            }
             if (data.type === 'STATE_UPDATE') {
                 const p = STATE.player;
                 if (p && data.player) {
@@ -2836,9 +2855,30 @@ function startLiveView(targetId) {
                     p.hp = data.player.hp;
                     p.kills = data.player.kills;
                     p.weaponIdx = data.player.weaponIdx;
+                    updateHUD(); 
+                }
+                // ĐỒNG BỘ BOT CHO KHÁN GIẢ
+                if (data.bots) {
+                    STATE.bots = data.bots.map(b => ({
+                        pos: b.p,
+                        hp: b.h,
+                        state: b.s,
+                        id: b.i
+                    }));
+                }
+                // ĐỒNG BỘ BOSS CHO KHÁN GIẢ
+                if (data.boss) {
+                    if (!STATE.boss) STATE.boss = { active: true };
+                    STATE.boss.pos = data.boss.p;
+                    STATE.boss.hp = data.boss.h;
+                    STATE.boss.phase = data.boss.ph;
+                } else {
+                    STATE.boss = null;
                 }
                 if (data.action === 'shoot') {
                     playAudio('shoot');
+                    const weapon = STATE.weapons[p.weaponIdx];
+                    fireWeapon(p, STATE.camera.rot, weapon, true);
                 }
             }
             if (data.type === 'GAME_OVER') {
@@ -2877,6 +2917,17 @@ function sendStateToSpectators(action = null) {
             kills: STATE.player.kills,
             weaponIdx: STATE.player.weaponIdx
         },
+        bots: STATE.bots.map(b => ({
+            p: b.pos,
+            h: b.hp,
+            s: b.state,
+            i: b.id
+        })),
+        boss: STATE.boss ? {
+            p: STATE.boss.pos,
+            h: STATE.boss.hp,
+            ph: STATE.boss.phase
+        } : null,
         action: action
     };
 
