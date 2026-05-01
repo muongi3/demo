@@ -1003,14 +1003,19 @@ function update(dt) {
             }
         }
 
-        // Khi còn dưới 30% bot ban đầu, chúng sẽ hóa cuồng bạo (Horror Mode)
-        const isLastBots = STATE.bots.length <= (STATE.config.botCount || 25) * 0.3;
-        bot.isHorror = isLastBots; // Bật cờ kinh dị cho Animation
+        // --- 3 GIAI ĐOẠN TIẾN HÓA CỦA BOT ---
+        const botCount = STATE.bots.length;
+        const initialCount = STATE.config.botCount || 25;
+        const isEnragedLv2 = botCount <= initialCount * 0.4; // Cuồng bạo 40%
+        const isEnragedLv3 = botCount <= 3; // 3 con cuối cùng (Giai đoạn cuối)
 
-        if (isLastBots || dist < 30) {
+        bot.isHorror = isEnragedLv2 || isEnragedLv3; // Bật cờ kinh dị từ Lv2
+
+        // TẦM PHÁT HIỆN: 40 đơn vị
+        if (isEnragedLv2 || isEnragedLv3 || dist < 40) {
             const dir = V3.norm(V3.sub(p.pos, bot.pos));
-            // NERF TỐC ĐỘ BOT: Cuồng bạo 10, Bình thường 4
-            const speed = isLastBots ? 10 : 4;
+            // TỐC ĐỘ: Lv2/Lv3 là 11, Bình thường là 5
+            const speed = (isEnragedLv2 || isEnragedLv3) ? 11 : 5;
             const dist2D = Math.sqrt(Math.pow(p.pos.x - bot.pos.x, 2) + Math.pow(p.pos.z - bot.pos.z, 2));
             if (dist2D > 1.5) {
                 bot.pos.x += dir.x * speed * dt;
@@ -1159,9 +1164,9 @@ function update(dt) {
                 b.skillIndex++;
 
                 if (skill === 'chiêu 5') {
-                    b.state = 'teleport_start'; b.skillCD = 2.0; // Chìm xuống 2 giây
+                    b.state = 'teleport_start'; b.skillCD = 1.5; // Giảm "rặn" xuống 1.5s
                 } else if (skill === 'chiêu 4') {
-                    b.state = 'pillar_prepare'; b.skillCD = 3.0; b.pillarSpots = [];
+                    b.state = 'pillar_prepare'; b.skillCD = 2.5; b.pillarSpots = []; // Giảm xuống 2.5s
                     b.shotCount = 0;
                 } else if (skill === 'chiêu 3') {
                     b.state = 'jump_start'; b.skillCD = 2.0;
@@ -2166,8 +2171,8 @@ function updateHUD() {
         }
     }
 
-    // CẢNH BÁO CUỒNG BẠO
-    const enragedThreshold = (STATE.config.botCount || 25) * 0.3;
+    // CẢNH BÁO CUỒNG BẠO LV2 (40%)
+    const enragedThreshold = (STATE.config.botCount || 25) * 0.4;
     if (!STATE.enragedAnnounced && STATE.bots.length > 0 && STATE.bots.length <= enragedThreshold) {
         showGlobalAnnouncement("⚠️ CẢNH BÁO: QUÁI VẬT ĐÃ HÓA CUỒNG BẠO!", 4000);
         STATE.enragedAnnounced = true;
