@@ -1356,7 +1356,7 @@ function update(dt) {
                 }
             } else {
                 const isRage = b.hp < b.maxHp * 0.4;
-                const speed = isRage ? 15 : window.GAME_CONFIG.bot.baseSpeed; // Dùng tốc độ bot cơ bản cho Boss lúc thường
+                const speed = isRage ? 15 : window.GAME_CONFIG.bot.speedLv1; // Dùng tốc độ bot cơ bản cho Boss lúc thường
 
                 const dir = V3.norm(V3.sub(p.pos, b.pos));
                 b.pos.x += dir.x * speed * dt; b.pos.z += dir.z * speed * dt;
