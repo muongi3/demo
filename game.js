@@ -34,16 +34,21 @@ window.GAME_CONFIG = {
     // 🤖 THÔNG SỐ QUÁI VẬT (BOT AI STATS)
     // ==========================================================================================
     bot: {
-        baseHp: 200,          // Máu quái thường (Lv1). Tăng -> Khó tiêu diệt quái hơn.
-        baseSpeed: 5,         // Tốc độ quái Lv1. Tăng -> Quái đuổi theo nhanh hơn.
-        baseDamage: 10,       // Sát thương cào Lv1. Tăng -> Quái cào đau hơn.
-        enragedSpeed: 11,     // Tốc độ quái khi hóa điên (Lv2 và Lv3).
-        enragedDamageLv2: 30, // Sát thương quái khi hóa đỏ (Lv2 - khi còn 40% số lượng).
-        enragedDamageLv3: 60, // Sát thương quái 3 con cuối (Lv3 - dạng móng vuốt).
-        detectRadius: 40,     // Tầm nhìn của quái. Tăng -> Quái phát hiện bạn từ xa hơn.
-        attackRange: 2.5,     // Khoảng cách quái có thể cào. Tăng -> Quái cào được từ xa.
-        attackCD: 0.8,        // Hồi chiêu cào (giây). Giảm -> Quái cào liên tục cực nhanh.
-        evolveTime: 2.0       // Thời gian gồng hóa Lv3. Tăng -> Bạn có nhiều thời gian bắn nó trước khi nó biến hình.
+        hpLv1: 200,          // Máu quái thường (Lv1).
+        hpLv2: 250,          // Máu quái hóa đỏ (Lv2). (+50 máu)
+        hpLv3: 400,          // Máu 3 con cuối (Lv3). (+200 máu so với Lv1)
+        
+        speedLv1: 5,         // Tốc độ quái Lv1.
+        speedLv2: 11,        // Tốc độ quái khi hóa đỏ (Lv2).
+        speedLv3: 13,        // Tốc độ quái 3 con cuối (Lv3).
+
+        baseDamage: 10,       // Sát thương cào Lv1.
+        enragedDamageLv2: 30, // Sát thương quái khi hóa đỏ (Lv2).
+        enragedDamageLv3: 60, // Sát thương quái 3 con cuối (Lv3).
+        detectRadius: 40,     // Tầm nhìn của quái.
+        attackRange: 2.5,     // Khoảng cách quái có thể cào.
+        attackCD: 0.8,        // Hồi chiêu cào (giây).
+        evolveTime: 2.0       // Thời gian gồng hóa Lv3.
     },
 
     // ==========================================================================================
@@ -922,7 +927,7 @@ function startGame() {
             y = getHeight(x, z);
         } while (y <= -8.5); // Đảm bảo bot không spawn dưới nước
 
-        STATE.bots.push({ pos: V3.create(x, y + 1, z), hp: window.GAME_CONFIG.bot.baseHp, target: null, state: 'roam', nextMove: 0, fireCD: 0, id: i });
+        STATE.bots.push({ pos: V3.create(x, y + 1, z), hp: window.GAME_CONFIG.bot.hpLv1, target: null, state: 'roam', nextMove: 0, fireCD: 0, id: i });
     }
     for (let i = 0; i < (isMobile ? 50 : 300); i++) {
         let x, z, y;
@@ -1119,16 +1124,24 @@ function update(dt) {
         const isEnragedLv2 = botCount <= initialCount * 0.4; // Cuồng bạo 40%
         const isEnragedLv3 = botCount <= 3; // 3 con cuối cùng (Giai đoạn cuối)
 
-        bot.isHorror = isEnragedLv2 || isEnragedLv3;
-        bot.isFinal = isEnragedLv3; // Cờ cho Lv3
-
-        // TẦM PHÁT HIỆN: 40 đơn vị
+        // [MỚI] Tăng máu khi tiến hóa
+        if (isEnragedLv2 && !bot.hasEvolvedLv2) {
+            bot.hasEvolvedLv2 = true;
+            bot.hp += (window.GAME_CONFIG.bot.hpLv2 - window.GAME_CONFIG.bot.hpLv1);
+        }
         if (isEnragedLv3 && !bot.hasEvolvedLv3) {
             bot.hasEvolvedLv3 = true;
+            // Nếu đã là Lv2 thì tăng thêm (Lv3 - Lv2), nếu chưa kịp là Lv2 (nhảy vọt) thì tăng (Lv3 - Lv1)
+            const currentBaseHp = bot.hasEvolvedLv2 ? window.GAME_CONFIG.bot.hpLv2 : window.GAME_CONFIG.bot.hpLv1;
+            bot.hp += (window.GAME_CONFIG.bot.hpLv3 - currentBaseHp);
+            
             bot.isEvolvingLv3 = true;
-            bot.evolveTimer = window.GAME_CONFIG.bot.evolveTime; // Dùng config
+            bot.evolveTimer = window.GAME_CONFIG.bot.evolveTime;
             playAudio('hit');
         }
+
+        bot.isHorror = isEnragedLv2 || isEnragedLv3;
+        bot.isFinal = isEnragedLv3; // Cờ cho Lv3
 
         if (bot.isEvolvingLv3) {
             bot.evolveTimer -= dt;
@@ -1144,8 +1157,8 @@ function update(dt) {
             }
         } else if (isEnragedLv2 || isEnragedLv3 || dist < window.GAME_CONFIG.bot.detectRadius) {
             const dir = V3.norm(V3.sub(p.pos, bot.pos));
-            // TỐC ĐỘ: Lv2/Lv3 là 11, Bình thường là 5
-            const speed = (isEnragedLv2 || isEnragedLv3) ? window.GAME_CONFIG.bot.enragedSpeed : window.GAME_CONFIG.bot.baseSpeed;
+            // TỐC ĐỘ: Tinh chỉnh theo từng cấp độ
+            const speed = isEnragedLv3 ? window.GAME_CONFIG.bot.speedLv3 : (isEnragedLv2 ? window.GAME_CONFIG.bot.speedLv2 : window.GAME_CONFIG.bot.speedLv1);
             const dist2D = Math.sqrt(Math.pow(p.pos.x - bot.pos.x, 2) + Math.pow(p.pos.z - bot.pos.z, 2));
             if (dist2D > 1.5) {
                 bot.pos.x += dir.x * speed * dt;
