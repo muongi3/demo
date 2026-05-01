@@ -1584,20 +1584,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     let draggedBtn = null;
 
-    const defaultHUD = {
-        'btn-shoot': { bottom: '20px', right: '60px', top: '', left: '' },
-        'btn-jump': { bottom: '80px', right: '15px', top: '', left: '' },
-        'btn-aim': { bottom: '100px', right: '90px', top: '', left: '' },
-        'btn-reload': { bottom: '25px', right: '140px', top: '', left: '' },
-        'btn-sprint': { bottom: '150px', left: '40px', top: '', right: '' },
-        'mobile-weapons': { top: '75px', right: '10px', bottom: '', left: '' },
-        'health-bar-container': { bottom: '10px', left: '10px', top: '', right: '' },
-        'armor-bar-container': { bottom: '30px', left: '10px', top: '', right: '' },
-        'ammo-display': { bottom: '20px', left: '50%', top: '', right: '' },
-        'stats-display': { top: '30px', right: '30px', bottom: '', left: '' },
-        'loot-legend': { top: '90px', right: '230px', bottom: '', left: '' }
-    };
-
     const savedHUD = JSON.parse(localStorage.getItem('hudSettings'));
     if (savedHUD) {
         mobileBtns.forEach(id => {
@@ -1667,9 +1653,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                     btn.classList.add('editing-btn');
                     btn.style.pointerEvents = 'auto'; // Cho phép touch khi edit
-                    if (!btn.style.transform.includes('var(--btn-scale')) {
-                        btn.style.transform = 'scale(var(--btn-scale, 1.0))';
-                    }
                 }
             });
             // Tự động chọn nút Bắn mặc định
@@ -1739,9 +1722,9 @@ document.addEventListener('DOMContentLoaded', () => {
             mobileBtns.forEach(id => {
                 const btn = document.getElementById(id);
                 if (btn) {
-                    btn.style.top = ''; btn.style.left = ''; btn.style.position = 'absolute';
+                    btn.style.top = ''; btn.style.left = ''; btn.style.bottom = ''; btn.style.right = '';
+                    btn.style.position = ''; btn.style.transform = '';
                     btn.style.removeProperty('--btn-scale');
-                    Object.assign(btn.style, defaultHUD[id]);
                 }
             });
             localStorage.removeItem('hudSettings');
