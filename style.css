@@ -768,6 +768,7 @@ canvas {
     gap: 8px;
     pointer-events: auto;
     z-index: 2000;
+    scale: var(--btn-scale, 1.0);
 }
 
 .weapon-btn {
@@ -981,11 +982,31 @@ canvas {
 
 @media (max-width: 800px), (pointer: coarse) {
     #btn-settings { display: block !important; }
+    
+    #stats-display {
+        top: 10px !important;
+        right: 10px !important;
+    }
+    
+    #mobile-weapons {
+        top: 60px !important;
+        right: 10px !important;
+    }
+
     #loot-legend {
-        top: 60px;
-        right: 10px;
+        top: 110px !important;
+        right: 10px !important;
+        bottom: auto !important;
+        left: auto !important;
         transform: scale(0.7);
         transform-origin: top right;
+    }
+    
+    #ammo-display {
+        bottom: 20px !important;
+        right: auto !important;
+        left: 50% !important;
+        transform: translateX(-50%);
     }
     .menu-title {
         font-size: 36px !important;
