@@ -13,7 +13,7 @@ body::before {
     content: "";
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background: radial-gradient(circle at center, transparent 50%, rgba(10, 0, 0, 0.4) 100%); // Giảm độ tối rìa màn hình
+    background: radial-gradient(circle at center, transparent 50%, rgba(10, 0, 0, 0.4) 100%); /* Giảm độ tối rìa màn hình */
     pointer-events: none;
     z-index: 10;
 }
@@ -312,8 +312,8 @@ canvas {
     left: 20px;
     width: 120px;
     height: 120px;
-    border: 2px solid rgba(255, 255, 255, 0.5); // Viền sáng hơn
-    background: rgba(255, 255, 255, 0.1);      // Nền trong suốt sáng
+    border: 2px solid rgba(255, 255, 255, 0.5); /* Viền sáng hơn */
+    background: rgba(255, 255, 255, 0.1);      /* Nền trong suốt sáng */
     backdrop-filter: blur(5px);
     border-radius: 20px;
     overflow: hidden;
