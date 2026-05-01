@@ -1484,9 +1484,21 @@ function update(dt) {
             } else if (b.skillCD > 0.5) {
                 b.armLift = 3.0;
 
-                // 3. VUNG TAY ĐẬP XUỐNG: Khi skillCD < 0.5
+                // 3. VUNG TAY ĐẬP XUỐNG: Khi skillCD < 0.5 (Giai đoạn sát thương)
             } else {
                 b.armLift += (-1.0 - b.armLift) * 0.4;
+                b.bodyRot += (1.4 - b.bodyRot) * 0.2; // Cúi người cực thấp khi đập xuống
+                
+                if (!b.hasHit) {
+                    const d = V3.dist(b.pos, p.pos);
+                    // Kiểm tra hướng và tầm đánh (Hình quạt)
+                    if (d < 25) {
+                        takeDamage(p, window.GAME_CONFIG.boss.skill5.damage);
+                        b.hasHit = true;
+                        STATE.shake = 10;
+                        spawnParticles(p.pos, 50, [1, 0, 0], 2.0);
+                    }
+                }
 
                 const toP = V3.norm(V3.sub(p.pos, b.pos));
                 const bYaw = Math.atan2(toP.x, toP.z);
@@ -1953,10 +1965,10 @@ function draw() {
         const intensity = Math.max(0, 1 - dist / 50);
         // Bầu trời máu nhấp nháy u ám (Hell Vibe)
         const skyPulse = 0.05 + Math.sin(Date.now() * 0.0015) * 0.04;
-        fogCol = [0.25 + intensity * 0.5, 0.01, 0.01];
-        bgCol = [0.12 + skyPulse, 0.005, 0.005];
-        // CSS filter + shake chỉ áp dụng cho người chơi trên PC
-        if (!isMobile && !window.SPECTATOR_MODE) document.body.style.filter = intensity > 0.4 ? `contrast(${140 + intensity * 60}%) brightness(${0.7 - intensity * 0.25})` : 'brightness(0.7) contrast(1.2)';
+        fogCol = [0.6 + intensity * 0.3, 0.2, 0.2]; // Tăng mạnh độ sáng sương mù
+        bgCol = [0.4 + skyPulse, 0.1, 0.1];         // Tăng mạnh độ sáng bầu trời
+        // CSS filter: Giữ độ sáng cao hơn
+        if (!isMobile && !window.SPECTATOR_MODE) document.body.style.filter = intensity > 0.4 ? `contrast(${120 + intensity * 30}%) brightness(${1.0 - intensity * 0.15})` : 'brightness(1.0) contrast(1.1)';
         if (!isMobile && !window.SPECTATOR_MODE && intensity > 0.6) STATE.shake += intensity * 0.2;
     } else {
         // GIAI ĐOẠN CHIỀU TÀ (Hết bị tối hui)
@@ -2143,10 +2155,11 @@ function draw() {
             } else if (b.state === 'pillar_prepare') {
                 armColor = [1.5, 0, 0]; // Đỏ lòng bàn tay
             } else if (b.state === 'teleport_strike') {
-                if (side === 1) { // Chỉ tay phải to và đỏ khi đập
-                    armScale = 2.0; armColor = [1.5, 0, 0];
-                } else {
-                    lift = -0.5; // Tay trái hạ xuống cho tự nhiên
+                // Chỉ hóa đỏ x2 khi thực sự vung tay đập (skillCD < 0.5)
+                if (side === 1 && b.skillCD < 0.5) {
+                    armScale = 2.0; armColor = [2, 0, 0];
+                } else if (side === -1) {
+                    lift = -0.5; // Tay trái luôn hạ xuống cho tự nhiên
                 }
             } else if (b.state === 'dash_prepare' || b.state === 'dashing') {
                 armScale = 1.0; armColor = null;
