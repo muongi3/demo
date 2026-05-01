@@ -21,16 +21,36 @@ function initPeer() {
     let hostId = localStorage.getItem('survival_host_id_v4') || ('survival-' + Math.random().toString(36).substr(2, 6));
     localStorage.setItem('survival_host_id_v4', hostId);
     
-    const myId = window.SPECTATOR_MODE ? null : hostId;
+    const myId = window.SPECTATOR_MODE ? undefined : hostId;
     debug("📡 Đang khởi động mạng v18...");
 
+    // Dùng PeerJS Cloud server chính chủ (ổn định hơn 0.peerjs.com)
     STATE.peer = new Peer(myId, {
+        host: '0.peerjs.com',
+        port: 443,
+        path: '/',
+        secure: true,
         config: {
             iceServers: [
+                // STUN servers (Google)
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun.services.mozilla.com' }
+                // TURN server miễn phí (openrelay) để vượt NAT/firewall
+                {
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                }
             ],
             iceCandidatePoolSize: 10,
             sdpSemantics: 'unified-plan'
@@ -68,10 +88,23 @@ function initPeer() {
     });
 
     STATE.peer.on('error', (err) => {
-        debug("❌ LỖI MẠNG: " + err.type);
+        debug("❌ LỖI MẠNG: " + err.type + " - " + (err.message || ''));
         if (err.type === 'peer-unavailable' && window.SPECTATOR_MODE) {
             updateSpecStatus("⚠️ KHÔNG THẤY MÁY CHỦ. ĐANG THỬ LẠI...");
+        } else if (err.type === 'network' || err.type === 'server-error') {
+            updateSpecStatus("🔄 LỖI MẠNG. ĐANG KẾT NỐI LẠI...");
+            // Tự khởi động lại kết nối sau 3s
+            setTimeout(() => {
+                if (STATE.peer) { STATE.peer.destroy(); STATE.peer = null; }
+                initPeer();
+            }, 3000);
         }
+    });
+
+    STATE.peer.on('disconnected', () => {
+        debug("🔌 Mất kết nối signaling server. Đang reconnect...");
+        updateSpecStatus("🔄 ĐANG KẾT NỐI LẠI SERVER...");
+        if (STATE.peer) STATE.peer.reconnect();
     });
 }
 
