@@ -31,7 +31,7 @@ window.STATE = {
     mouse: { x: 0, y: 0, down: false, rightDown: false }, projectiles: [], particles: [], loot: [], powerups: [], bots: [], barrels: [], pads: [], obstacles: [],
 
     player: { pos: null, vel: V3.create(0, 0, 0), hp: 600, maxHp: 1000, armor: 0, maxArmor: 500, grounded: false, weaponIdx: 0, recoil: 0, kills: 0, alive: true, streak: 0, lastKillTime: 0, powerup: { type: null, time: 0 } },
-    weapons: [{ name: "Pistol", damage: 60, rate: 300, spread: 0.05, range: 50, ammo: 12, res: 129, type: 0 }, { name: "SMG", damage: 40, rate: 180, spread: 0.1, range: 40, ammo: 30, res: 90, type: 1 }, { name: "Sniper", damage: 100, rate: 1000, spread: 0.001, range: 200, ammo: 5, res: 10, type: 2 }],
+    weapons: [{ name: "Pistol", damage: 60, rate: 300, spread: 0.05, range: 50, ammo: 12, maxAmmo: 12, res: 129, type: 0 }, { name: "SMG", damage: 40, rate: 180, spread: 0.1, range: 40, ammo: 30, maxAmmo: 30, res: 90, type: 1 }, { name: "Sniper", damage: 100, rate: 1000, spread: 0.001, range: 200, ammo: 5, maxAmmo: 5, res: 10, type: 2 }],
     lastShot: 0, shake: 0, config: { botCount: 20, zoneSpeed: 5 },
     inputLocked: false,
     bossTriggered: false,
@@ -884,7 +884,9 @@ function startGame() {
         }
     }
 
-    gl.canvas.requestPointerLock(); requestAnimationFrame(loop);
+    // Khởi động P2P cho khán giả (spectator.js)
+    if (typeof initPeer === 'function') initPeer();
+    gl.canvas.requestPointerLock(); requestAnimationFrame(window.loop);
 
 
 }
@@ -953,12 +955,11 @@ function update(dt) {
     let onPad = false; for (let pad of STATE.pads) if (V3.dist(p.pos, pad.pos) < 3 && Math.abs(p.pos.y - pad.pos.y) < 2) { p.vel.y = 30; p.grounded = false; onPad = true; playAudio('jump'); break; }
     if (!onPad && p.pos.y < floorH) { p.pos.y = floorH; p.vel.y = 0; p.grounded = true; } else if (!onPad) p.grounded = false;
     if (STATE.keys['Space'] && p.grounded) { p.vel.y = 10; p.grounded = false; }
-    p.recoil *= 0.8;
-
     const now = performance.now(), weapon = STATE.weapons[p.weaponIdx];
     if (STATE.mouse.down && now - STATE.lastShot > weapon.rate && weapon.ammo > 0) { fireWeapon(p, STATE.camera.rot, weapon, true); weapon.ammo--; STATE.lastShot = now; p.recoil = 0.1; }
     p.recoil *= 0.8; if (STATE.keys['Digit1']) p.weaponIdx = 0; if (STATE.keys['Digit2']) p.weaponIdx = 1; if (STATE.keys['Digit3']) p.weaponIdx = 2;
-    if (STATE.keys['KeyR'] && weapon.ammo < 30) { let needed = 30 - weapon.ammo; if (weapon.res >= needed) { weapon.res -= needed; weapon.ammo = 30; } else { weapon.ammo += weapon.res; weapon.res = 0; } }
+    // Nạp đạn dùng maxAmmo theo loại súng (Pistol:12, SMG:30, Sniper:5)
+    if (STATE.keys['KeyR'] && weapon.ammo < weapon.maxAmmo) { let needed = weapon.maxAmmo - weapon.ammo; if (weapon.res >= needed) { weapon.res -= needed; weapon.ammo = weapon.maxAmmo; } else { weapon.ammo += weapon.res; weapon.res = 0; } }
     STATE.projectiles.forEach((proj, i) => {
         // Ưu tiên dùng tốc độ tùy chỉnh (proj.speed), nếu không mới dùng mặc định
         const speed = proj.speed || (proj.isBoss ? 40 : 100);
@@ -1236,7 +1237,7 @@ function update(dt) {
                     takeDamage(p, 600);
                     STATE.shake = 5.0;
                 }
-                spawnParticles(b.pos, 300, [1, 0, 0], 2.5);
+                spawnParticles(b.pos, isMobile ? 30 : 300, [1, 0, 0], 2.5);
                 STATE.shake = 10.0;
             }
         } else if (b.state === 'recover') {
@@ -1507,7 +1508,7 @@ function takeDamage(p, amt) {
         if (p.armor < 0) { p.hp += p.armor; p.armor = 0; }
     } else p.hp -= amt;
 
-    STATE.shake = Math.min(1.5, STATE.shake + amt * 0.08);
+    if (!isMobile) STATE.shake = Math.min(1.5, STATE.shake + amt * 0.08);
     playAudio('hit');
 
     // Hiệu ứng Horror khi trúng đòn
@@ -1523,6 +1524,8 @@ function takeDamage(p, amt) {
 
 function showHitMarker() { const el = document.getElementById('hit-marker'); el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 100); }
 function spawnParticles(pos, count, color, speedMult = 1.0) {
+    // Giới hạn particles trên mobile để giữ FPS
+    if (isMobile) count = Math.min(count, 8);
     for (let i = 0; i < count; i++) {
         STATE.particles.push({
             pos: { x: pos.x, y: pos.y, z: pos.z },
@@ -1564,10 +1567,7 @@ function endGame(win) {
     document.getElementById('end-stats').innerText = `Kills: ${STATE.player.kills} | Thời gian: ${duration}s`;
 }
 
-function finishGameAndSendToDiscord() {
-    // Đơn giản là nạp lại trang để về Menu
-    location.reload();
-}
+// finishGameAndSendToDiscord() được định nghĩa trong spectator.js (gửi Discord rồi reload)
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1787,13 +1787,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-function showClickToContinue() {
-
-    const txt = document.getElementById("continue-text"); txt.classList.remove("hidden");
-    function onClick() { txt.classList.add("hidden"); window.removeEventListener("mousedown", onClick); endGame(true); }
-    setTimeout(() => { window.addEventListener("mousedown", onClick); }, 2000);
-
-}
+// showClickToContinue() đã thay bằng showClickAnywhere() — đã xóa
 
 let spun = false;
 const rewards = [
@@ -1848,7 +1842,8 @@ function spinWheel() {
 
 
 
-const GRASS_PATCHES = []; for (let i = 0; i < 200; i++) { const x = Math.sin(i * 12.989) * MAP_SIZE * 0.45, z = Math.cos(i * 78.233) * MAP_SIZE * 0.45, y = getHeight(x, z), scale = 0.6 + Math.random() * 0.6; GRASS_PATCHES.push({ x, y, z, scale }); }
+// Giảm grass trên mobile để giảm draw call
+const GRASS_PATCHES = []; for (let i = 0; i < (isMobile ? 30 : 200); i++) { const x = Math.sin(i * 12.989) * MAP_SIZE * 0.45, z = Math.cos(i * 78.233) * MAP_SIZE * 0.45, y = getHeight(x, z), scale = 0.6 + Math.random() * 0.6; GRASS_PATCHES.push({ x, y, z, scale }); }
 
 function draw() {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -1873,13 +1868,14 @@ function draw() {
         const skyPulse = 0.05 + Math.sin(Date.now() * 0.0015) * 0.04;
         fogCol = [0.25 + intensity * 0.5, 0.01, 0.01];
         bgCol = [0.12 + skyPulse, 0.005, 0.005];
-        document.body.style.filter = intensity > 0.4 ? `contrast(${140 + intensity * 60}%) brightness(${0.7 - intensity * 0.25})` : 'brightness(0.7) contrast(1.2)';
-        if (intensity > 0.6) STATE.shake += intensity * 0.2;
+        // CSS filter + shake chỉ áp dụng cho người chơi trên PC
+        if (!isMobile && !window.SPECTATOR_MODE) document.body.style.filter = intensity > 0.4 ? `contrast(${140 + intensity * 60}%) brightness(${0.7 - intensity * 0.25})` : 'brightness(0.7) contrast(1.2)';
+        if (!isMobile && !window.SPECTATOR_MODE && intensity > 0.6) STATE.shake += intensity * 0.2;
     } else {
         // GIAI ĐOẠN CHIỀU TÀ (Hết bị tối hui)
         fogCol = [0.6, 0.4, 0.3];
         bgCol = [0.7, 0.4, 0.3];
-        document.body.style.filter = 'brightness(1.0) contrast(1.1)';
+        if (!isMobile && !window.SPECTATOR_MODE) document.body.style.filter = 'brightness(1.0) contrast(1.1)';
     }
 
     gl.clearColor(bgCol[0], bgCol[1], bgCol[2], 1.0);
@@ -1897,7 +1893,9 @@ function draw() {
     const proj = M4.perspective(fov, aspect, 0.1, 1000);
     const yaw = STATE.camera.rot.y, pitch = STATE.camera.rot.x;
 
-    const eye = V3.create(p.pos.x + (Math.random() - 0.5) * STATE.shake, p.pos.y + 1.1 + (Math.random() - 0.5) * STATE.shake, p.pos.z);
+    // Giật cam chỉ trên PC (mobile tắt để mượt hơn)
+    const shakeAmt = isMobile ? 0 : STATE.shake;
+    const eye = V3.create(p.pos.x + (Math.random() - 0.5) * shakeAmt, p.pos.y + 1.1 + (Math.random() - 0.5) * shakeAmt, p.pos.z);
     const forward = V3.create(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)), center = V3.add(eye, forward), view = M4.lookAt(eye, center, V3.create(0, 1, 0));
 
     gl.uniformMatrix4fv(locs.proj, false, proj);
@@ -1927,20 +1925,18 @@ function draw() {
     gl.uniform1i(locs.instanced, false);
     drawMeshActual(ASSETS.sky, eye, 1, 0);
 
-    // VẼ TRĂNG MÁU (Blood Moon) TỐI GIẢN
+    // Trăng máu: khán giả bỏ hào quang BLEND tốn GPU, chỉ vẽ mặt trăng tĩnh
     if (STATE.boss && STATE.boss.active) {
         gl.uniform1i(locs.isSky, false);
         const moonPos = { x: eye.x + 200, y: eye.y + 180, z: eye.z - 400 };
-
-        // Vẽ Hào quang nhẹ (Subtle Aura)
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-        const pulse = 0.9 + Math.sin(Date.now() * 0.001) * 0.1;
-        gl.uniform3f(locs.fogColor, 0.4 * pulse, 0, 0);
-        drawMeshActual(ASSETS.bloodMoon, moonPos, 100, 0);
-        gl.disable(gl.BLEND);
-
-        // Mặt trăng chính với vết đen diện tích lớn
+        if (!window.SPECTATOR_MODE) {
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+            const pulse = 0.9 + Math.sin(Date.now() * 0.001) * 0.1;
+            gl.uniform3f(locs.fogColor, 0.4 * pulse, 0, 0);
+            drawMeshActual(ASSETS.bloodMoon, moonPos, 100, 0);
+            gl.disable(gl.BLEND);
+        }
         gl.uniform3f(locs.fogColor, 2.0, 0, 0);
         drawMeshActual(ASSETS.bloodMoon, moonPos, 80, 0);
         gl.uniform3f(locs.fogColor, fogCol[0], fogCol[1], fogCol[2]);
@@ -1952,9 +1948,13 @@ function draw() {
     gl.uniformMatrix4fv(locs.model, false, M4.identity()); gl.bindVertexArray(ASSETS.ground.vao); gl.drawArrays(gl.TRIANGLES, 0, ASSETS.ground.count);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.uniform1i(locs.isWater, true); gl.uniformMatrix4fv(locs.model, false, M4.identity()); gl.bindVertexArray(ASSETS.water.vao); gl.drawArrays(gl.TRIANGLES, 0, ASSETS.water.count); gl.uniform1i(locs.isWater, false); gl.disable(gl.BLEND);
     const drawShadow = (pos, size) => { let h = getHeight(pos.x, pos.z) + 0.05, m = M4.translation(pos.x, h, pos.z); m = M4.multiply(m, M4.scaling(size, 0.01, size)); gl.uniformMatrix4fv(locs.model, false, m); gl.bindVertexArray(ASSETS.crate.vao); gl.drawArrays(gl.TRIANGLES, 0, ASSETS.crate.count); };
-    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.uniform3f(locs.fogColor, 0, 0, 0); STATE.bots.forEach(b => drawShadow(b.pos, 1.5)); drawShadow(p.pos, 1.5);
-    gl.uniform3f(locs.fogColor, fogCol[0], fogCol[1], fogCol[2]); // Reset về màu sương hiện tại
-    gl.disable(gl.BLEND);
+    // Shadow: bỏ cho mobile VÀ khán giả
+    if (!isMobile && !window.SPECTATOR_MODE) {
+        gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.uniform3f(locs.fogColor, 0, 0, 0);
+        STATE.bots.forEach(b => drawShadow(b.pos, 1.5)); drawShadow(p.pos, 1.5);
+        gl.uniform3f(locs.fogColor, fogCol[0], fogCol[1], fogCol[2]);
+        gl.disable(gl.BLEND);
+    }
     STATE.bots.forEach(b => {
         const dx = p.pos.x - b.pos.x, dz = p.pos.z - b.pos.z, ang = Math.atan2(dx, dz);
 
@@ -1978,7 +1978,9 @@ function draw() {
 
         drawMeshActual(mesh, b.pos, scale, ang);
     });
-    STATE.barrels.forEach(b => drawMeshActual(ASSETS.barrel, b.pos, 3, 0)); gl.disable(gl.CULL_FACE); GRASS_PATCHES.forEach(g => drawMeshActual(ASSETS.grass, { x: g.x, y: g.y, z: g.z }, g.scale, 0)); gl.enable(gl.CULL_FACE);
+    STATE.barrels.forEach(b => drawMeshActual(ASSETS.barrel, b.pos, 3, 0));
+    // Grass: khán giả bỏ hoàn toàn để tiết kiệm draw call
+    if (!window.SPECTATOR_MODE && GRASS_PATCHES.length > 0) { gl.disable(gl.CULL_FACE); GRASS_PATCHES.forEach(g => drawMeshActual(ASSETS.grass, { x: g.x, y: g.y, z: g.z }, g.scale, 0)); gl.enable(gl.CULL_FACE); }
     STATE.pads.forEach(p => drawMeshActual(ASSETS.pad, p.pos, 2, 0));
 
     // Vẽ vật cản (Cây, Nhà, Xe)
@@ -2343,21 +2345,7 @@ function triggerBossEvent() {
 let bossOsc = null;
 let ambientLoop = null;
 
-function playAmbientHorror() {
-    if (AudioCtx.state === 'suspended') AudioCtx.resume();
-    if (ambientLoop) return;
-
-    // Tạo tiếng drone trầm u ám
-    const osc = AudioCtx.createOscillator();
-    const gain = AudioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(55, AudioCtx.currentTime); // Tần số thấp
-    gain.gain.setValueAtTime(0.05, AudioCtx.currentTime);
-    osc.connect(gain);
-    gain.connect(AudioCtx.destination);
-    osc.start();
-    ambientLoop = { osc, gain };
-}
+// playAmbientHorror() đã xóa — chưa từng được gọi, ambientLoop vẫn giữ cho playBossSound()
 
 let bossNodes = [];
 function playBossSound() {
@@ -2424,7 +2412,8 @@ function loop(now) {
     update(dt);
     draw();
     updateHUD();
-    requestAnimationFrame(loop);
+    // Dùng window.loop để chạy qua wrapper đồng bộ khán giả mỗi frame
+    requestAnimationFrame(window.loop);
 }
 
 function showClickAnywhere(delay = 10000) {
@@ -2744,17 +2733,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 
-// --- GAME INITIALIZATION & NETWORKING BRIDGE ---
-// Đảm bảo chỉ khởi tạo một lần
-if (typeof window.gameInitialized === 'undefined') {
-    window.gameInitialized = true;
-    const originalStartGame = window.startGame;
-    window.startGame = function () {
-        if (typeof originalStartGame === 'function') originalStartGame();
-        // Gọi initPeer từ spectator.js (nếu có)
-        if (typeof initPeer === 'function') initPeer();
-    };
-}
+// initPeer() được gọi trực tiếp trong startGame() — bridge cũ đã xóa
 
 // Sync Logic for Host (Gọi đến các hàm trong spectator.js)
 let lastSyncTime = 0;

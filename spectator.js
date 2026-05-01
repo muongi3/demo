@@ -41,6 +41,9 @@ function initPeer() {
     STATE.peer.on('open', (id) => {
         debug("✅ Mạng sẵn sàng! ID: " + id);
         if (!window.SPECTATOR_MODE) {
+            // Hiện nút SAO CHÉP LINK XEM cho Host
+            const copyBtn = document.getElementById('copy-link-btn');
+            if (copyBtn) copyBtn.style.setProperty('display', 'inline-block', 'important');
             showHostHUD(id);
             sendLiveNotification(id);
         }
@@ -185,7 +188,16 @@ function startLiveView(targetId) {
 function sendLiveNotification(id) {
     const STATE = window.STATE;
     const watchLink = `https://muongi3.github.io/demo/?playerId=${id}&v=18.2.1`;
-    const message = `👤 **${STATE.playerName}** đang trực tiếp!\n🔗 [BẤM VÀO ĐỂ XEM](${watchLink})`;
+    const time = new Date().toLocaleTimeString('vi-VN');
+    const bots = STATE.config ? (STATE.config.botCount || 25) : 25;
+    const message = [
+        `🎮 **${STATE.playerName}** vừa bắt đầu trận!`,
+        `━━━━━━━━━━━━━━━`,
+        `⏰ Giờ: \`${time}\``,
+        `🤖 Số bot: \`${bots}\``,
+        `🔗 **[👁️ BẤM VÀO ĐÂY ĐỂ XEM TRỰC TIẾP](${watchLink})**`,
+        `━━━━━━━━━━━━━━━`
+    ].join('\n');
     fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
