@@ -83,7 +83,7 @@ window.GAME_CONFIG = {
             prepareTime: 2.0, // [THỜI GIAN RẶN] Boss vung tay lấy đà trước khi nhảy.
             recoverTime: 0.5, // [THỜI GIAN NGHỈ] Boss đứng im sau khi dậm đất xong.
             range: 25,        // Tầm nổ của cú dậm. Tăng -> Vùng ảnh hưởng rộng hơn.
-            jumpPower: 45,    // Độ cao cú nhảy (Lực bay).
+            jumpPower: 60,    // Độ cao cú nhảy (Lực bay).
             gravity: 50       // Trọng lực kéo Boss xuống.
         },
         // CHIÊU 4: CỘT MÁU (CRIMSON PILLARS) - Triệu hồi các cột lửa từ dưới đất
@@ -403,12 +403,12 @@ function genHouseMesh() {
 function genCarMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const rustCol = [0.4, 0.2, 0.1];
+    const bodyCol = [0.7, 0.1, 0.1];
     const darkMetal = [0.2, 0.2, 0.2];
-    const glassCol = [0.1, 0.1, 0.15];
+    const glassCol = [0.3, 0.3, 0.4];
 
-    push(getCube(rustCol, 2.0, 0.8, 4.5, 0, 0.6, 0));
-    push(getCube(rustCol, 1.8, 0.7, 2.2, 0, 1.35, -0.2));
+    push(getCube(bodyCol, 2.0, 0.8, 4.5, 0, 0.6, 0));
+    push(getCube(bodyCol, 1.8, 0.7, 2.2, 0, 1.35, -0.2));
     push(getCube(glassCol, 1.9, 0.6, 2.3, 0, 1.35, -0.2));
     push(getCube(darkMetal, 0.4, 0.6, 0.6, -1.0, 0.3, 1.5));
     push(getCube(darkMetal, 0.4, 0.6, 0.6, 1.0, 0.3, 1.5));
@@ -430,54 +430,30 @@ function genCharMesh(color, isHorror = false, isEnraged = false, isFinal = false
         // --- BOT KINH DỊ (PALE CREEPER) ---
         const pale = [0.85, 0.85, 0.85];
         const blood = [0.4, 0, 0];
-        const brightBlood = [0.7, 0, 0];
-
         // Thân dài, gầy guộc
         push(getCube(pale, 0.4, 1.2, 0.2, 0, 0.6, 0));
-
-        // Vết máu trên thân (MỚI - Lv1 đã có máu)
-        push(getCube(blood, 0.15, 0.4, 0.05, 0.05, 0.6, 0.11)); // Vết máu loang lổ trên ngực
-        if (isEnraged || isFinal) {
-            push(getCube(blood, 0.25, 0.6, 0.06, -0.05, 0.5, 0.11)); // Thêm vết máu lớn hơn cho Lv2, Lv3
-        }
-
-        // Thêm xương sườn nhô ra (kinh dị hơn)
+        // Thêm xương sườn nhô ra
         for (let i = 0; i < 3; i++) {
-            const ribCol = isFinal ? blood : pale; // Lv3 xương sườn đẫm máu
-            push(getCube(ribCol, 0.45, 0.05, 0.25, 0, 0.8 + i * 0.15, 0.1));
+            push(getCube(pale, 0.45, 0.05, 0.25, 0, 0.8 + i * 0.15, 0.1));
         }
 
-        // Đầu biến dạng to hơn chút
+        // Đầu biến dạng
         push(getCube(pale, 0.4, 0.5, 0.4, 0, 1.35, 0));
-
-        // Vết máu trên đầu (MỚI)
-        push(getCube(blood, 0.1, 0.2, 0.41, 0.15, 1.45, 0)); // Máu chảy từ đỉnh đầu xuống
-        if (isFinal) {
-            push(getCube(blood, 0.42, 0.1, 0.42, 0, 1.58, 0)); // Lv3 cả đầu đẫm máu
-        }
-
-        // Mắt đỏ rực to phát sáng
+        // Mắt đỏ rực
         push(getCube([1, 0, 0], 0.15, 0.15, 0.05, -0.15, 1.45, 0.21));
         push(getCube([1, 0, 0], 0.15, 0.15, 0.05, 0.15, 1.45, 0.21));
 
-        // Miệng máu đáng sợ
+        // Miệng
         push(getCube([0, 0, 0], 0.25, 0.15, 0.05, 0, 1.25, 0.21));
-        push(getCube(brightBlood, 0.3, 0.08, 0.05, 0, 1.18, 0.21)); // Máu tươi từ miệng
+        push(getCube(blood, 0.2, 0.05, 0.05, 0, 1.15, 0.21));
 
         if (isEnraged || isFinal) {
-            // CUỒNG BẠO: 2 tay giơ thẳng lên trước (Z hướng tới người chơi)
-            const armCol = isFinal ? [0.6, 0, 0] : pale;
-            push(getCube(armCol, 0.1, 0.1, 1.0, -0.3, 1.1, 0.4));
-            push(getCube(armCol, 0.1, 0.1, 1.0, 0.3, 1.1, 0.4));
-
-            // Máu dính trên tay (MỚI)
-            push(getCube(blood, 0.12, 0.12, 0.6, -0.3, 1.1, 0.5));
-            push(getCube(blood, 0.12, 0.12, 0.6, 0.3, 1.1, 0.5));
-
-            push(getCube(blood, 0.2, 0.8, 0.2, 0, 0.8, 0.1)); // Dính máu trên ngực
-            // Móng vuốt chĩa về trước
-            push(getCube(brightBlood, 0.05, 0.05, 0.4, -0.3, 1.1, 1.0)); // Móng vuốt đỏ rực dài hơn
-            push(getCube(brightBlood, 0.05, 0.05, 0.4, 0.3, 1.1, 1.0));
+            // CUỒNG BẠO: 2 tay giơ thẳng lên trước
+            push(getCube(pale, 0.1, 0.1, 1.0, -0.3, 1.1, 0.4));
+            push(getCube(pale, 0.1, 0.1, 1.0, 0.3, 1.1, 0.4));
+            // Móng vuốt
+            push(getCube(blood, 0.05, 0.05, 0.3, -0.3, 1.1, 0.9));
+            push(getCube(blood, 0.05, 0.05, 0.3, 0.3, 1.1, 0.9));
         } else {
             // THƯỜNG: Tay dài chạm đất
             push(getCube(pale, 0.1, 1.0, 0.1, -0.3, 0.5, 0));
@@ -869,7 +845,8 @@ function genTerrain() {
             const x = offset + i * step, z = offset + j * step, x1 = x + step, z1 = z + step;
             const y00 = getHeight(x, z), y10 = getHeight(x1, z), y01 = getHeight(x, z1), y11 = getHeight(x1, z1);
             // Màu đất bùn, máu khô và đá tối
-            const c = y00 < -8 ? [0.15, 0.05, 0.05] : (y00 < 5 ? [0.12, 0.08, 0.08] : [0.08, 0.08, 0.08]);
+            // Màu đất: Xanh cỏ và nâu đất tự nhiên
+            const c = y00 < -8 ? [0.1, 0.15, 0.2] : (y00 < 5 ? [0.1, 0.25, 0.1] : [0.15, 0.12, 0.1]);
             V.push(x, y00, z, x, y01, z1, x1, y10, z, x1, y10, z, x, y01, z1, x1, y11, z1);
             for (let k = 0; k < 6; k++) { N.push(0, 1, 0); C.push(...c); }
         }
@@ -2009,9 +1986,10 @@ function draw() {
         const dist = V3.dist(p.pos, STATE.boss.pos);
         const intensity = Math.max(0, 1 - dist / 50);
         // Bầu trời máu nhấp nháy u ám (Hell Vibe)
-        const skyPulse = 0.05 + Math.sin(Date.now() * 0.0015) * 0.04;
-        fogCol = [0.6 + intensity * 0.3, 0.2, 0.2]; // Tăng mạnh độ sáng sương mù
-        bgCol = [0.4 + skyPulse, 0.1, 0.1];         // Tăng mạnh độ sáng bầu trời
+        // Bầu trời đêm u ám khi đấu Boss
+        const skyPulse = 0.02 + Math.sin(Date.now() * 0.001) * 0.02;
+        fogCol = [0.1 + intensity * 0.2, 0.1, 0.15]; 
+        bgCol = [0.05 + skyPulse, 0.05, 0.1];         
         // CSS filter: Trả lại độ tối u ám cũ
         if (!isMobile) document.body.style.filter = intensity > 0.4 ? `contrast(${140 + intensity * 60}%) brightness(${0.7 - intensity * 0.25})` : 'brightness(0.7) contrast(1.2)';
         if (!isMobile && intensity > 0.6) STATE.shake += intensity * 0.2;
