@@ -1336,7 +1336,7 @@ function update(dt) {
 
         } else if (b.state === 'jump_start') {
             b.bodyRot += (0.4 - b.bodyRot) * 0.1; // Cúi người lấy đà hơi hơi thôi
-            b.armLift += (-1.2 - b.armLift) * 0.1; // Vung 2 tay ra sau lấy đà
+            b.armLift += (1.4 - b.armLift) * 0.1; // Vung 2 tay ra sau lấy đà (POSITIVE là ra sau)
             if (b.skillCD <= 0) {
                 const gravity = window.GAME_CONFIG.boss.skill3.gravity;
                 b.state = 'jumping';
@@ -1346,17 +1346,17 @@ function update(dt) {
                 const airTime = (v0y + Math.sqrt(v0y * v0y + 2 * gravity * dy)) / gravity;
                 b.vel.x = (b.targetPos.x - b.pos.x) / airTime;
                 b.vel.z = (b.targetPos.z - b.pos.z) / airTime;
-                b.armLift = 1.4; // Nhảy lên giơ 2 tay ra phía trước
+                b.armLift = -1.2; // Nhảy lên giơ 2 tay ra phía trước (NEGATIVE là ra trước)
                 b.bodyRot = 0.2; // Bay người thẳng, hơi đổ tới xíu
             }
         } else if (b.state === 'jumping') {
-            b.armLift = 1.4;
+            b.armLift = -1.2;
             b.bodyRot = 0.2;
             b.vel.y -= window.GAME_CONFIG.boss.skill3.gravity * dt; b.pos.x += b.vel.x * dt; b.pos.z += b.vel.z * dt; b.pos.y += b.vel.y * dt;
             if (b.pos.y <= getHeight(b.pos.x, b.pos.z)) {
                 b.pos.y = getHeight(b.pos.x, b.pos.z);
                 b.state = 'recover'; b.skillCD = 0.5;
-                b.bodyRot = 0.6; b.armLift = 1.4; // Chạm đất tay chống đất, người hơi cúi (không quá thấp)
+                b.bodyRot = 0.6; b.armLift = -0.2; // Chạm đất tay chống đất phía trước (-0.2), người hơi cúi (0.6)
                 const dmgDist = window.GAME_CONFIG.boss.skill3.range;
                 const dx = b.pos.x - p.pos.x, dz = b.pos.z - p.pos.z;
                 if (Math.sqrt(dx * dx + dz * dz) < dmgDist) {
@@ -1367,7 +1367,8 @@ function update(dt) {
                 STATE.shake = 10.0;
             }
         } else if (b.state === 'recover') {
-            b.bodyRot = 0.6; b.armLift = 1.4;
+            b.bodyRot += (0.6 - b.bodyRot) * 0.2; 
+            b.armLift += (-0.2 - b.armLift) * 0.2;
             if (b.skillCD <= 0) {
                 b.state = 'fight';
                 b.skillCD = 1.0;
@@ -1448,7 +1449,7 @@ function update(dt) {
             }
         } else if (b.state === 'teleport_start') {
             b.bodyY -= 15 * dt;
-            b.armLift += (2.5 - b.armLift) * 0.1;
+            b.armLift += (-1.8 - b.armLift) * 0.1; // Giơ tay lên cao khi chìm xuống
             if (b.skillCD > 1.0) {
                 b.targetPos = V3.create(p.pos.x, 0, p.pos.z);
                 b.targetPos.y = getHeight(b.targetPos.x, b.targetPos.z);
@@ -1482,19 +1483,16 @@ function update(dt) {
             // 1. THỜI GIAN TRỒI LÊN: Khi skillCD giảm từ 3.0 xuống 2.5 (mất 0.5 giây)
             if (b.skillCD > 2.5) {
                 b.bodyY += 40 * dt; if (b.bodyY > 0) b.bodyY = 0;
-                b.armLift += (3.0 - b.armLift) * 0.1;
+                b.armLift += (-1.8 - b.armLift) * 0.1; // Tay giơ cao chuẩn bị đập
 
                 // 2. THỜI GIAN GỒNG CHỜ (Đập xuống tốn 2 giây): Khi skillCD từ 2.5 xuống 0.5
-                // [CHỈNH SỬA THỜI GIAN] Thay đổi số 0.5 này:
-                // Tăng lên (VD: 1.5) -> Gồng nhanh hơn
-                // Giảm xuống (VD: 0.1) -> Gồng lâu hơn
             } else if (b.skillCD > 0.5) {
-                b.armLift = 3.0;
+                b.armLift = -1.8;
 
                 // 3. VUNG TAY ĐẬP XUỐNG: Khi skillCD < 0.5 (Giai đoạn sát thương)
             } else {
-                b.armLift += (-1.0 - b.armLift) * 0.4;
-                b.bodyRot += (1.4 - b.bodyRot) * 0.2; // Cúi người cực thấp khi đập xuống
+                b.armLift += (-0.2 - b.armLift) * 0.4; // Tay phải đập thẳng xuống chạm đất phía trước
+                b.bodyRot += (0.6 - b.bodyRot) * 0.2; // Hơi cúi người thôi
                 
                 if (!b.hasHit) {
                     const d = V3.dist(b.pos, p.pos);
@@ -2170,20 +2168,17 @@ function draw() {
                 armColor = [1.5, 0, 0];
                 lift = -Math.PI * 0.7; // Giơ tay lên trời vừa phải
             }
-            // Skill 5: TELEPORT STRIKE (Chìm/Trồi đập) - Tay phải hóa đỏ x2 đập cực mạnh
+            // Skill 5: TELEPORT STRIKE (Chìm/Trồi đập) - Tay phải đập cực mạnh
             else if (b.state === 'teleport_strike') {
                 if (side === 1) { // Tay phải
                     armColor = [2.0, 0, 0];
-                    if (b.skillCD > 0.5) { // Giai đoạn trồi lên
-                        armScale = 1.3; lift = -Math.PI * 0.6;
-                    } else { // Giai đoạn đập
-                        armScale = 1.8; lift = Math.PI * 0.4;
-                    }
+                    armScale = b.skillCD > 0.5 ? 1.3 : 1.8;
+                    lift = b.armLift; // Sử dụng giá trị b.armLift từ AI (mượt mà)
                 } else { // Tay trái hạ xuống tự nhiên
-                    lift = 0.5;
+                    lift = 0.5; // Hơi đưa ra sau lưng
                 }
             } else if (b.state === 'teleport_start') {
-                lift = -Math.PI * 0.6; // Giơ tay khi chìm xuống
+                lift = b.armLift; // Cả hai tay giơ lên khi chìm xuống
             }
 
             let mArm = M4.translation(b.pos.x, b.pos.y + b.bodyY + 16, b.pos.z);
