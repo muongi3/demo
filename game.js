@@ -2786,7 +2786,7 @@ function startLiveView(targetId) {
     // Ẩn menu ngay lập tức để không bị kẹt
     const mainMenu = document.getElementById('main-menu');
     if (mainMenu) { 
-        mainMenu.style.display = 'none'; 
+        mainMenu.style.setProperty('display', 'none', 'important');
         mainMenu.classList.add('hidden'); 
     }
 
