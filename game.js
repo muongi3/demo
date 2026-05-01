@@ -1050,7 +1050,6 @@ function update(dt) {
                 else if (isEnragedLv2) damage = 30;
 
                 takeDamage(p, damage);
-                STATE.shake = 3.0;
                 playAudio('hit');
                 bot.fireCD = 0.8;
             }
