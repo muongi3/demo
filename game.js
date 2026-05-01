@@ -340,7 +340,7 @@ function genRockMesh() {
     return createMesh(getCube([0.5, 0.5, 0.5], 1.5, 1, 1.5, 0, 0.5, 0).v, getCube([0.5, 0.5, 0.5], 1, 1, 1).n, getCube([0.5, 0.5, 0.5], 1, 1, 1).c);
 }
 
-function genCharMesh(color, isHorror = false, isEnraged = false) {
+function genCharMesh(color, isHorror = false, isEnraged = false, isFinal = false) {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
 
@@ -365,21 +365,21 @@ function genCharMesh(color, isHorror = false, isEnraged = false) {
         push(getCube([0, 0, 0], 0.25, 0.15, 0.05, 0, 1.25, 0.21));
         push(getCube(blood, 0.3, 0.05, 0.05, 0, 1.15, 0.21));
 
-        if (isEnraged) {
+        if (isEnraged || isFinal) {
             // CUỒNG BẠO: 2 tay giơ thẳng lên trước (Z hướng tới người chơi)
-            push(getCube(pale, 0.1, 0.1, 1.0, -0.3, 1.1, 0.4));
-            push(getCube(pale, 0.1, 0.1, 1.0, 0.3, 1.1, 0.4));
-            push(getCube(blood, 0.1, 0.5, 0.1, 0, 0.8, 0.1)); // Dính máu trên ngực
+            push(getCube(isFinal ? [0.6, 0, 0] : pale, 0.1, 0.1, 1.0, -0.3, 1.1, 0.4));
+            push(getCube(isFinal ? [0.6, 0, 0] : pale, 0.1, 0.1, 1.0, 0.3, 1.1, 0.4));
+            push(getCube(blood, 0.2, 0.8, 0.2, 0, 0.8, 0.1)); // Dính máu trên ngực
             // Móng vuốt chĩa về trước
             push(getCube(blood, 0.05, 0.05, 0.3, -0.3, 1.1, 0.9));
             push(getCube(blood, 0.05, 0.05, 0.3, 0.3, 1.1, 0.9));
         } else {
             // THƯỜNG: Tay dài chạm đất
-            push(getCube(pale, 0.1, 1.0, 0.1, -0.3, 0.5, 0));
-            push(getCube(pale, 0.1, 1.0, 0.1, 0.3, 0.5, 0));
+            push(getCube(isFinal ? [0.6, 0, 0] : pale, 0.1, 1.0, 0.1, -0.3, 0.5, 0));
+            push(getCube(isFinal ? [0.6, 0, 0] : pale, 0.1, 1.0, 0.1, 0.3, 0.5, 0));
             // Móng vuốt chạm đất
-            push(getCube(blood, 0.05, 0.2, 0.05, -0.3, 0, 0));
-            push(getCube(blood, 0.05, 0.2, 0.05, 0.3, 0, 0));
+            push(getCube(blood, 0.05, 0.4, 0.05, -0.3, -0.2, 0));
+            push(getCube(blood, 0.05, 0.4, 0.05, 0.3, -0.2, 0));
         }
     } else {
         // --- NGƯỜI CHƠI (SỐNG SÓT) ---
@@ -706,6 +706,7 @@ function initAssets() {
     ASSETS.char = genCharMesh([0.2, 0.2, 0.8], false); // Người chơi
     ASSETS.bot = genCharMesh([0.5, 0.5, 0.5], true, false);  // Bot kinh dị
     ASSETS.botEnraged = genCharMesh([0.5, 0.5, 0.5], true, true);  // Bot cuồng bạo
+    ASSETS.botFinal = genCharMesh([0.4, 0, 0], true, true, true);  // Bot máu me (Giai đoạn cuối)
     ASSETS.crate = genCrateMesh([0.7, 0.4, 0.2]);
     ASSETS.lootAmmo = genCrateMesh([0.9, 0.8, 0.1]);
     ASSETS.lootHP = genCrateMesh([0.1, 0.8, 0.1]);
@@ -1009,7 +1010,8 @@ function update(dt) {
         const isEnragedLv2 = botCount <= initialCount * 0.4; // Cuồng bạo 40%
         const isEnragedLv3 = botCount <= 3; // 3 con cuối cùng (Giai đoạn cuối)
 
-        bot.isHorror = isEnragedLv2 || isEnragedLv3; // Bật cờ kinh dị từ Lv2
+        bot.isHorror = isEnragedLv2 || isEnragedLv3;
+        bot.isFinal = isEnragedLv3; // Cờ cho Lv3
 
         // TẦM PHÁT HIỆN: 40 đơn vị
         if (isEnragedLv2 || isEnragedLv3 || dist < 40) {
@@ -1022,8 +1024,12 @@ function update(dt) {
                 bot.pos.z += dir.z * speed * dt;
             }
             if (dist2D < 2.5 && Math.abs(p.pos.y - bot.pos.y) < 3.0 && bot.fireCD <= 0) {
-                // Xóa cơ chế bắn, chuyển sang CÀO CẬN CHIẾN
-                takeDamage(p, (isEnragedLv2 || isEnragedLv3) ? 20 : 10);
+                // Sát thương: Lv1=10, Lv2=30, Lv3=60
+                let damage = 10;
+                if (isEnragedLv3) damage = 60;
+                else if (isEnragedLv2) damage = 30;
+
+                takeDamage(p, damage);
                 STATE.shake = 3.0;
                 playAudio('hit');
                 bot.fireCD = 0.8;
@@ -1951,9 +1957,26 @@ function draw() {
     gl.disable(gl.BLEND);
     STATE.bots.forEach(b => {
         const dx = p.pos.x - b.pos.x, dz = p.pos.z - b.pos.z, ang = Math.atan2(dx, dz);
-        // [CHỈNH SỐ LƯỢNG CUỒNG BẠO] Nhớ đổi số 3 ở đây cho khớp với số ở trên hàm update()
-        const mesh = (STATE.bots.length <= 3) ? ASSETS.botEnraged : ASSETS.bot;
-        drawMeshActual(mesh, b.pos, 1, ang);
+        
+        const botCount = STATE.bots.length;
+        const initialCount = STATE.config.botCount || 25;
+        const isLv2 = botCount <= initialCount * 0.4;
+        const isLv3 = botCount <= 3;
+
+        let mesh = ASSETS.bot;
+        let scale = 1.0;
+
+        if (isLv3) {
+            // [GIAI ĐOẠN 3] To gấp đôi và máu me
+            mesh = ASSETS.botFinal;
+            scale = 2.0;
+        } else if (isLv2) {
+            // [GIAI ĐOẠN 2] Hóa kinh dị
+            mesh = ASSETS.botEnraged;
+            scale = 1.0;
+        }
+
+        drawMeshActual(mesh, b.pos, scale, ang);
     });
     STATE.barrels.forEach(b => drawMeshActual(ASSETS.barrel, b.pos, 3, 0)); gl.disable(gl.CULL_FACE); GRASS_PATCHES.forEach(g => drawMeshActual(ASSETS.grass, { x: g.x, y: g.y, z: g.z }, g.scale, 0)); gl.enable(gl.CULL_FACE);
     STATE.pads.forEach(p => drawMeshActual(ASSETS.pad, p.pos, 2, 0));
