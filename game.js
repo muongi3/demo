@@ -1491,7 +1491,8 @@ function fireWeapon(shooter, rot, weapon, isPlayer, dirOverride) {
 }
 
 function takeDamage(p, amt) {
-    if (STATE.gameEnded || (p.powerup && p.powerup.type === 2 && p.powerup.time > 0)) amt *= 0.2;
+    // FIX CRASH: Kiểm tra p.powerup tồn tại trước khi truy cập type
+    if (STATE.gameEnded || (p.powerup && p.powerup.time > 0 && p.powerup.type === 2)) amt *= 0.2;
     if (STATE.gameEnded) return;
     if (p.armor > 0) {
         const armDmg = amt * 0.7;
