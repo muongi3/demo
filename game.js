@@ -27,7 +27,8 @@ const V3 = {
 };
 
 // Hệ thống Debug cho Mobile
-const debug = (msg) => {
+// Hệ thống Debug Toàn cục
+window.debug = (msg) => {
     console.log(msg);
     const consoleEl = document.getElementById('debug-console');
     if (consoleEl) {
@@ -36,7 +37,7 @@ const debug = (msg) => {
         consoleEl.scrollTop = consoleEl.scrollHeight;
     }
 };
-window.onerror = (msg, url, line) => debug(`❌ LỖI: ${msg} tại ${line}`);
+window.onerror = (msg, url, line) => window.debug(`❌ LỖI: ${msg} tại ${line}`);
 
 const M4 = {
     identity: () => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]),
@@ -97,7 +98,16 @@ window.addEventListener('load', () => {
     // KIỂM TRA LINK KHÁN GIẢ NGAY SAU KHI ĐỒ HỌA SẴN SÀNG
     if (GLOBAL_WATCH_ID) {
         debug("🔍 Chế độ: KHÁN GIẢ | Mục tiêu: " + GLOBAL_WATCH_ID);
-        startLiveView(GLOBAL_WATCH_ID);
+        // Kiểm tra xem spectator.js đã nạp xong chưa
+        if (typeof startLiveView === 'function') {
+            startLiveView(GLOBAL_WATCH_ID);
+        } else {
+            window.debug("⚠️ Đang đợi hệ thống mạng...");
+            setTimeout(() => {
+                if (typeof startLiveView === 'function') startLiveView(GLOBAL_WATCH_ID);
+                else window.debug("❌ LỖI: spectator.js không tải được!");
+            }, 500);
+        }
     } else {
         debug("🔍 Chế độ: NGƯỜI CHƠI (HOST)");
     }
@@ -735,7 +745,7 @@ function genTerrain() {
 
 
 
-const STATE = {
+window.STATE = {
     screen: 'menu', lastTime: 0, camera: { pos: V3.create(0, 10, 20), rot: { x: 0, y: 0 } }, keys: {},
     mouse: { x: 0, y: 0, down: false, rightDown: false }, projectiles: [], particles: [], loot: [], powerups: [], bots: [], barrels: [], pads: [], obstacles: [],
 
@@ -757,6 +767,7 @@ const STATE = {
     peer: null,
     spectatorConns: []
 };
+const STATE = window.STATE;
 
 
 
@@ -2647,60 +2658,39 @@ window.startGame = function () {
 
 }
 
-// Initialize Peer for the host when game starts
-const originalStartGame = startGame;
-window.startGame = function () {
-    originalStartGame();
-    initPeer();
-};
-
-// Cập nhật link vào nút Copy ở Menu (Gọi ngay để nút hoạt động trước khi bấm Bắt đầu)
-function setupCopyBtn() {
-    const copyBtn = document.getElementById('copy-link-btn');
-    if (copyBtn) {
-        copyBtn.onclick = () => {
-            if (!STATE.peer) initPeer();
-            let hostId = localStorage.getItem('survival_host_id_v4');
-            if (!hostId) {
-                hostId = 'survival-' + Math.random().toString(36).substr(2, 6);
-                localStorage.setItem('survival_host_id_v4', hostId);
-            }
-            const link = `https://muongi3.github.io/demo/?playerId=${hostId}&v=18`;
-            navigator.clipboard.writeText(link).then(() => {
-                copyBtn.innerText = "✅ ĐÃ SAO CHÉP!";
-                setTimeout(() => copyBtn.innerText = "🔗 SAO CHÉP LINK XEM", 2000);
-            }).catch(() => {
-                alert("Link của bác đây: " + link);
-            });
-        };
-    }
+// --- GAME INITIALIZATION & NETWORKING BRIDGE ---
+// Đảm bảo chỉ khởi tạo một lần
+if (typeof window.gameInitialized === 'undefined') {
+    window.gameInitialized = true;
+    const originalStartGame = window.startGame;
+    window.startGame = function () {
+        if (typeof originalStartGame === 'function') originalStartGame();
+        // Gọi initPeer từ spectator.js (nếu có)
+        if (typeof initPeer === 'function') initPeer();
+    };
 }
-// --- GAME INITIALIZATION ---
-const originalStartGame = startGame;
-window.startGame = function () {
-    originalStartGame();
-    if (typeof initPeer === 'function') initPeer();
-};
 
-// Sync Logic for Host
+// Sync Logic for Host (Gọi đến các hàm trong spectator.js)
 let lastSyncTime = 0;
-const originalLoop = loop;
+const originalLoop = window.loop;
 window.loop = function (now) {
-    originalLoop(now);
+    if (typeof originalLoop === 'function') originalLoop(now);
+    
     if (STATE.screen === 'game' && !window.SPECTATOR_MODE) {
-        if (now - lastSyncTime > 100) { // Sync every 100ms
+        if (now - lastSyncTime > 100) { // Đồng bộ mỗi 100ms
             if (typeof sendStateToSpectators === 'function') sendStateToSpectators();
             lastSyncTime = now;
         }
     }
 };
 
-const originalFireWeapon = fireWeapon;
+const originalFireWeapon = window.fireWeapon;
 window.fireWeapon = function (shooter, rot, weapon, isPlayer, dirOverride) {
-    originalFireWeapon(shooter, rot, weapon, isPlayer, dirOverride);
+    if (typeof originalFireWeapon === 'function') originalFireWeapon(shooter, rot, weapon, isPlayer, dirOverride);
     if (isPlayer && !window.SPECTATOR_MODE) {
         if (typeof sendStateToSpectators === 'function') sendStateToSpectators('shoot');
     }
 };
+
 
 

@@ -4,6 +4,13 @@
  * Tách biệt để game.js nhẹ hơn và dễ quản lý hơn.
  */
 
+// --- KHỞI TẠO HÀM DEBUG DỰ PHÒNG ---
+if (typeof window.debug === 'undefined') {
+    window.debug = (msg) => console.log("[Spectator Log] " + msg);
+}
+// Alias để dùng nhanh trong file này
+const debug = window.debug;
+
 // --- CẤU HÌNH WEBHOOK & MẠNG ---
 const WEBHOOK_URL = "https://discord.com/api/webhooks/1499169990350471359/SQrGcSeCjvW3JleJv6rfoBpk5ffwmYpojnLlW5HFdS9oRfn7Gg5UvrYPV95TaAY_6pau";
 
@@ -120,26 +127,27 @@ function startLiveView(targetId) {
             debug("🟢 Bắt tay thành công!");
         });
 
-        conn.on('data', (data) => {
-            if (data.type === 'WORLD_INIT') {
-                STATE.loot = data.loot;
-                STATE.barrels = data.barrels;
-                STATE.pads = data.pads;
-                STATE.obstacles = data.obstacles;
-                STATE.screen = 'game';
-                document.getElementById('ui-layer').style.display = 'block';
-                updateSpecStatus("🔴 ĐANG XEM TRỰC TIẾP");
-                requestAnimationFrame(loop);
-            }
-            if (data.type === 'STATE_UPDATE') {
-                if (STATE.player && data.player) {
-                    STATE.player.pos = data.player.pos;
-                    STATE.camera.rot = data.player.rot;
-                    STATE.player.hp = data.player.hp;
-                    STATE.player.kills = data.player.kills;
-                    STATE.player.weaponIdx = data.player.weaponIdx;
-                    updateHUD();
-                }
+                conn.on('data', (data) => {
+                    const STATE = window.STATE;
+                    if (data.type === 'WORLD_INIT') {
+                        STATE.loot = data.loot;
+                        STATE.barrels = data.barrels;
+                        STATE.pads = data.pads;
+                        STATE.obstacles = data.obstacles;
+                        STATE.screen = 'game';
+                        document.getElementById('ui-layer').style.display = 'block';
+                        updateSpecStatus("🔴 ĐANG XEM TRỰC TIẾP");
+                        requestAnimationFrame(window.loop);
+                    }
+                    if (data.type === 'STATE_UPDATE') {
+                        if (STATE.player && data.player) {
+                            STATE.player.pos = data.player.pos;
+                            STATE.camera.rot = data.player.rot;
+                            STATE.player.hp = data.player.hp;
+                            STATE.player.kills = data.player.kills;
+                            STATE.player.weaponIdx = data.player.weaponIdx;
+                            if (typeof window.updateHUD === 'function') window.updateHUD();
+                        }
                 if (data.bots) STATE.bots = data.bots.map(b => ({ pos: b.p, hp: b.h, state: b.s, id: b.i }));
                 if (data.boss) {
                     if (!STATE.boss) STATE.boss = { active: true };
@@ -147,7 +155,9 @@ function startLiveView(targetId) {
                     STATE.boss.hp = data.boss.h;
                     STATE.boss.phase = data.boss.ph;
                 } else { STATE.boss = null; }
-                if (data.action === 'shoot') playAudio('shoot');
+                if (data.action === 'shoot') {
+                    if (typeof window.playAudio === 'function') window.playAudio('shoot');
+                }
                 if (data.type === 'GAME_OVER') {
                     alert("Trận đấu đã kết thúc!");
                     location.reload();
@@ -173,7 +183,8 @@ function startLiveView(targetId) {
 
 // --- ĐỒNG BỘ TRẠNG THÁI (DÀNH CHO HOST) ---
 function sendLiveNotification(id) {
-    const watchLink = `https://muongi3.github.io/demo/?playerId=${id}&v=18`;
+    const STATE = window.STATE;
+    const watchLink = `https://muongi3.github.io/demo/?playerId=${id}&v=18.2.1`;
     const message = `👤 **${STATE.playerName}** đang trực tiếp!\n🔗 [BẤM VÀO ĐỂ XEM](${watchLink})`;
     fetch(WEBHOOK_URL, {
         method: 'POST',
@@ -184,6 +195,7 @@ function sendLiveNotification(id) {
 }
 
 function sendStateToSpectators(action = null) {
+    const STATE = window.STATE;
     if (!STATE.spectatorConns || STATE.spectatorConns.length === 0) return;
 
     const syncData = {
@@ -213,6 +225,7 @@ function sendStateToSpectators(action = null) {
         if (conn.open) conn.send(syncData);
     });
 }
+
 
 // --- EXIT DETECTION & DISCORD ---
 function sendExitToDiscord(reason) {
