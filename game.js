@@ -2826,6 +2826,7 @@ function initPeer() {
     });
 
     STATE.peer.on('error', (err) => {
+        debug("❌ LỖI PEER TOÀN CỤC: " + err.type);
         console.error('PeerJS Global Error:', err);
         const specWarning = document.getElementById('spectator-warning');
         if (specWarning && window.SPECTATOR_MODE) {
@@ -2865,9 +2866,18 @@ function startLiveView(targetId) {
     const connectToPlayer = () => {
         debug("🔗 Đang kết nối tới: " + targetId);
         console.log("Attempting connection to:", targetId);
+        
+        // Thiết lập timeout nếu quá 15 giây không kết nối được
+        const connectionTimeout = setTimeout(() => {
+            if (!STATE.isConnected) {
+                debug("⏳ LỖI: Kết nối quá lâu (Timeout). Bác kiểm tra xem Máy chủ (Laptop) có còn mở tab game không?");
+            }
+        }, 15000);
+
         const conn = STATE.peer.connect(targetId);
         
         conn.on('open', () => {
+            clearTimeout(connectionTimeout);
             debug("🟢 Kết nối THÀNH CÔNG!");
             console.log("Connection opened!");
             STATE.isConnected = true; 
@@ -2878,6 +2888,16 @@ function startLiveView(targetId) {
             }
             document.getElementById('ui-layer').style.display = 'block';
             requestAnimationFrame(loop);
+        });
+
+        conn.on('error', (err) => {
+            debug("❌ LỖI KẾT NỐI: " + err.type);
+            console.error("Connection error:", err);
+        });
+
+        conn.on('close', () => {
+            debug("🔌 KẾT NỐI ĐÃ ĐÓNG");
+            STATE.isConnected = false;
         });
 
         conn.on('data', (data) => {
