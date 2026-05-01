@@ -1,12 +1,21 @@
 :root {
-    --primary: #ff4d4d;
-    --secondary: #4d79ff;
-    --accent: #ffcc00;
-    --glass: rgba(0, 0, 0, 0.4);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --primary: #990000;
+    --secondary: #111111;
+    --accent: #ff3333;
+    --glass: rgba(15, 0, 0, 0.8);
+    --glass-border: rgba(255, 0, 0, 0.25);
     --btn-scale: 1.0;
     --run-left: -150px;
     --run-right: 90vw;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: radial-gradient(circle at center, transparent 30%, rgba(10, 0, 0, 0.9) 100%);
+    pointer-events: none;
+    z-index: 10;
 }
 
 body {

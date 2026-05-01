@@ -902,7 +902,7 @@ function update(dt) {
         if (p.powerup.type === 0 || p.powerup.type === 3) speedMult = 1.8;
         if (p.powerup.type === 1 || p.powerup.type === 3) dmgMult = 2.0;
     }
-    if (STATE.keys['ShiftLeft']) speedMult *= 1.5;
+    if (STATE.keys['ShiftLeft']) speedMult *= 2.0;
     // GIẢM TỐC ĐỘ: Đi bộ 8, Chạy nhanh 12 (8 * 1.5)
     const moveSpeed = (p.weaponIdx === 2 ? 5 : 8) * speedMult;
     let move = V3.create(0, 0, 0); if (STATE.keys['KeyW']) move.z -= 1; if (STATE.keys['KeyS']) move.z += 1; if (STATE.keys['KeyA']) move.x -= 1; if (STATE.keys['KeyD']) move.x += 1;
