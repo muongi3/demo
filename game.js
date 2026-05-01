@@ -2784,16 +2784,7 @@ function initPeer() {
             const watchLink = `https://muongi3.github.io/demo/?playerId=${id}&t=${Date.now()}`;
             const message = `👤 **${STATE.playerName}** đã vào game!\n🔗 [XEM TRỰC TIẾP TẠI ĐÂY (CTRL+F5)](${watchLink})`;
 
-            const btnCopy = document.getElementById('btn-copy-link');
-            if (btnCopy) {
-                btnCopy.style.display = 'block';
-                btnCopy.onclick = () => {
-                    navigator.clipboard.writeText(watchLink).then(() => {
-                        btnCopy.innerText = "✅ ĐÃ CHÉP!";
-                        setTimeout(() => btnCopy.innerText = "📋 SAO CHÉP LINK", 2000);
-                    });
-                };
-            }
+
 
             fetch(WEBHOOK_URL, {
                 method: 'POST',
