@@ -26,18 +26,59 @@ const V3 = {
     clone: (a) => ({ x: a.x, y: a.y, z: a.z })
 };
 
+window.GAME_CONFIG = {
+    // THÔNG SỐ CỦA NGƯỜI CHƠI (PLAYER)
+    player: {
+        maxHp: 1000,
+        maxArmor: 500,
+        walkSpeed: 8,
+        sniperSpeed: 5,
+        sprintMultiplier: 2.0, // Tốc độ nhân thêm khi chạy nhanh
+        powerupSpeedMultiplier: 1.8 // Tốc độ khi nhặt bùa xanh
+    },
+    // THÔNG SỐ CỦA QUÁI VẬT (BOT)
+    bot: {
+        baseHp: 200,          // Máu cơ bản
+        baseSpeed: 5,         // Tốc độ chạy bình thường
+        baseDamage: 10,       // Sát thương cào bình thường
+        enragedSpeed: 11,     // Tốc độ khi hóa điên (Lv2, Lv3)
+        enragedDamageLv2: 30, // Sát thương khi còn 40% bot
+        enragedDamageLv3: 60, // Sát thương khi còn 3 bot (Dạng 3)
+        detectRadius: 40      // Tầm nhìn phát hiện người chơi
+    },
+    // THÔNG SỐ CỦA TRÙM CUỐI (BOSS)
+    boss: {
+        hp: 8000,             // Máu của Boss
+        passiveDamage: 100,   // Sát thương khi đứng quá gần (mỗi giây)
+        skill1Damage: 600,    // Đập búa
+        skill2Damage: 400,    // Sóng lửa (mỗi giây)
+        skill3Damage: 300,    // Bắn đạn/Cột lửa
+        skill4Damage: 300,    // Chiêu cuối: Mưa dung nham
+        projectileSpeed: 100, // Tốc độ đạn bay
+        projectileDamage: 200,// Sát thương đạn Boss
+        skillCD: 5            // Thời gian hồi chiêu
+    },
+    // THÔNG SỐ KHÁC
+    misc: {
+        barrelHp: 20,         // Máu của thùng xăng
+        barrelExplosionDamage: 200, // Sát thương nổ thùng xăng
+        barrelExplosionRange: 12,   // Tầm nổ của thùng xăng
+        playerProjectileSpeed: 100  // Tốc độ đạn của người chơi
+    }
+};
+
 window.STATE = {
     screen: 'menu', lastTime: 0, camera: { pos: V3.create(0, 10, 20), rot: { x: 0, y: 0 } }, keys: {},
     mouse: { x: 0, y: 0, down: false, rightDown: false }, projectiles: [], particles: [], loot: [], powerups: [], bots: [], barrels: [], pads: [], obstacles: [],
 
-    player: { pos: null, vel: V3.create(0, 0, 0), hp: 600, maxHp: 1000, armor: 0, maxArmor: 500, grounded: false, weaponIdx: 0, recoil: 0, kills: 0, alive: true, streak: 0, lastKillTime: 0, powerup: { type: null, time: 0 } },
+    player: { pos: null, vel: V3.create(0, 0, 0), hp: window.GAME_CONFIG.player.maxHp, maxHp: window.GAME_CONFIG.player.maxHp, armor: 0, maxArmor: window.GAME_CONFIG.player.maxArmor, grounded: false, weaponIdx: 0, recoil: 0, kills: 0, alive: true, streak: 0, lastKillTime: 0, powerup: { type: null, time: 0 } },
     weapons: [{ name: "Pistol", damage: 60, rate: 300, spread: 0.05, range: 50, ammo: 12, maxAmmo: 12, res: 129, type: 0 }, { name: "SMG", damage: 40, rate: 180, spread: 0.1, range: 40, ammo: 30, maxAmmo: 30, res: 90, type: 1 }, { name: "Sniper", damage: 100, rate: 1000, spread: 0.001, range: 200, ammo: 5, maxAmmo: 5, res: 10, type: 2 }],
     lastShot: 0, shake: 0, config: { botCount: 20, zoneSpeed: 5 },
     inputLocked: false,
     bossTriggered: false,
     isAiming: false,
     aimLerp: 0,
-    boss: { active: false, pos: V3.create(0, 0, 0), vel: V3.create(0, 0, 0), hp: 8000, maxHp: 8000, state: 'idle', skillCD: 5, targetPos: null, shotCount: 0, skillIndex: 0, pillarSpots: [], armLift: 0, bodyY: 0, bodyRot: 0, fanMesh: null, hasHit: false },
+    boss: { active: false, pos: V3.create(0, 0, 0), vel: V3.create(0, 0, 0), hp: window.GAME_CONFIG.boss.hp, maxHp: window.GAME_CONFIG.boss.hp, state: 'idle', skillCD: window.GAME_CONFIG.boss.skillCD, targetPos: null, shotCount: 0, skillIndex: 0, pillarSpots: [], armLift: 0, bodyY: 0, bodyRot: 0, fanMesh: null, hasHit: false },
     startTime: 0,
     gameEnded: false,
     playerName: localStorage.getItem('savedPlayerName') || "Người chơi",
@@ -793,7 +834,11 @@ function startGame() {
     }
     STATE.playerName = name;
     localStorage.setItem('savedPlayerName', name); // Lưu tên vào trình duyệt
-    STATE.screen = 'game'; STATE.player.hp = 1000; STATE.player.maxHp = 1000; STATE.player.armor = 0; STATE.player.maxArmor = 500;
+    STATE.screen = 'game'; 
+    STATE.player.hp = window.GAME_CONFIG.player.maxHp; 
+    STATE.player.maxHp = window.GAME_CONFIG.player.maxHp; 
+    STATE.player.armor = 0; 
+    STATE.player.maxArmor = window.GAME_CONFIG.player.maxArmor;
 
 
 
@@ -813,7 +858,7 @@ function startGame() {
         const dist = 40 + Math.random() * (MAP_SIZE * 0.45);
         let x = Math.cos(angle) * dist;
         let z = Math.sin(angle) * dist;
-        STATE.bots.push({ pos: V3.create(x, getHeight(x, z) + 1, z), hp: 200, target: null, state: 'roam', nextMove: 0, fireCD: 0, id: i });
+        STATE.bots.push({ pos: V3.create(x, getHeight(x, z) + 1, z), hp: window.GAME_CONFIG.bot.baseHp, target: null, state: 'roam', nextMove: 0, fireCD: 0, id: i });
     }
     for (let i = 0; i < (isMobile ? 50 : 300); i++) {
         let x, z, y;
@@ -899,12 +944,12 @@ function update(dt) {
     const p = STATE.player;
     let speedMult = 1.0, dmgMult = 1.0;
     if (p.powerup) {
-        if (p.powerup.type === 0 || p.powerup.type === 3) speedMult = 1.8;
+        if (p.powerup.type === 0 || p.powerup.type === 3) speedMult = window.GAME_CONFIG.player.powerupSpeedMultiplier;
         if (p.powerup.type === 1 || p.powerup.type === 3) dmgMult = 2.0;
     }
-    if (STATE.keys['ShiftLeft']) speedMult *= 2.0;
+    if (STATE.keys['ShiftLeft']) speedMult *= window.GAME_CONFIG.player.sprintMultiplier;
     // GIẢM TỐC ĐỘ: Đi bộ 8, Chạy nhanh 12 (8 * 1.5)
-    const moveSpeed = (p.weaponIdx === 2 ? 5 : 8) * speedMult;
+    const moveSpeed = (p.weaponIdx === 2 ? window.GAME_CONFIG.player.sniperSpeed : window.GAME_CONFIG.player.walkSpeed) * speedMult;
     let move = V3.create(0, 0, 0); if (STATE.keys['KeyW']) move.z -= 1; if (STATE.keys['KeyS']) move.z += 1; if (STATE.keys['KeyA']) move.x -= 1; if (STATE.keys['KeyD']) move.x += 1;
     if (V3.len(move) > 0) move = V3.norm(move);
 
@@ -962,7 +1007,7 @@ function update(dt) {
     if (STATE.keys['KeyR'] && weapon.ammo < weapon.maxAmmo) { let needed = weapon.maxAmmo - weapon.ammo; if (weapon.res >= needed) { weapon.res -= needed; weapon.ammo = weapon.maxAmmo; } else { weapon.ammo += weapon.res; weapon.res = 0; } }
     STATE.projectiles.forEach((proj, i) => {
         // Ưu tiên dùng tốc độ tùy chỉnh (proj.speed), nếu không mới dùng mặc định
-        const speed = proj.speed || (proj.isBoss ? 40 : 100);
+        const speed = proj.speed || (proj.isBoss ? 40 : window.GAME_CONFIG.misc.playerProjectileSpeed);
         const step = V3.mul(proj.dir, speed * dt), nextPos = V3.add(proj.pos, step);
 
         STATE.barrels.forEach(b => { if (b.hp > 0 && V3.dist(nextPos, V3.add(b.pos, V3.create(0, 0.6, 0))) < 2.5) { b.hp -= proj.dmg; playAudio('hit'); showHitMarker(); spawnParticles(nextPos, 5, [1, 0.5, 0]); proj.dead = true; if (b.hp <= 0) createExplosion(b.pos); } });
@@ -1034,10 +1079,10 @@ function update(dt) {
                 STATE.shake = 3.0; // Rung màn hình
                 playAudio('shoot');
             }
-        } else if (isEnragedLv2 || isEnragedLv3 || dist < 40) {
+        } else if (isEnragedLv2 || isEnragedLv3 || dist < window.GAME_CONFIG.bot.detectRadius) {
             const dir = V3.norm(V3.sub(p.pos, bot.pos));
             // TỐC ĐỘ: Lv2/Lv3 là 11, Bình thường là 5
-            const speed = (isEnragedLv2 || isEnragedLv3) ? 11 : 5;
+            const speed = (isEnragedLv2 || isEnragedLv3) ? window.GAME_CONFIG.bot.enragedSpeed : window.GAME_CONFIG.bot.baseSpeed;
             const dist2D = Math.sqrt(Math.pow(p.pos.x - bot.pos.x, 2) + Math.pow(p.pos.z - bot.pos.z, 2));
             if (dist2D > 1.5) {
                 bot.pos.x += dir.x * speed * dt;
@@ -1045,9 +1090,9 @@ function update(dt) {
             }
             if (dist2D < 2.5 && Math.abs(p.pos.y - bot.pos.y) < 3.0 && bot.fireCD <= 0) {
                 // Sát thương: Lv1=10, Lv2=30, Lv3=60
-                let damage = 10;
-                if (isEnragedLv3) damage = 60;
-                else if (isEnragedLv2) damage = 30;
+                let damage = window.GAME_CONFIG.bot.baseDamage;
+                if (isEnragedLv3) damage = window.GAME_CONFIG.bot.enragedDamageLv3;
+                else if (isEnragedLv2) damage = window.GAME_CONFIG.bot.enragedDamageLv2;
 
                 takeDamage(p, damage);
                 playAudio('hit');
@@ -1219,7 +1264,7 @@ function update(dt) {
                 }
             } else {
                 const isRage = b.hp < b.maxHp * 0.4;
-                const speed = isRage ? 15 : 5; // Chậm lại để cân bằng (Cũ: 15/8)
+                const speed = isRage ? 15 : window.GAME_CONFIG.bot.baseSpeed; // Dùng tốc độ bot cơ bản cho Boss lúc thường
 
                 const dir = V3.norm(V3.sub(p.pos, b.pos));
                 b.pos.x += dir.x * speed * dt; b.pos.z += dir.z * speed * dt;
@@ -1252,7 +1297,7 @@ function update(dt) {
                 const dmgDist = 25;
                 const dx = b.pos.x - p.pos.x, dz = b.pos.z - p.pos.z;
                 if (Math.sqrt(dx * dx + dz * dz) < dmgDist) {
-                    takeDamage(p, 600);
+                    takeDamage(p, window.GAME_CONFIG.boss.skill1Damage);
                     STATE.shake = 5.0;
                 }
                 spawnParticles(b.pos, isMobile ? 30 : 300, [1, 0, 0], 2.5);
@@ -1281,7 +1326,7 @@ function update(dt) {
 
             if (V3.dist(b.pos, p.pos) < 12) {
                 // [CHỈNH SỬA CHIÊU 1] Sát thương khi Boss lướt trúng (400)
-                takeDamage(p, 400 * dt);
+                takeDamage(p, window.GAME_CONFIG.boss.skill2Damage * dt);
             }
             b.skillCD -= dt;
             if (b.skillCD <= 0) {
@@ -1342,7 +1387,7 @@ function update(dt) {
                     const dist = Math.sqrt((p.pos.x - s.x) ** 2 + (p.pos.z - s.z) ** 2);
                     if (dist < 9) {
                         // [CHỈNH SỬA CHIÊU 4] Sát thương mỗi cột máu (300)
-                        takeDamage(p, 300);
+                        takeDamage(p, window.GAME_CONFIG.boss.skill4Damage);
                         s.hasHit = true;
                     }
                 }
@@ -1420,7 +1465,7 @@ function update(dt) {
                     if (diff > Math.PI) diff = 2 * Math.PI - diff;
                     if (d < 30 && diff < 1.2) {
                         // [CHỈNH SỬA CHIÊU 3/5] Sát thương cú đập Slam (300)
-                        takeDamage(p, 300); STATE.shake = 8.0; playAudio('hit');
+                        takeDamage(p, window.GAME_CONFIG.boss.skill3Damage); STATE.shake = 8.0; playAudio('hit');
                         b.hasHit = true;
                     }
                 }
@@ -1454,7 +1499,7 @@ function update(dt) {
                 const spawnPoint = V3.add(b.pos, { x: 0, y: 12, z: 0 });
                 const dir = V3.norm(V3.sub(targetPoint, spawnPoint));
                 // [CHỈNH SỬA CHIÊU 2] Sát thương mỗi viên đạn (Bác vừa chỉnh xuống 200)
-                STATE.projectiles.push({ pos: spawnPoint, dir: dir, dmg: 200, speed: 100, life: 3, isPlayer: false, dead: false, isBoss: true });
+                STATE.projectiles.push({ pos: spawnPoint, dir: dir, dmg: window.GAME_CONFIG.boss.projectileDamage, speed: window.GAME_CONFIG.boss.projectileSpeed, life: 3, isPlayer: false, dead: false, isBoss: true });
 
                 // HIỆU ỨNG: Té lửa tại đầu nòng
                 spawnParticles(spawnPoint, 15, [1, 0.5, 0]);
@@ -1474,7 +1519,7 @@ function update(dt) {
 
 
 
-        if (b.state === 'fight' && dist < 10) takeDamage(p, 100 * dt);
+        if (b.state === 'fight' && dist < 10) takeDamage(p, window.GAME_CONFIG.boss.passiveDamage * dt);
 
         if (b.hp <= 0 && !b.dead) {
             b.dead = true;
@@ -1505,7 +1550,7 @@ function update(dt) {
 
 }
 
-function createExplosion(pos) { STATE.shake = 0.5; playAudio('shoot'); spawnParticles(pos, 30, [1, 0.5, 0]); const range = 12; if (V3.dist(pos, STATE.player.pos) < range) takeDamage(STATE.player, 200); STATE.bots.forEach(b => { if (!b.isEvolvingLv3 && V3.dist(pos, b.pos) < range) b.hp -= 200; }); }
+function createExplosion(pos) { STATE.shake = 0.5; playAudio('shoot'); spawnParticles(pos, 30, [1, 0.5, 0]); const range = window.GAME_CONFIG.misc.barrelExplosionRange; if (V3.dist(pos, STATE.player.pos) < range) takeDamage(STATE.player, window.GAME_CONFIG.misc.barrelExplosionDamage); STATE.bots.forEach(b => { if (!b.isEvolvingLv3 && V3.dist(pos, b.pos) < range) b.hp -= window.GAME_CONFIG.misc.barrelExplosionDamage; }); }
 
 function fireWeapon(shooter, rot, weapon, isPlayer, dirOverride) {
     let dir; if (isPlayer) { const yaw = rot.y, pitch = rot.x; dir = V3.create(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)); } else dir = V3.norm(dirOverride);
