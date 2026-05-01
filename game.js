@@ -1964,8 +1964,8 @@ function draw() {
     }
 
     // CHUYỂN ĐỔI KHÔNG KHÍ: Chiều tà (Bot) vs Kinh dị (Boss)
-    let fogCol = [0.6, 0.3, 0.2]; // Màu cam chiều tà mặc định
-    let bgCol = [0.7, 0.4, 0.3];  // Bầu trời buổi chiều
+    let fogCol = [0.85, 0.55, 0.45]; // Tăng mạnh độ sáng chiều tà
+    let bgCol = [0.95, 0.65, 0.55];  // Bầu trời buổi chiều sáng hơn
 
     if (STATE.boss && STATE.boss.active) {
         const dist = V3.dist(p.pos, STATE.boss.pos);
@@ -2289,8 +2289,8 @@ function drawMinimap(p, bots) {
     const ctx = document.getElementById('minimap').getContext('2d'), w = ctx.canvas.width, h = ctx.canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    // [YÊU CẦU] Tăng độ sáng minimap bằng cách thêm nền và viền rõ hơn
-    ctx.fillStyle = "rgba(40, 40, 40, 0.7)"; // Nền tối xám để nổi bật các điểm sáng
+    // [YÊU CẦU] Tăng độ sáng minimap mạnh hơn nữa
+    ctx.fillStyle = "rgba(100, 100, 100, 0.5)"; // Nền xám sáng trung tính
     ctx.fillRect(0, 0, w, h);
 
     // Tỉ lệ để bản đồ bao quát vừa đủ MAP_SIZE
