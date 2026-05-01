@@ -64,44 +64,41 @@ window.GAME_CONFIG = {
         // CHIÊU 1: LƯỚT (DASH) - Boss lao thẳng vào người chơi
         skill1: {
             damage: 400,      // Sát thương khi bị tông trúng.
-            prepareTime: 1.0, // [THỜI GIAN RẶN] Boss rung lắc trước khi phóng đi. Tăng -> Dễ né hơn.
-            activeTime: 0.8,  // Thời gian Boss lướt đi trên mặt đất.
+            prepareTime: 1.0, // Thời gian rặn trước khi lướt. Tăng -> Boss lướt chậm hơn.
+            activeTime: 0.8,  // Thời gian trong khi lướt.
             speed: 110,       // Tốc độ lướt. Tăng -> Boss lướt như tia chớp.
-            width: 8          // Độ rộng vùng sát thương của vệt lướt.
+            width: 8          // Độ rộng vùng sát thương. Tăng -> Khó né hơn.
         },
         // CHIÊU 2: ĐẠI BÁC (SHOOT) - Boss nhắm laser và bắn chuỗi đạn
         skill2: {
             damage: 200,      // Sát thương mỗi viên đạn.
-            prepareTime: 1.0, // [THỜI GIAN RẶN] Thời gian laser nhắm bắn trước khi xả đạn.
+            prepareTime: 1.0, // Thời gian laser nhắm bắn. Tăng -> Dễ né hơn.
             shotCount: 15,    // Số lượng đạn bắn ra mỗi đợt.
-            interval: 0.1,    // Thời gian giữa mỗi viên đạn (giây).
+            interval: 0.1,    // Thời gian giữa mỗi viên đạn. Giảm -> Đạn xả như mưa.
             speed: 100,       // Tốc độ bay của đạn.
         },
         // CHIÊU 3: NHẢY DẬM (JUMP/SLAM) - Boss nhảy lên và dậm mạnh xuống đất
         skill3: {
             damage: 600,      // Sát thương khi Boss dậm trúng.
-            prepareTime: 2.0, // [THỜI GIAN RẶN] Boss vung tay lấy đà trước khi nhảy.
-            recoverTime: 0.5, // [THỜI GIAN NGHỈ] Boss đứng im sau khi dậm đất xong.
+            prepareTime: 2.0, // Thời gian rặn trước khi nhảy.
             range: 25,        // Tầm nổ của cú dậm. Tăng -> Vùng ảnh hưởng rộng hơn.
-            jumpPower: 60,    // Độ cao cú nhảy (Lực bay).
-            gravity: 50       // Trọng lực kéo Boss xuống.
+            jumpPower: 45,    // Độ cao cú nhảy.
+            gravity: 50       // Trọng lực kéo Boss xuống. Tăng -> Boss rơi xuống nhanh hơn.
         },
         // CHIÊU 4: CỘT MÁU (CRIMSON PILLARS) - Triệu hồi các cột lửa từ dưới đất
         skill4: {
             damage: 300,      // Sát thương mỗi cột lửa.
-            prepareTime: 2.5, // [THỜI GIAN RẶN] Boss giơ tay triệu hồi vòng cảnh báo.
-            count: 20,        // Số lượng cột lửa triệu hồi.
+            prepareTime: 2.5, // Thời gian vòng đỏ hiện lên trước khi nổ. Tăng -> Dễ né.
+            count: 20,        // Số lượng cột lửa triệu hồi. Tăng -> Kín bản đồ.
             pillarRange: 9,   // Bán kính nổ của mỗi cột.
             pillarTimer: 2.0  // Thời gian cột nổ từ lúc hiện cảnh báo.
         },
         // CHIÊU 5: DỊCH CHUYỂN (TELEPORT STRIKE) - Boss chìm xuống đất và trồi lên đập
         skill5: {
             damage: 400,      // Sát thương cú đập khi trồi lên.
-            prepareTime: 2.0, // [THỜI GIAN RẶN 1] Boss từ từ chìm xuống đất.
-            activeTime: 3.0,  // [TỔNG THỜI GIAN] Boss ở dưới đất và trồi lên đập.
-            emergeTime: 0.5,  // [THỜI GIAN TRỒI] Thời gian để Boss nhô lên mặt đất.
-            strikeDelay: 1.5, // [THỜI GIAN RẶN 2] Thời gian gồng (rặn) sau khi nhô lên rồi mới đập.
-            range: 40         // Tầm đập của chiêu này.
+            prepareTime: 2.0, // Thời gian Boss chìm xuống đất.
+            activeTime: 3.0,  // Tổng thời gian chiêu thức (Boss biến mất).
+            range: 40         // Tầm đập của chiêu này. Tăng -> Rất khó né.
         }
     },
 
@@ -403,12 +400,12 @@ function genHouseMesh() {
 function genCarMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const bodyCol = [0.7, 0.1, 0.1];
+    const rustCol = [0.4, 0.2, 0.1];
     const darkMetal = [0.2, 0.2, 0.2];
-    const glassCol = [0.3, 0.3, 0.4];
+    const glassCol = [0.1, 0.1, 0.15];
 
-    push(getCube(bodyCol, 2.0, 0.8, 4.5, 0, 0.6, 0));
-    push(getCube(bodyCol, 1.8, 0.7, 2.2, 0, 1.35, -0.2));
+    push(getCube(rustCol, 2.0, 0.8, 4.5, 0, 0.6, 0));
+    push(getCube(rustCol, 1.8, 0.7, 2.2, 0, 1.35, -0.2));
     push(getCube(glassCol, 1.9, 0.6, 2.3, 0, 1.35, -0.2));
     push(getCube(darkMetal, 0.4, 0.6, 0.6, -1.0, 0.3, 1.5));
     push(getCube(darkMetal, 0.4, 0.6, 0.6, 1.0, 0.3, 1.5));
@@ -430,30 +427,54 @@ function genCharMesh(color, isHorror = false, isEnraged = false, isFinal = false
         // --- BOT KINH DỊ (PALE CREEPER) ---
         const pale = [0.85, 0.85, 0.85];
         const blood = [0.4, 0, 0];
+        const brightBlood = [0.7, 0, 0];
+
         // Thân dài, gầy guộc
         push(getCube(pale, 0.4, 1.2, 0.2, 0, 0.6, 0));
-        // Thêm xương sườn nhô ra
-        for (let i = 0; i < 3; i++) {
-            push(getCube(pale, 0.45, 0.05, 0.25, 0, 0.8 + i * 0.15, 0.1));
+
+        // Vết máu trên thân (MỚI - Lv1 đã có máu)
+        push(getCube(blood, 0.15, 0.4, 0.05, 0.05, 0.6, 0.11)); // Vết máu loang lổ trên ngực
+        if (isEnraged || isFinal) {
+            push(getCube(blood, 0.25, 0.6, 0.06, -0.05, 0.5, 0.11)); // Thêm vết máu lớn hơn cho Lv2, Lv3
         }
 
-        // Đầu biến dạng
+        // Thêm xương sườn nhô ra (kinh dị hơn)
+        for (let i = 0; i < 3; i++) {
+            const ribCol = isFinal ? blood : pale; // Lv3 xương sườn đẫm máu
+            push(getCube(ribCol, 0.45, 0.05, 0.25, 0, 0.8 + i * 0.15, 0.1));
+        }
+
+        // Đầu biến dạng to hơn chút
         push(getCube(pale, 0.4, 0.5, 0.4, 0, 1.35, 0));
-        // Mắt đỏ rực
+
+        // Vết máu trên đầu (MỚI)
+        push(getCube(blood, 0.1, 0.2, 0.41, 0.15, 1.45, 0)); // Máu chảy từ đỉnh đầu xuống
+        if (isFinal) {
+            push(getCube(blood, 0.42, 0.1, 0.42, 0, 1.58, 0)); // Lv3 cả đầu đẫm máu
+        }
+
+        // Mắt đỏ rực to phát sáng
         push(getCube([1, 0, 0], 0.15, 0.15, 0.05, -0.15, 1.45, 0.21));
         push(getCube([1, 0, 0], 0.15, 0.15, 0.05, 0.15, 1.45, 0.21));
 
-        // Miệng
+        // Miệng máu đáng sợ
         push(getCube([0, 0, 0], 0.25, 0.15, 0.05, 0, 1.25, 0.21));
-        push(getCube(blood, 0.2, 0.05, 0.05, 0, 1.15, 0.21));
+        push(getCube(brightBlood, 0.3, 0.08, 0.05, 0, 1.18, 0.21)); // Máu tươi từ miệng
 
         if (isEnraged || isFinal) {
-            // CUỒNG BẠO: 2 tay giơ thẳng lên trước
-            push(getCube(pale, 0.1, 0.1, 1.0, -0.3, 1.1, 0.4));
-            push(getCube(pale, 0.1, 0.1, 1.0, 0.3, 1.1, 0.4));
-            // Móng vuốt
-            push(getCube(blood, 0.05, 0.05, 0.3, -0.3, 1.1, 0.9));
-            push(getCube(blood, 0.05, 0.05, 0.3, 0.3, 1.1, 0.9));
+            // CUỒNG BẠO: 2 tay giơ thẳng lên trước (Z hướng tới người chơi)
+            const armCol = isFinal ? [0.6, 0, 0] : pale;
+            push(getCube(armCol, 0.1, 0.1, 1.0, -0.3, 1.1, 0.4));
+            push(getCube(armCol, 0.1, 0.1, 1.0, 0.3, 1.1, 0.4));
+
+            // Máu dính trên tay (MỚI)
+            push(getCube(blood, 0.12, 0.12, 0.6, -0.3, 1.1, 0.5));
+            push(getCube(blood, 0.12, 0.12, 0.6, 0.3, 1.1, 0.5));
+
+            push(getCube(blood, 0.2, 0.8, 0.2, 0, 0.8, 0.1)); // Dính máu trên ngực
+            // Móng vuốt chĩa về trước
+            push(getCube(brightBlood, 0.05, 0.05, 0.4, -0.3, 1.1, 1.0)); // Móng vuốt đỏ rực dài hơn
+            push(getCube(brightBlood, 0.05, 0.05, 0.4, 0.3, 1.1, 1.0));
         } else {
             // THƯỜNG: Tay dài chạm đất
             push(getCube(pale, 0.1, 1.0, 0.1, -0.3, 0.5, 0));
@@ -845,8 +866,7 @@ function genTerrain() {
             const x = offset + i * step, z = offset + j * step, x1 = x + step, z1 = z + step;
             const y00 = getHeight(x, z), y10 = getHeight(x1, z), y01 = getHeight(x, z1), y11 = getHeight(x1, z1);
             // Màu đất bùn, máu khô và đá tối
-            // Màu đất: Xanh cỏ và nâu đất tự nhiên
-            const c = y00 < -8 ? [0.1, 0.15, 0.2] : (y00 < 5 ? [0.1, 0.25, 0.1] : [0.15, 0.12, 0.1]);
+            const c = y00 < -8 ? [0.15, 0.05, 0.05] : (y00 < 5 ? [0.12, 0.08, 0.08] : [0.08, 0.08, 0.08]);
             V.push(x, y00, z, x, y01, z1, x1, y10, z, x1, y10, z, x, y01, z1, x1, y11, z1);
             for (let k = 0; k < 6; k++) { N.push(0, 1, 0); C.push(...c); }
         }
@@ -1335,7 +1355,7 @@ function update(dt) {
                 }
             } else {
                 const isRage = b.hp < b.maxHp * 0.4;
-                const speed = isRage ? 15 : window.GAME_CONFIG.bot.baseSpeed; // Dùng tốc độ bot cơ bản cho Boss lúc thường
+                const speed = isRage ? 15 : window.GAME_CONFIG.bot.speedLv1; // Sử dụng tốc độ cấp 1 cho Boss lúc thường
 
                 const dir = V3.norm(V3.sub(p.pos, b.pos));
                 b.pos.x += dir.x * speed * dt; b.pos.z += dir.z * speed * dt;
@@ -1377,7 +1397,7 @@ function update(dt) {
             b.vel.y -= window.GAME_CONFIG.boss.skill3.gravity * dt; b.pos.x += b.vel.x * dt; b.pos.z += b.vel.z * dt; b.pos.y += b.vel.y * dt;
             if (b.pos.y <= getHeight(b.pos.x, b.pos.z)) {
                 b.pos.y = getHeight(b.pos.x, b.pos.z);
-                b.state = 'recover'; b.skillCD = window.GAME_CONFIG.boss.skill3.recoverTime;
+                b.state = 'recover'; b.skillCD = 0.5;
                 b.bodyRot = 0.6; b.armLift = -0.2; // Chạm đất tay chống đất phía trước (-0.2), người hơi cúi (0.6)
                 const dmgDist = window.GAME_CONFIG.boss.skill3.range;
                 const dx = b.pos.x - p.pos.x, dz = b.pos.z - p.pos.z;
@@ -1503,15 +1523,18 @@ function update(dt) {
                 b.fanMesh = genTerrainFanMesh(b.fanMeshParams.x, b.fanMeshParams.z, b.fanMeshParams.ang, b.fanMeshParams.arc, b.fanMeshParams.r);
             }
         } else if (b.state === 'teleport_strike') {
-            const config = window.GAME_CONFIG.boss.skill5;
-            const emergeThreshold = config.activeTime - config.emergeTime;
-            const strikeThreshold = emergeThreshold - config.strikeDelay;
+            // --- THỜI GIAN CHIÊU 5 (Đếm ngược từ 3.0 về 0) ---
 
-            if (b.skillCD > emergeThreshold) {
+            // 1. THỜI GIAN TRỒI LÊN: Khi skillCD giảm từ 3.0 xuống 2.5 (mất 0.5 giây)
+            if (b.skillCD > 2.5) {
                 b.bodyY += 40 * dt; if (b.bodyY > 0) b.bodyY = 0;
-                b.armLift += (-1.8 - b.armLift) * 0.1;
-            } else if (b.skillCD > strikeThreshold) {
+                b.armLift += (-1.8 - b.armLift) * 0.1; // Tay giơ cao chuẩn bị đập
+
+                // 2. THỜI GIAN GỒNG CHỜ: Khi skillCD từ 2.5 xuống 1.0 (rặn trong 1.5 giây)
+            } else if (b.skillCD > 1.0) {
                 b.armLift = -1.8;
+
+                // 3. VUNG TAY ĐẬP XUỐNG: Khi skillCD < 1.0
             } else {
                 b.armLift += (-0.2 - b.armLift) * 0.4; // Tay phải đập thẳng xuống chạm đất phía trước
                 b.bodyRot += (0.6 - b.bodyRot) * 0.2; // Hơi cúi người thôi
@@ -1525,8 +1548,8 @@ function update(dt) {
                     spawnParticles({ x: handX, y: b.pos.y + 10, z: handZ }, 5, [1, 0, 0], 1.5);
                 }
 
-                // 4. THỜI ĐIỂM GÂY SÁT THƯƠNG: Khoảng 0.15s sau khi bắt đầu đập
-                if (b.skillCD < (strikeThreshold - 0.15) && !b.hasHit) {
+                // 4. THỜI ĐIỂM GÂY SÁT THƯƠNG: Khoảng 0.15s sau khi bắt đầu đập (1.0 - 0.15 = 0.85)
+                if (b.skillCD < 0.85 && !b.hasHit) {
                     // Hiệu ứng đất gãy, vỡ vụn tại vị trí tay đập
                     spawnParticles({ x: handX, y: getHeight(handX, handZ), z: handZ }, 100, [0.8, 0.4, 0.1], 3.0); // Bụi đất cam
                     spawnParticles({ x: handX, y: getHeight(handX, handZ), z: handZ }, 150, [0.2, 0.2, 0.2], 2.0); // Đá vỡ vụn xám
@@ -1986,10 +2009,9 @@ function draw() {
         const dist = V3.dist(p.pos, STATE.boss.pos);
         const intensity = Math.max(0, 1 - dist / 50);
         // Bầu trời máu nhấp nháy u ám (Hell Vibe)
-        // Bầu trời đêm u ám khi đấu Boss
-        const skyPulse = 0.02 + Math.sin(Date.now() * 0.001) * 0.02;
-        fogCol = [0.1 + intensity * 0.2, 0.1, 0.15]; 
-        bgCol = [0.05 + skyPulse, 0.05, 0.1];         
+        const skyPulse = 0.05 + Math.sin(Date.now() * 0.0015) * 0.04;
+        fogCol = [0.6 + intensity * 0.3, 0.2, 0.2]; // Tăng mạnh độ sáng sương mù
+        bgCol = [0.4 + skyPulse, 0.1, 0.1];         // Tăng mạnh độ sáng bầu trời
         // CSS filter: Trả lại độ tối u ám cũ
         if (!isMobile) document.body.style.filter = intensity > 0.4 ? `contrast(${140 + intensity * 60}%) brightness(${0.7 - intensity * 0.25})` : 'brightness(0.7) contrast(1.2)';
         if (!isMobile && intensity > 0.6) STATE.shake += intensity * 0.2;
@@ -2187,9 +2209,8 @@ function draw() {
             else if (b.state === 'teleport_strike') {
                 if (side === 1) { // Tay phải
                     armColor = [2.0, 0, 0];
-                    const strikeThreshold = window.GAME_CONFIG.boss.skill5.activeTime - window.GAME_CONFIG.boss.skill5.emergeTime - window.GAME_CONFIG.boss.skill5.strikeDelay;
-                    armScale = b.skillCD > strikeThreshold ? 1.3 : 1.8;
-                    lift = b.armLift; // Sử dụng giá trị b.armLift từ AI (mượt màng)
+                    armScale = b.skillCD > 1.0 ? 1.3 : 1.8;
+                    lift = b.armLift; // Sử dụng giá trị b.armLift từ AI (mượt mà)
                 } else { // Tay trái hạ xuống tự nhiên
                     lift = 0.5; // Hơi đưa ra sau lưng
                 }
@@ -2201,7 +2222,7 @@ function draw() {
             let mArm = M4.translation(b.pos.x, b.pos.y + b.bodyY, b.pos.z);
             mArm = M4.multiply(mArm, M4.rotationY(b.rotY || ang));
             mArm = M4.multiply(mArm, M4.rotationX(b.bodyRot)); // Thân gập, vai gập theo
-            mArm = M4.multiply(mArm, M4.translation(side * 3.5, 16, 0)); // Gắn chết vào khớp vai (Y=16, X=±3.5, Z=0)
+            mArm = M4.multiply(mArm, M4.translation(side * 3.5, 16, forward)); // Gắn chết vào khớp vai (có hỗ trợ vươn tay forward)
             mArm = M4.multiply(mArm, M4.rotationX(lift)); // Cử động cánh tay từ khớp vai
             mArm = M4.multiply(mArm, M4.scaling(armScale, armScale, armScale)); // Phóng to cánh tay từ khớp
 
