@@ -16,6 +16,18 @@ const V3 = {
     clone: (a) => ({ x: a.x, y: a.y, z: a.z })
 };
 
+// Hệ thống Debug cho Mobile
+const debug = (msg) => {
+    console.log(msg);
+    const consoleEl = document.getElementById('debug-console');
+    if (consoleEl) {
+        consoleEl.style.display = 'block';
+        consoleEl.innerHTML += msg + '<br>';
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+};
+window.onerror = (msg, url, line) => debug(`❌ LỖI: ${msg} tại ${line}`);
+
 const M4 = {
     identity: () => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]),
     perspective: (fovy, aspect, near, far) => {
@@ -58,21 +70,25 @@ let gl;
 window.addEventListener('load', () => {
     gl = document.getElementById('glcanvas').getContext('webgl2');
     if (!gl) {
+        debug("❌ WebGL2 KHÔNG HỖ TRỢ!");
         alert("Thiết bị của bác không hỗ trợ WebGL2. Vui lòng dùng trình duyệt khác!");
         return;
     }
+    debug("✅ WebGL2 OK");
     // Cập nhật kích thước canvas ngay khi load
     gl.canvas.width = window.innerWidth;
     gl.canvas.height = window.innerHeight;
-    initGraphics(); // KHỞI TẠO SHADER/PROGRAM TRƯỚC
-    initAssets();   // SAU ĐÓ MỚI TẠO MESH
-    console.log("Game initialized successfully!");
+    debug("🎨 Khởi tạo Graphics...");
+    initGraphics(); 
+    debug("📦 Khởi tạo Assets...");
+    initAssets();   
+    debug("🚀 Game initialized successfully!");
 
     // KIỂM TRA LINK KHÁN GIẢ NGAY SAU KHI ĐỒ HỌA SẴN SÀNG
     const urlParams = new URLSearchParams(window.location.search);
     const watchId = urlParams.get('playerId') || urlParams.get('spectate') || urlParams.get('watch');
     if (watchId) {
-        console.log("Found spectator ID in URL:", watchId);
+        debug("🔍 Tìm thấy ID khán giả: " + watchId);
         startLiveView(watchId);
     }
 });
@@ -2843,10 +2859,12 @@ function startLiveView(targetId) {
     }
 
     const connectToPlayer = () => {
+        debug("🔗 Đang kết nối tới: " + targetId);
         console.log("Attempting connection to:", targetId);
         const conn = STATE.peer.connect(targetId);
         
         conn.on('open', () => {
+            debug("🟢 Kết nối THÀNH CÔNG!");
             console.log("Connection opened!");
             STATE.isConnected = true; 
             STATE.screen = 'game'; 

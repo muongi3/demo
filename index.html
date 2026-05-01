@@ -28,7 +28,8 @@
     <!-- Cảnh báo khán giả -->
     <div id="spectator-warning" style="display: none; position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px; border-radius: 20px; z-index: 1000; font-family: 'Outfit', sans-serif; font-weight: bold; border: 2px solid #00ff00; text-align: center; box-shadow: 0 0 10px #00ff00;">🔴 ĐANG XEM TRỰC TIẾP...</div>
 
-    <!-- WebGL Canvas -->
+    <div id="spectator-warning">📡 ĐANG KẾT NỐI...</div>
+    <div id="debug-console" style="position:fixed; bottom:0; left:0; width:100%; max-height:100px; background:rgba(0,0,0,0.7); color:#0f0; font-size:10px; font-family:monospace; pointer-events:none; z-index:9999; overflow-y:auto; padding:5px; line-height:1.2; display:none;"></div>
     <canvas id="glcanvas"></canvas>
 
     <!-- Damage Overlay -->
@@ -290,7 +291,7 @@
     <!-- PeerJS for Live View -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <!-- Thêm ?v=3 để bắt trình duyệt tải lại file JS mới -->
-    <script src="game.js?v=4"></script>
+    <script src="game.js?v=5"></script>
 
     <!-- OIIA CAT Assets -->
     <img id="hakariphonk-cat" src="hakariphonk.png" alt="hakariphonk cat">
