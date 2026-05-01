@@ -56,7 +56,6 @@ window.debug = (msg) => {
     console.log(msg);
     const consoleEl = document.getElementById('debug-console');
     if (consoleEl) {
-        consoleEl.style.display = 'block';
         consoleEl.innerHTML += msg + '<br>';
         consoleEl.scrollTop = consoleEl.scrollHeight;
     }

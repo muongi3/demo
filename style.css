@@ -415,6 +415,11 @@ canvas {
     100% { opacity: 1; transform: scale(1.5); }
 }
 
+/* --- UI CLEANUP v18.3 --- */
+#spectator-warning, #debug-console {
+    display: none !important;
+}
+
 #boss-msg {
     color: #ff3300;
     font-size: 48px;
