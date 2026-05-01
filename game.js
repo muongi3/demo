@@ -1408,7 +1408,8 @@ function update(dt) {
 
         if (b.state === 'fight' && dist < 10) takeDamage(p, 100 * dt);
 
-        if (b.hp <= 0) {
+        if (b.hp <= 0 && !b.dead) {
+            b.dead = true;
             b.active = false;
             // DỌN DẸP MESH KHI BOSS CHẾT
             if (b.indicatorMesh) { deleteMesh(b.indicatorMesh); b.indicatorMesh = null; }
@@ -1421,7 +1422,9 @@ function update(dt) {
             document.getElementById('boss-hp-container').style.display = 'none';
             spawnOiiaCat(); playBossSound(); showClickAnywhere(2000);
         }
-        document.getElementById('boss-hp-fill').style.width = (b.hp / b.maxHp) * 100 + '%';
+        if (b.active) {
+            document.getElementById('boss-hp-fill').style.width = (b.hp / b.maxHp) * 100 + '%';
+        }
     }
 
     // Xóa vòng lặp đạn bị thừa
@@ -2409,12 +2412,10 @@ window.addEventListener('load', () => {
 });
 
 // --- BỘ ĐIỀU KHIỂN MOBILE (TOUCH CONTROLS) & TỐI ƯU ---
-// --- CẤU HÌNH SỐ LƯỢNG BOT ---
-const savedBotCount = localStorage.getItem('botCount');
-if (savedBotCount) {
-    STATE.config.botCount = parseInt(savedBotCount);
+if (isMobile) {
+    STATE.config.botCount = 15;
 } else {
-    STATE.config.botCount = isMobile ? 15 : 25;
+    STATE.config.botCount = 25;
 }
 
 let joyActive = false, joyCenter = { x: 0, y: 0 };
@@ -2431,22 +2432,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     if (btnCloseGuide && guideModal) {
         btnCloseGuide.onclick = () => guideModal.classList.add('hidden');
-    }
-
-    // --- XỬ LÝ THANH CHỈNH BOT ---
-    const botSlider = document.getElementById('bot-count-slider');
-    const botVal = document.getElementById('bot-count-val');
-    if (botSlider && botVal) {
-        // Cập nhật giá trị hiển thị ban đầu
-        botSlider.value = STATE.config.botCount;
-        botVal.innerText = STATE.config.botCount;
-
-        botSlider.addEventListener('input', (e) => {
-            const val = e.target.value;
-            botVal.innerText = val;
-            STATE.config.botCount = parseInt(val);
-            localStorage.setItem('botCount', val);
-        });
     }
 
     // --- XỬ LÝ DISCORD ---
