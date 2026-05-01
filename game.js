@@ -2611,9 +2611,58 @@ window.addEventListener('DOMContentLoaded', () => {
 
                     const cdx = Math.max(-150, Math.min(150, dx));
                     const cdy = Math.max(-150, Math.min(150, dy));
-
-                                    STATE.camera.rot.x = Math.max(-1.5, Math.min(1.5, STATE.camera.rot.x));
+                    STATE.camera.rot.y += cdx * 0.005 * (window.aimSensitivity || 1.0);
+                    STATE.camera.rot.x -= cdy * 0.005 * (window.aimSensitivity || 1.0);
+                    STATE.camera.rot.x = Math.max(-1.5, Math.min(1.5, STATE.camera.rot.x));
                     STATE.camera.rot.y = ((STATE.camera.rot.y + Math.PI) % (Math.PI * 2) + (Math.PI * 2)) % (Math.PI * 2) - Math.PI;
+                }
+            }
+        }, { passive: false });
+
+        aimZone.addEventListener('touchend', e => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === aimTouchId) aimTouchId = null;
+            }
+        }, { passive: false });
+    }
+
+    // Các Nút Hành động
+    window.isEditingHUD = false;
+    const btnShoot = document.getElementById('btn-shoot');
+    let shootTouchId = null;
+    let lastShootPos = { x: 0, y: 0 };
+
+    if (btnShoot) {
+        const onShootStart = e => {
+            if (window.isEditingHUD) return;
+            if (e.type === 'touchstart') e.preventDefault();
+            STATE.mouse.down = true;
+            btnShoot.classList.add('pressed');
+            const t = e.changedTouches ? e.changedTouches[0] : e;
+            shootTouchId = e.changedTouches ? t.identifier : 'mouse';
+            lastShootPos = { x: t.clientX, y: t.clientY };
+        };
+        btnShoot.addEventListener('touchstart', onShootStart);
+        btnShoot.addEventListener('mousedown', onShootStart);
+
+        const onShootMove = e => {
+            if (window.isEditingHUD || (!shootTouchId)) return;
+            if (shootTouchId === 'mouse') return;
+            const touches = e.changedTouches ? e.changedTouches : [e];
+            for (let i = 0; i < touches.length; i++) {
+                const t = touches[i];
+                const id = e.changedTouches ? t.identifier : 'mouse';
+                if (id === shootTouchId) {
+                    const dx = t.clientX - lastShootPos.x;
+                    const dy = t.clientY - lastShootPos.y;
+                    lastShootPos.x = t.clientX;
+                    lastShootPos.y = t.clientY;
+                    const cdx = Math.max(-100, Math.min(100, dx));
+                    const cdy = Math.max(-100, Math.min(100, dy));
+                    STATE.camera.rot.y += cdx * 0.005 * (window.aimSensitivity || 1.0);
+                    STATE.camera.rot.x -= cdy * 0.005 * (window.aimSensitivity || 1.0);
+                    STATE.camera.rot.x = Math.max(-1.5, Math.min(1.5, STATE.camera.rot.x));
                 }
             }
         };
