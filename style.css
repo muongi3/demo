@@ -9,10 +9,14 @@
 
 body {
     margin: 0;
+    width: 100%;
+    height: 100%;
+    position: fixed;
     overflow: hidden;
     background: #050505;
     font-family: 'Outfit', sans-serif;
     user-select: none;
+    touch-action: none;
     color: #fff;
 }
 
@@ -752,24 +756,29 @@ canvas {
 
 #mobile-weapons {
     position: absolute;
-    top: 75px;
-    right: 10px;
+    top: calc(10px + env(safe-area-inset-top));
+    right: calc(10px + env(safe-area-inset-right));
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    gap: 8px;
     pointer-events: auto;
     z-index: 2000;
 }
 
 .weapon-btn {
-    background: rgba(0, 0, 0, 0.5);
-    color: rgba(255, 255, 255, 0.7);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
-    padding: 5px 8px;
-    font-size: 10px;
-    font-weight: bold;
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.6);
+    color: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    width: 60px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
 }
 
 .weapon-btn.active {
@@ -781,10 +790,10 @@ canvas {
 
 .action-buttons {
     position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 200px;
-    height: 250px;
+    bottom: env(safe-area-inset-bottom);
+    right: env(safe-area-inset-right);
+    width: 280px;
+    height: 280px;
     pointer-events: none;
 }
 
@@ -792,65 +801,60 @@ canvas {
     position: absolute;
     pointer-events: auto;
     border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.8);
-    font-weight: bold;
+    border: 3px solid rgba(255, 255, 255, 0.7);
+    font-weight: 900;
     color: white;
-    box-shadow: 0 0 15px rgba(0,0,0,0.5);
-    backdrop-filter: blur(5px);
-    transform: scale(var(--btn-scale, 1.0));
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s, background 0.1s;
 }
 
 #btn-shoot {
-    width: 50px;
-    height: 50px;
-    bottom: 20px;
-    right: 60px;
-    background: rgba(255, 50, 50, 0.6);
-    font-size: 10px;
-}
-#btn-shoot:active, #btn-shoot.pressed {
-    background: rgba(255, 50, 50, 0.9);
-    transform: scale(calc(var(--btn-scale, 1.0) * 0.9));
+    width: 85px;
+    height: 85px;
+    bottom: 40px;
+    right: 80px;
+    background: rgba(255, 50, 50, 0.5);
+    font-size: 14px;
+    border-width: 4px;
+    box-shadow: 0 0 20px rgba(255, 50, 50, 0.4);
 }
 
 #btn-jump {
-    width: 40px;
-    height: 40px;
-    bottom: 80px;
+    width: 65px;
+    height: 65px;
+    bottom: 120px;
     right: 15px;
-    background: rgba(255, 204, 0, 0.6);
-    font-size: 9px;
-}
-#btn-jump:active {
-    background: rgba(255, 204, 0, 0.9);
-    transform: scale(calc(var(--btn-scale, 1.0) * 0.9));
+    background: rgba(255, 204, 0, 0.5);
+    font-size: 12px;
 }
 
 #btn-aim {
-    width: 40px;
-    height: 40px;
-    bottom: 100px;
-    right: 90px;
-    background: rgba(0, 150, 255, 0.6);
-    font-size: 9px;
-}
-#btn-aim:active, #btn-aim.pressed {
-    background: rgba(0, 150, 255, 0.9);
-    transform: scale(calc(var(--btn-scale, 1.0) * 0.9));
+    width: 65px;
+    height: 65px;
+    bottom: 150px;
+    right: 100px;
+    background: rgba(0, 150, 255, 0.5);
+    font-size: 12px;
 }
 
 #btn-reload {
-    width: 35px;
-    height: 35px;
-    bottom: 25px;
-    right: 140px;
-    background: rgba(150, 150, 150, 0.6);
-    font-size: 8px;
+    width: 65px;
+    height: 65px;
+    bottom: 30px;
+    right: 180px;
+    background: rgba(200, 200, 200, 0.5);
+    font-size: 12px;
 }
-#btn-reload:active, #btn-reload.pressed {
-    background: rgba(150, 150, 150, 0.9);
-    transform: scale(calc(var(--btn-scale, 1.0) * 0.9));
-}
+
+#btn-shoot:active, #btn-shoot.pressed { background: rgba(255, 50, 50, 0.9); transform: scale(0.92); }
+#btn-jump:active { background: rgba(255, 204, 0, 0.9); transform: scale(0.92); }
+#btn-aim:active, #btn-aim.pressed { background: rgba(0, 150, 255, 0.9); transform: scale(0.92); }
+#btn-reload:active, #btn-reload.pressed { background: rgba(255, 255, 255, 0.9); color: black; transform: scale(0.92); }
+
 
 /* --- PORTRAIT WARNING (YÊU CẦU XOAY NGANG) --- */
 #portrait-warning {
