@@ -900,6 +900,7 @@ function startGame() {
 
 
     STATE.startTime = Date.now(); STATE.gameEnded = false;
+    sendJoinToDiscord();
 
 
     STATE.player.pos = V3.create(0, getHeight(0, 0) + 100, 0); STATE.player.vel = V3.create(0, -1, 0); STATE.player.alive = true; STATE.player.kills = 0; STATE.player.streak = 0; STATE.player.damageFlash = 0;
@@ -1721,11 +1722,50 @@ function endGame(win) {
     document.getElementById('end-stats').innerText = `Kills: ${STATE.player.kills} | Thời gian: ${duration}s`;
 }
 
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1317517173822263387/a_E-57T078uO3fM26T6zZk5zGvYxH6X1X3v6Z3v6Z3v6Z3v6Z3v6Z3v6Z3v6Z3v6";
+
+function sendJoinToDiscord() {
+    const time = new Date().toLocaleTimeString('vi-VN');
+    const device = isMobile ? "Mobile" : "PC";
+    const message = [
+        `🚀 **NGƯỜI CHƠI VÀO GAME**`,
+        `━━━━━━━━━━━━━━━`,
+        `👤 Player: **${STATE.playerName}**`,
+        `📱 Device: \`${device}\``,
+        `⏰ Time: \`${time}\``,
+        `━━━━━━━━━━━━━━━`
+    ].join('\n');
+    fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: message }),
+        keepalive: true
+    }).catch(() => { });
+}
+
+function sendExitToDiscord(reason) {
+    if (STATE.hasExited) return;
+    const time = new Date().toLocaleTimeString('vi-VN');
+    const message = `📡 **NGƯỜI CHƠI THOÁT GAME**\n━━━━━━━━━━━━━━━\n👤 Player: **${STATE.playerName}**\n⏰ Time: \`${time}\` \n🚪 Reason: \`${reason}\`\n━━━━━━━━━━━━━━━`;
+    fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: message }),
+        keepalive: true
+    }).catch(() => { });
+}
+
+function handlePlayerExit(reason) {
+    if (STATE.hasExited) return;
+    STATE.hasExited = true;
+    sendExitToDiscord(reason);
+}
+
 function finishGameAndSendToDiscord() {
     const s = STATE.finalStats;
     if (!s) { location.reload(); return; }
+    STATE.hasExited = true; // Đánh dấu đã thoát để không gửi thông báo thoát nữa
 
-    const WEBHOOK_URL = "https://discord.com/api/webhooks/1317517173822263387/a_E-57T078uO3fM26T6zZk5zGvYxH6X1X3v6Z3v6Z3v6Z3v6Z3v6Z3v6Z3v6Z3v6"; // URL từ spectator.js cũ
     const resultLabel = s.win ? "🏆 CHIẾN THẮNG" : "💀 THẤT BẠI";
 
     fetch(WEBHOOK_URL, {
@@ -1736,6 +1776,22 @@ function finishGameAndSendToDiscord() {
         })
     }).finally(() => location.reload());
 }
+
+// --- EVENT LISTENERS (DISCORD) ---
+window.addEventListener('beforeunload', () => handlePlayerExit('tab closed / refreshed'));
+window.addEventListener('pagehide', () => handlePlayerExit('page hidden'));
+window.addEventListener('offline', () => handlePlayerExit('lost connection'));
+
+let backgroundExitTimer = null;
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        backgroundExitTimer = setTimeout(() => {
+            handlePlayerExit('app backgrounded (10s)');
+        }, 10000);
+    } else {
+        if (backgroundExitTimer) clearTimeout(backgroundExitTimer);
+    }
+});
 
 
 document.addEventListener('DOMContentLoaded', () => {
