@@ -592,10 +592,13 @@ function genSniperMesh() {
 function genCannonMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const gray = [0.2, 0.2, 0.2], orange = [1, 0.4, 0];
-    push(getCube(gray, 0.35, 0.35, 1.4, 0, 0, 0)); // Thân đại bác
-    push(getCube(orange, 0.45, 0.45, 0.1, 0, 0, 0.7)); // Đầu nòng lửa
-    push(getCube(gray, 0.3, 0.5, 0.3, 0, -0.3, -0.3)); // Tay cầm
+    const gray = [0.08, 0.08, 0.08], cyan = [0, 0.9, 1], orange = [1, 0.4, 0];
+    push(getCube(gray, 0.4, 0.4, 1.4, 0, 0, 0)); // Sleek Black Body
+    push(getCube(cyan, 0.42, 0.05, 1.0, 0, 0.2, 0)); // Glowing Top Neon
+    push(getCube(cyan, 0.05, 0.42, 1.0, 0.2, 0, 0)); // Glowing Side Neon L
+    push(getCube(cyan, 0.05, 0.42, 1.0, -0.2, 0, 0)); // Glowing Side Neon R
+    push(getCube(orange, 0.45, 0.45, 0.1, 0, 0, 0.7)); // Energy Muzzle
+    push(getCube(gray, 0.1, 0.5, 0.2, 0, -0.3, -0.3)); // Grip
     return createMesh(V, N, C);
 }
 
@@ -1332,7 +1335,12 @@ function update(dt) {
     // Cập nhật hạt (Particles)
     STATE.particles.forEach(p => {
         p.pos.x += p.vel.x * dt; p.pos.y += p.vel.y * dt; p.pos.z += p.vel.z * dt;
-        p.vel.y -= 20 * dt; // Trọng lực cho hạt
+        if (p.type === 'smoke') {
+            p.vel.y += 10 * dt; // Khói bay lên
+            p.vel.x *= 0.9; p.vel.z *= 0.9;
+        } else {
+            p.vel.y -= 20 * dt; // Trọng lực lửa
+        }
         p.life -= dt;
     });
     STATE.particles = STATE.particles.filter(p => p.life > 0);
@@ -1697,7 +1705,7 @@ function update(dt) {
 
 
 
-        if (b.state === 'fight' && dist < 10) takeDamage(p, window.GAME_CONFIG.boss.passiveDamage * dt);
+        if (b.state === 'fight' && dist < 10) takeDamage(p, window.GAME_CONFIG.boss.passiveDamage * dt, true); // [YÊU CẦU] Im lặng khi dính dame áp sát Boss
 
         if (b.hp <= 0 && !b.dead) {
             b.dead = true;
@@ -1730,9 +1738,11 @@ function update(dt) {
 
 }
 
-function createExplosion(pos, customRange, customDamage, isFriendly = false, noCharge = false) {
-    STATE.shake = 0.8; playAudio('shoot'); spawnParticles(pos, 40, [1, 0.5, 0]);
-    const range = customRange || window.GAME_CONFIG.misc.barrelExplosionRange;
+function createExplosion(pos, customRange, customDamage, isFriendly = false, noCharge = false) { 
+    STATE.shake = 0.8; playAudio('shoot'); 
+    spawnParticles(pos, 40, [1, 0.5, 0], 1.5, 'fire'); // Lửa cam
+    spawnParticles(pos, 25, [0.4, 0.4, 0.4], 0.8, 'smoke'); // Khói xám
+    const range = customRange || window.GAME_CONFIG.misc.barrelExplosionRange; 
     const damage = customDamage || window.GAME_CONFIG.misc.barrelExplosionDamage;
     if (!isFriendly && V3.dist(pos, STATE.player.pos) < range) takeDamage(STATE.player, damage);
     STATE.bots.forEach(b => {
@@ -1756,7 +1766,7 @@ function fireWeapon(shooter, rot, weapon, isPlayer, dirOverride) {
     playAudio('shoot');
 }
 
-function takeDamage(p, amt) {
+function takeDamage(p, amt, silent = false) {
     if (STATE.gameEnded || p.isInvincible) return;
     // FIX CRASH: Kiểm tra p.powerup tồn tại trước khi truy cập type
     if (p.powerup && p.powerup.time > 0 && p.powerup.type === 2) amt *= 0.2;
@@ -1769,9 +1779,9 @@ function takeDamage(p, amt) {
 
     if (!isMobile) STATE.shake = Math.min(1.5, STATE.shake + amt * 0.08);
     
-    // Cooldown âm thanh trúng đòn để tránh lặp liên tục khi Boss áp sát
+    // Cooldown âm thanh trúng đòn
     const now = performance.now();
-    if (now - p.lastDamageSoundTime > 200) {
+    if (!silent && now - p.lastDamageSoundTime > 200) {
         playAudio('hit');
         p.lastDamageSoundTime = now;
     }
@@ -1790,19 +1800,20 @@ function takeDamage(p, amt) {
 }
 
 function showHitMarker() { const el = document.getElementById('hit-marker'); el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 100); }
-function spawnParticles(pos, count, color, speedMult = 1.0) {
+function spawnParticles(pos, count, color, speedMult = 1.0, type = 'fire') {
     // Giới hạn particles trên mobile để giữ FPS
     if (isMobile) count = Math.min(count, 8);
     for (let i = 0; i < count; i++) {
         STATE.particles.push({
             pos: { x: pos.x, y: pos.y, z: pos.z },
             vel: {
-                x: (Math.random() - 0.5) * 15 * speedMult,
-                y: Math.random() * 20 * speedMult,
-                z: (Math.random() - 0.5) * 15 * speedMult
+                x: (Math.random() - 0.5) * 0.2 * speedMult,
+                y: (Math.random() - 0.5) * 0.2 * speedMult,
+                z: (Math.random() - 0.5) * 0.2 * speedMult
             },
             color: color,
-            life: (1.0 + Math.random()) * (speedMult > 1 ? 1.5 : 1.0)
+            life: 1.0,
+            type: type
         });
     }
 }
