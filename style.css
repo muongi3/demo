@@ -201,24 +201,24 @@ canvas {
 }
 
 #zone-timer {
-    top: 30px;
+    top: 50px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 20px;
-    padding: 10px 25px;
+    font-size: 14px;
+    padding: 6px 15px;
     letter-spacing: 1px;
 }
 
 #zone-warning {
-    top: 90px;
+    top: 80px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 24px;
+    font-size: 16px;
     color: #ff3333;
     display: none;
     animation: blinkHud 0.8s infinite;
     font-weight: 900;
-    text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
 }
 
 #interaction-msg {
@@ -235,13 +235,14 @@ canvas {
 }
 
 #kill-feed {
-    top: 110px;
-    left: 30px;
-    font-size: 14px;
-    color: var(--accent);
+    bottom: 80px;
+    left: 20px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
+    pointer-events: none;
 }
 
 #pickup-msg {
@@ -264,13 +265,13 @@ canvas {
 
 /* New Fun UI Elements */
 #streak-msg {
-    top: 30%;
+    top: 25%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0);
-    font-size: 48px;
+    font-size: 24px;
     color: #ff00ff;
     font-weight: 900;
-    text-shadow: 3px 3px 0 #000, -1px -1px 0 #fff;
+    text-shadow: 2px 2px 0 #000;
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: none;
     text-align: center;
@@ -302,21 +303,13 @@ canvas {
 }
 
 #global-announcement.show {
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, 0) scale(1);
     opacity: 1;
 }
 
 
 
-@media (max-width: 800px) {
-    #global-announcement {
-        font-size: 20px;
-        letter-spacing: 2px;
-        width: 90%;
-        padding: 15px;
-        top: 20%;
-    }
-}
+
 
 #minimap-container {
     top: 20px;
