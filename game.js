@@ -159,7 +159,7 @@ window.STATE = {
     screen: 'menu', lastTime: 0, camera: { pos: V3.create(0, 10, 20), rot: { x: 0, y: 0 } }, keys: {},
     mouse: { x: 0, y: 0, down: false, rightDown: false }, projectiles: [], particles: [], loot: [], powerups: [], bots: [], barrels: [], pads: [], obstacles: [],
 
-    player: { pos: null, vel: V3.create(0, 0, 0), hp: window.GAME_CONFIG.player.maxHp, maxHp: window.GAME_CONFIG.player.maxHp, armor: 0, maxArmor: window.GAME_CONFIG.player.maxArmor, grounded: false, weaponIdx: 0, recoil: 0, kills: 0, alive: true, streak: 0, lastKillTime: 0, powerup: { type: null, time: 0 }, damageDealt: 0, isInvincible: false },
+    player: { pos: null, vel: V3.create(0, 0, 0), hp: window.GAME_CONFIG.player.maxHp, maxHp: window.GAME_CONFIG.player.maxHp, armor: 0, maxArmor: window.GAME_CONFIG.player.maxArmor, grounded: false, weaponIdx: 0, lastWeaponIdx: 0, weaponSwitchTime: 1.0, recoil: 0, kills: 0, alive: true, streak: 0, lastKillTime: 0, powerup: { type: null, time: 0 }, damageDealt: 0, isInvincible: false },
     weapons: [
         { name: "Pistol", ...window.GAME_CONFIG.weapons.pistol, ammo: window.GAME_CONFIG.weapons.pistol.maxAmmo, type: 0 },
         { name: "SMG", ...window.GAME_CONFIG.weapons.smg, ammo: window.GAME_CONFIG.weapons.smg.maxAmmo, type: 1 },
@@ -548,12 +548,13 @@ function genCrateMesh(color = [0.7, 0.4, 0.2]) {
 function genPistolMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const gray = [0.15, 0.15, 0.15], dark = [0.1, 0.1, 0.1];
-    push(getCube(gray, 0.12, 0.2, 0.6, 0, 0, 0)); // Slide
-    push(getCube(dark, 0.1, 0.35, 0.2, 0, -0.22, -0.15)); // Grip
-    push(getCube(dark, 0.1, 0.05, 0.22, 0, -0.1, 0.05)); // Trigger guard
-    push(getCube([0, 1, 0], 0.02, 0.05, 0.02, 0, 0.12, 0.25)); // Front sight (Glow)
-    push(getCube(dark, 0.11, 0.08, 0.1, 0, 0, -0.25)); // Hammer
+    const iron = [0.2, 0.2, 0.2], gold = [1, 0.8, 0], black = [0.05, 0.05, 0.05];
+    push(getCube(iron, 0.15, 0.25, 0.7, 0, 0, 0)); // Slide (Thân súng to hơn)
+    push(getCube(gold, 0.16, 0.05, 0.72, 0, 0.1, 0)); // Gold Top Rail
+    push(getCube(black, 0.12, 0.4, 0.25, 0, -0.25, -0.2)); // Grip
+    push(getCube(gold, 0.13, 0.1, 0.1, 0, -0.4, -0.2)); // Gold Base Plate
+    push(getCube(black, 0.1, 0.05, 0.22, 0, -0.1, 0.05)); // Trigger guard
+    push(getCube([0, 1, 0], 0.02, 0.06, 0.02, 0, 0.15, 0.3)); // Glowing sight
     return createMesh(V, N, C);
 }
 
@@ -561,13 +562,13 @@ function genPistolMesh() {
 function genSMGMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const gray = [0.2, 0.2, 0.2], dark = [0.08, 0.08, 0.08];
-    push(getCube(gray, 0.15, 0.25, 1.0, 0, 0, 0)); // Receiver
-    push(getCube(dark, 0.12, 0.6, 0.15, 0, -0.3, 0.1)); // Magazine
-    push(getCube(dark, 0.1, 0.35, 0.18, 0, -0.25, -0.3)); // Grip
-    push(getCube(gray, 0.08, 0.08, 0.5, 0, 0, 0.6)); // Barrel
-    push(getCube(dark, 0.15, 0.3, 0.4, 0, -0.1, -0.6)); // Stock
-    push(getCube([1, 0, 0], 0.04, 0.06, 0.04, 0, 0.15, 0.4)); // Red Dot Sight
+    const carbon = [0.1, 0.1, 0.1], neonBlue = [0, 0.6, 1], steel = [0.3, 0.3, 0.3];
+    push(getCube(carbon, 0.18, 0.3, 1.1, 0, 0, 0)); // Futuristic Body
+    push(getCube(neonBlue, 0.19, 0.05, 0.8, 0, 0.12, 0)); // Neon Strip L
+    push(getCube(steel, 0.12, 0.5, 0.18, 0, -0.3, 0.2)); // Vertical Mag
+    push(getCube(carbon, 0.14, 0.35, 0.2, 0, -0.28, -0.35)); // Tactical Grip
+    push(getCube(steel, 0.08, 0.08, 0.4, 0, 0.05, 0.7)); // Dual Barrel
+    push(getCube(carbon, 0.16, 0.3, 0.45, 0, -0.05, -0.7)); // Modern Stock
     return createMesh(V, N, C);
 }
 
@@ -575,14 +576,15 @@ function genSMGMesh() {
 function genSniperMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const gray = [0.25, 0.25, 0.25], dark = [0.05, 0.05, 0.05];
-    push(getCube(gray, 0.18, 0.22, 1.8, 0, 0, -0.2)); // Long Body
-    push(getCube(dark, 0.14, 0.25, 0.5, 0, 0.25, 0.2)); // Scope Body
-    push(getCube([0, 0.4, 0.8], 0.1, 0.1, 0.05, 0, 0.25, 0.45)); // Lens
-    push(getCube(dark, 0.12, 0.4, 0.2, 0, -0.3, -0.6)); // Sniper Stock
-    push(getCube(dark, 0.1, 0.5, 0.1, 0, -0.4, 0.3)); // Mag
-    push(getCube(gray, 0.08, 0.08, 1.2, 0, 0, 1.2)); // Long Barrel
-    push(getCube(dark, 0.05, 0.5, 0.05, -0.1, -0.4, 0.8)); // Bipod R
+    const camo = [0.2, 0.25, 0.15], glass = [0, 0.8, 1], chrome = [0.5, 0.5, 0.5];
+    push(getCube(camo, 0.2, 0.25, 2.0, 0, 0, -0.2)); // Heavy Body
+    push(getCube(chrome, 0.15, 0.3, 0.6, 0, 0.3, 0.1)); // Advanced Scope
+    push(getCube(glass, 0.12, 0.12, 0.05, 0, 0.3, 0.4)); // Lens Glow
+    push(getCube(camo, 0.14, 0.45, 0.3, 0, -0.35, -0.8)); // Ergonomic Stock
+    push(getCube(chrome, 0.1, 0.1, 1.5, 0, 0.05, 1.5)); // Long Heavy Barrel
+    push(getCube(chrome, 0.2, 0.15, 0.25, 0, 0.05, 2.3)); // Muzzle Brake
+    push(getCube(chrome, 0.05, 0.6, 0.05, 0.15, -0.4, 1.0)); // Bipod L
+    push(getCube(chrome, 0.05, 0.6, 0.05, -0.15, -0.4, 1.0)); // Bipod R
     return createMesh(V, N, C);
 }
 
@@ -1124,6 +1126,13 @@ function update(dt) {
     if (STATE.keys['Space'] && p.grounded) { p.vel.y = window.GAME_CONFIG.player.jumpPower; p.grounded = false; }
     const now = performance.now(), weapon = STATE.weapons[p.weaponIdx];
     if (STATE.mouse.down && now - STATE.lastShot > weapon.rate && weapon.ammo > 0) { fireWeapon(p, STATE.camera.rot, weapon, true); weapon.ammo--; STATE.lastShot = now; p.recoil = 0.1; }
+    if (p.weaponIdx !== p.lastWeaponIdx) {
+        p.weaponSwitchTime = 0;
+        p.lastWeaponIdx = p.weaponIdx;
+        playAudio('hit'); // Âm thanh đổi súng giả
+    }
+    if (p.weaponSwitchTime < 1.0) p.weaponSwitchTime += dt * 4.0; // Rút súng nhanh trong 0.25s
+
     p.recoil *= 0.8; if (STATE.keys['Digit1']) p.weaponIdx = 0; if (STATE.keys['Digit2']) p.weaponIdx = 1; if (STATE.keys['Digit3']) p.weaponIdx = 2;
     // Nạp đạn dùng maxAmmo theo loại súng (Pistol:12, SMG:30, Sniper:5)
     if (STATE.keys['KeyR'] && weapon.ammo < weapon.maxAmmo) { let needed = weapon.maxAmmo - weapon.ammo; if (weapon.res >= needed) { weapon.res -= needed; weapon.ammo = weapon.maxAmmo; } else { weapon.ammo += weapon.res; weapon.res = 0; } }
@@ -2317,9 +2326,12 @@ function draw() {
         }
 
         if (!isFFScope) {
+            // Anim rút súng (Equip animation)
+            const equipOffset = (1.0 - Math.min(1.0, p.weaponSwitchTime)) * 0.5;
+
             // Right Arm
             let armX = 0.35 - STATE.aimLerp * 0.35;
-            let armY = -0.4 + bob + STATE.aimLerp * 0.05;
+            let armY = -0.4 + bob + STATE.aimLerp * 0.05 - equipOffset;
             let mArm = M4.translation(armX, armY, -0.5);
             mArm = M4.multiply(mArm, M4.rotationY(-0.3 * (1 - STATE.aimLerp)));
             drawMeshRaw(ASSETS.arm, mArm);
@@ -2330,7 +2342,7 @@ function draw() {
             if (p.weaponIdx === 2) targetWepY = -0.25;
 
             let wepX = 0.25 - STATE.aimLerp * 0.25;
-            let wepY = -0.3 + bob + STATE.aimLerp * (targetWepY + 0.3);
+            let wepY = -0.3 + bob + STATE.aimLerp * (targetWepY + 0.3) - equipOffset;
             let wepZ = -0.6 - kick - STATE.aimLerp * 0.2;
             let mWep = M4.translation(wepX, wepY, wepZ);
             mWep = M4.multiply(mWep, M4.rotationY(-0.15 * (1 - STATE.aimLerp)));
