@@ -81,50 +81,43 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-// --- UI HELPERS (THÙNG GÓP Ý) ---
+// --- UI HELPERS (MENU & GÓP Ý) ---
 document.addEventListener('DOMContentLoaded', () => {
     const STATE = window.STATE;
-    const btnOpenFeedback = document.getElementById('btn-open-feedback');
+    const log = (msg) => fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: msg }), keepalive: true }).catch(() => { });
+
+    // Logger cho các nút Menu
+    document.getElementById('btn-open-guide')?.addEventListener('click', () => {
+        log(`📖 **${STATE.playerName}** đang xem hướng dẫn sinh tồn...`);
+    });
+
+    document.getElementById('btn-join-discord')?.addEventListener('click', () => {
+        log(`💬 **${STATE.playerName}** định gia nhập Discord cộng đồng!`);
+    });
+
+    // Logic Thùng Góp Ý
     const modalFeedback = document.getElementById('feedback-modal');
-    const btnCloseFeedback = document.getElementById('close-feedback-btn');
-    const btnSendFeedback = document.getElementById('send-feedback-btn');
     const textFeedback = document.getElementById('feedback-text');
+    const btnSend = document.getElementById('send-feedback-btn');
 
-    if (btnOpenFeedback) {
-        btnOpenFeedback.addEventListener('click', () => {
-            modalFeedback.classList.remove('hidden');
-        });
-    }
+    document.getElementById('btn-open-feedback')?.addEventListener('click', () => modalFeedback.classList.remove('hidden'));
+    document.getElementById('close-feedback-btn')?.addEventListener('click', () => { modalFeedback.classList.add('hidden'); textFeedback.value = ""; });
 
-    if (btnCloseFeedback) {
-        btnCloseFeedback.addEventListener('click', () => {
-            modalFeedback.classList.add('hidden');
-            textFeedback.value = "";
-        });
-    }
-
-    if (btnSendFeedback) {
-        btnSendFeedback.addEventListener('click', () => {
-            const content = textFeedback.value.trim();
-            if (!content) { alert("Bác chưa nhập gì cả!"); return; }
-            btnSendFeedback.innerText = "ĐANG GỬI...";
-            btnSendFeedback.disabled = true;
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: `📩 **GÓP Ý / BÁO LỖI MỚI** 📩\n━━━━━━━━━━━━━━━\n👤 Người chơi: **${STATE.playerName || "Khách"}**\n📝 Nội dung: \n> ${content}\n━━━━━━━━━━━━━━━`
-                })
-            }).then(() => {
+    btnSend?.addEventListener('click', () => {
+        const content = textFeedback.value.trim();
+        if (!content) return alert("Bác chưa nhập gì cả!");
+        btnSend.innerText = "ĐANG GỬI...";
+        btnSend.disabled = true;
+        
+        log(`📩 **GÓP Ý MỚI** 📩\n━━━━━━━━━━━━━━━\n👤 Player: **${STATE.playerName}**\n📝 Nội dung: \n> ${content}\n━━━━━━━━━━━━━━━`)
+            .then(() => {
                 alert("Cảm ơn bác đã góp ý!");
                 modalFeedback.classList.add('hidden');
                 textFeedback.value = "";
-            }).catch(() => {
-                alert("Lỗi mạng, chưa gửi được góp ý!");
-            }).finally(() => {
-                btnSendFeedback.innerText = "GỬI";
-                btnSendFeedback.disabled = false;
+            })
+            .finally(() => {
+                btnSend.innerText = "GỬI";
+                btnSend.disabled = false;
             });
-        });
-    }
+    });
 });
