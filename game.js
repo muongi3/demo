@@ -1118,13 +1118,13 @@ function update(dt) {
 
         if (proj.isPlayer) {
             // Hitbox quái thường (bot) - Nhắm vào tâm thân mình (y + 0.65)
-            STATE.bots.forEach(bot => { if (!bot.isEvolvingLv3 && V3.dist(nextPos, V3.add(bot.pos, V3.create(0, 0.65, 0))) < (isMobile ? 2.5 : 1.0)) { bot.hp -= proj.dmg; STATE.player.damageDealt += proj.dmg; playAudio('hit'); showHitMarker(); spawnParticles(nextPos, 5, [1, 0, 0]); proj.dead = true; } });
+            STATE.bots.forEach(bot => { if (!bot.isEvolvingLv3 && V3.dist(nextPos, V3.add(bot.pos, V3.create(0, 0.65, 0))) < (isMobile ? 2.5 : 1.0)) { bot.hp -= proj.dmg; if (!proj.isUlti) STATE.player.damageDealt += proj.dmg; playAudio('hit'); showHitMarker(); spawnParticles(nextPos, 5, [1, 0, 0]); proj.dead = true; } });
 
             // Hitbox Boss hình trụ
             if (STATE.boss && STATE.boss.active) {
                 const dx = nextPos.x - STATE.boss.pos.x, dz = nextPos.z - STATE.boss.pos.z, dy = nextPos.y - STATE.boss.pos.y;
                 if (Math.sqrt(dx * dx + dz * dz) < 4 && dy > -5 && dy < 15) {
-                    STATE.boss.hp -= proj.dmg; STATE.player.damageDealt += proj.dmg; playAudio('hit'); showHitMarker(); proj.dead = true;
+                    STATE.boss.hp -= proj.dmg; if (!proj.isUlti) STATE.player.damageDealt += proj.dmg; playAudio('hit'); showHitMarker(); proj.dead = true;
                 }
             }
         }
@@ -1709,6 +1709,7 @@ function createExplosion(pos, customRange, customDamage, isFriendly = false, noC
 }
 
 function fireWeapon(shooter, rot, weapon, isPlayer, dirOverride) {
+    if (isPlayer && STATE.player.isChargingUlti) return;
     let dir; if (isPlayer) { const yaw = rot.y, pitch = rot.x; dir = V3.create(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)); } else dir = V3.norm(dirOverride);
     const spread = (isPlayer && isMobile) ? 0 : weapon.spread; // Không tản đạn trên mobile
     dir.x += (Math.random() - 0.5) * spread; dir.y += (Math.random() - 0.5) * spread; dir.z += (Math.random() - 0.5) * spread; dir = V3.norm(dir);
