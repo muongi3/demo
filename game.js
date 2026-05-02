@@ -103,6 +103,36 @@ window.GAME_CONFIG = {
     },
 
     // ==========================================================================================
+    // 🔫 THÔNG SỐ VŨ KHÍ (WEAPON STATS)
+    // ==========================================================================================
+    weapons: {
+        pistol: {
+            damage: 85,
+            rate: 250,
+            spread: 0.03,
+            range: 60,
+            maxAmmo: 15,
+            res: 150
+        },
+        smg: {
+            damage: 45,
+            rate: 150,
+            spread: 0.08,
+            range: 45,
+            maxAmmo: 40,
+            res: 200
+        },
+        sniper: {
+            damage: 800,
+            rate: 1200,
+            spread: 0.001,
+            range: 300,
+            maxAmmo: 5,
+            res: 15
+        }
+    },
+
+    // ==========================================================================================
     // ⚙️ THÔNG SỐ KHÁC (MISC STATS)
     // ==========================================================================================
     misc: {
@@ -119,9 +149,9 @@ window.STATE = {
 
     player: { pos: null, vel: V3.create(0, 0, 0), hp: window.GAME_CONFIG.player.maxHp, maxHp: window.GAME_CONFIG.player.maxHp, armor: 0, maxArmor: window.GAME_CONFIG.player.maxArmor, grounded: false, weaponIdx: 0, recoil: 0, kills: 0, alive: true, streak: 0, lastKillTime: 0, powerup: { type: null, time: 0 } },
     weapons: [
-        { name: "Pistol", damage: 85, rate: 250, spread: 0.03, range: 60, ammo: 15, maxAmmo: 15, res: 150, type: 0 }, // Pistol: Buff dame và tầm xa
-        { name: "SMG", damage: 45, rate: 150, spread: 0.08, range: 45, ammo: 40, maxAmmo: 40, res: 200, type: 1 },    // SMG: Bắn nhanh hơn, băng đạn to hơn
-        { name: "Sniper", damage: 800, rate: 1200, spread: 0.001, range: 300, ammo: 5, maxAmmo: 5, res: 15, type: 2 } // Sniper: Sát thương cực khủng (800)
+        { name: "Pistol", ...window.GAME_CONFIG.weapons.pistol, ammo: window.GAME_CONFIG.weapons.pistol.maxAmmo, type: 0 },
+        { name: "SMG", ...window.GAME_CONFIG.weapons.smg, ammo: window.GAME_CONFIG.weapons.smg.maxAmmo, type: 1 },
+        { name: "Sniper", ...window.GAME_CONFIG.weapons.sniper, ammo: window.GAME_CONFIG.weapons.sniper.maxAmmo, type: 2 }
     ],
     lastShot: 0, shake: 0, config: { botCount: 20, zoneSpeed: 5 },
     inputLocked: false,
