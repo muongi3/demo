@@ -1074,7 +1074,11 @@ function update(dt) {
     // GIẢM TỐC ĐỘ: Đi bộ 8, Chạy nhanh 12 (8 * 1.5)
     const moveSpeed = (p.weaponIdx === 2 ? window.GAME_CONFIG.player.sniperSpeed : window.GAME_CONFIG.player.walkSpeed) * speedMult;
     let move = V3.create(0, 0, 0); if (STATE.keys['KeyW']) move.z -= 1; if (STATE.keys['KeyS']) move.z += 1; if (STATE.keys['KeyA']) move.x -= 1; if (STATE.keys['KeyD']) move.x += 1;
-    if (p.isChargingUlti) { move.x = 0; move.z = 0; } // Đứng yên khi gồng UNTI
+    if (p.isChargingUlti) { 
+        move.x = 0; move.z = 0; 
+        // Hiệu ứng hạt lửa khi gồng (Fiery Aura)
+        if (Math.random() < 0.5) spawnParticles(V3.add(p.pos, V3.create((Math.random()-0.5)*2, 0.5, (Math.random()-0.5)*2)), 2, [1, 0.3, 0], 0.5);
+    } // Đứng yên khi gồng UNTI
     if (V3.len(move) > 0) move = V3.norm(move);
 
     // Quán tính (Lerp) di chuyển
@@ -2055,9 +2059,8 @@ function draw() {
     // Xử lý Aim Lerp (Mượt mà)
     STATE.aimLerp += ((STATE.isAiming ? 1 : 0) - STATE.aimLerp) * 0.2;
 
-    const aspect = gl.canvas.width / gl.canvas.height;
-    const zoomFactor = [0.3, 0.6, 0.95][p.weaponIdx];
-    const fov = 1.2 - (STATE.aimLerp * zoomFactor);
+    const sprintFOV = (STATE.keys['ShiftLeft'] && !STATE.isAiming) ? 0.3 : 0;
+    const fov = 1.2 - (STATE.aimLerp * zoomFactor) + sprintFOV;
 
     const proj = M4.perspective(fov, aspect, 0.1, 1000);
     const yaw = STATE.camera.rot.y, pitch = STATE.camera.rot.x;
@@ -2480,13 +2483,14 @@ function activateUltimate() {
     if (p.damageDealt < window.GAME_CONFIG.ultimate.requiredDamage || p.isChargingUlti) return;
 
     p.isChargingUlti = true;
+    p.isInvincible = true; // Bất tử NGAY LẬP TỨC khi bắt đầu gồng
     p.damageDealt = 0; // Reset điểm
     showGlobalAnnouncement("🔥 ĐANG GỒM ĐẠI BÁC... 🔥", 1000);
+    STATE.shake = 1.0; // Rung nhẹ khi gồng
     
     // Gồng 1s
     setTimeout(() => {
         p.isChargingUlti = false;
-        p.isInvincible = true;
         
         // Bắn đại bác
         const yaw = STATE.camera.rot.y, pitch = STATE.camera.rot.x;
@@ -2500,9 +2504,10 @@ function activateUltimate() {
         };
         STATE.projectiles.push(proj);
         playAudio('shoot');
-        STATE.shake = 3.0;
+        STATE.shake = 5.0; // Rung cực mạnh khi bắn
+        spawnParticles(proj.pos, 50, [1, 0.8, 0], 2.0); // Nổ lớn tại nòng súng
 
-        // Bất tử 1s
+        // Bất tử thêm 1s sau khi bắn để an toàn
         setTimeout(() => {
             p.isInvincible = false;
         }, window.GAME_CONFIG.ultimate.invincibleTime * 1000);
