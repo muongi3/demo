@@ -970,6 +970,36 @@ canvas {
     z-index: 10;
     scale: var(--btn-scale, 1.0);
 }
+
+#btn-ulti {
+    position: absolute;
+    top: 55px;
+    right: 15px;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: rgba(255, 68, 0, 0.4);
+    border: 3px solid #ff4400;
+    color: white;
+    font-weight: 900;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 0 15px #ff4400, inset 0 0 10px #ffcc00;
+    animation: fieryGlow 1.5s infinite alternate;
+    scale: var(--btn-scale, 1.0);
+}
+
+#btn-ulti.hidden { display: none; }
+
+@keyframes fieryGlow {
+    from { box-shadow: 0 0 10px #ff4400, inset 0 0 5px #ffcc00; border-color: #ff4400; }
+    to { box-shadow: 0 0 25px #ff0000, inset 0 0 15px #ff6600; border-color: #ffcc00; transform: scale(1.05); }
+}
 #btn-sprint:active, #btn-sprint.pressed {
     background: rgba(255, 255, 255, 0.9);
     color: black;

@@ -36,8 +36,8 @@ window.GAME_CONFIG = {
     // ==========================================================================================
     bot: {
         hpLv1: 180,          // Máu quái thường
-        hpLv2: 350,          // Máu quái hóa đỏ
-        hpLv3: 800,          // Máu 3 con cuối (Trở thành mini-boss thực thụ)
+        hpLv2: 240,          // Máu quái hóa đỏ
+        hpLv3: 300,          // Máu 3 con cuối (Trở thành mini-boss thực thụ)
 
         speedLv1: 7.5,       // Tốc độ quái Lv1
         speedLv2: 12,        // Tốc độ quái Lv2
@@ -56,7 +56,7 @@ window.GAME_CONFIG = {
     // 👹 THÔNG SỐ TRÙM CUỐI (HAKARI)
     // ==========================================================================================
     boss: {
-        hp: 12000,            // Máu của Boss (Tăng lên 12k để trận đấu epic hơn)
+        hp: 10000,            // Máu của Boss (Tăng lên 12k để trận đấu epic hơn)
         passiveDamage: 150,   // Sát thương áp sát
         skillCD: 4.5,         // Hồi chiêu giữa các đòn (Nhanh hơn chút)
         postSkillRest: 2.5,   // Thời gian nghỉ sau chiêu
@@ -107,7 +107,7 @@ window.GAME_CONFIG = {
     // ==========================================================================================
     weapons: {
         pistol: {
-            damage: 85,
+            damage: 65,
             rate: 250,
             spread: 0.03,
             range: 60,
@@ -123,13 +123,25 @@ window.GAME_CONFIG = {
             res: 200
         },
         sniper: {
-            damage: 800,
+            damage: 400,
             rate: 1200,
-            spread: 0.001,
+            spread: 0.1,
             range: 300,
             maxAmmo: 5,
-            res: 15
+            res: 20
         }
+    },
+
+    // ==========================================================================================
+    // 🔥 KỸ NĂNG ĐẶC BIỆT (ULTIMATE SKILL)
+    // ==========================================================================================
+    ultimate: {
+        requiredDamage: 1000,    // Gây 1000 dame để sạc đầy Unti
+        chargeTime: 1.0,         // Thời gian gồng (1s)
+        invincibleTime: 1.0,     // Bất tử 1s lúc tung chiêu
+        damage: 800,             // Sát thương nổ
+        explosionRange: 15,      // Tầm nổ
+        projectileSpeed: 100
     },
 
     // ==========================================================================================
@@ -147,7 +159,7 @@ window.STATE = {
     screen: 'menu', lastTime: 0, camera: { pos: V3.create(0, 10, 20), rot: { x: 0, y: 0 } }, keys: {},
     mouse: { x: 0, y: 0, down: false, rightDown: false }, projectiles: [], particles: [], loot: [], powerups: [], bots: [], barrels: [], pads: [], obstacles: [],
 
-    player: { pos: null, vel: V3.create(0, 0, 0), hp: window.GAME_CONFIG.player.maxHp, maxHp: window.GAME_CONFIG.player.maxHp, armor: 0, maxArmor: window.GAME_CONFIG.player.maxArmor, grounded: false, weaponIdx: 0, recoil: 0, kills: 0, alive: true, streak: 0, lastKillTime: 0, powerup: { type: null, time: 0 } },
+    player: { pos: null, vel: V3.create(0, 0, 0), hp: window.GAME_CONFIG.player.maxHp, maxHp: window.GAME_CONFIG.player.maxHp, armor: 0, maxArmor: window.GAME_CONFIG.player.maxArmor, grounded: false, weaponIdx: 0, recoil: 0, kills: 0, alive: true, streak: 0, lastKillTime: 0, powerup: { type: null, time: 0 }, damageDealt: 0, isInvincible: false },
     weapons: [
         { name: "Pistol", ...window.GAME_CONFIG.weapons.pistol, ammo: window.GAME_CONFIG.weapons.pistol.maxAmmo, type: 0 },
         { name: "SMG", ...window.GAME_CONFIG.weapons.smg, ammo: window.GAME_CONFIG.weapons.smg.maxAmmo, type: 1 },
@@ -1106,13 +1118,13 @@ function update(dt) {
 
         if (proj.isPlayer) {
             // Hitbox quái thường (bot) - Nhắm vào tâm thân mình (y + 0.65)
-            STATE.bots.forEach(bot => { if (!bot.isEvolvingLv3 && V3.dist(nextPos, V3.add(bot.pos, V3.create(0, 0.65, 0))) < (isMobile ? 2.5 : 1.0)) { bot.hp -= proj.dmg; playAudio('hit'); showHitMarker(); spawnParticles(nextPos, 5, [1, 0, 0]); proj.dead = true; } });
+            STATE.bots.forEach(bot => { if (!bot.isEvolvingLv3 && V3.dist(nextPos, V3.add(bot.pos, V3.create(0, 0.65, 0))) < (isMobile ? 2.5 : 1.0)) { bot.hp -= proj.dmg; STATE.player.damageDealt += proj.dmg; playAudio('hit'); showHitMarker(); spawnParticles(nextPos, 5, [1, 0, 0]); proj.dead = true; } });
 
             // Hitbox Boss hình trụ
             if (STATE.boss && STATE.boss.active) {
                 const dx = nextPos.x - STATE.boss.pos.x, dz = nextPos.z - STATE.boss.pos.z, dy = nextPos.y - STATE.boss.pos.y;
                 if (Math.sqrt(dx * dx + dz * dz) < 4 && dy > -5 && dy < 15) {
-                    STATE.boss.hp -= proj.dmg; playAudio('hit'); showHitMarker(); proj.dead = true;
+                    STATE.boss.hp -= proj.dmg; STATE.player.damageDealt += proj.dmg; playAudio('hit'); showHitMarker(); proj.dead = true;
                 }
             }
         }
@@ -1123,6 +1135,10 @@ function update(dt) {
                 proj.dead = true;
             }
         }
+        if (proj.dead && proj.isUlti) {
+            createExplosion(proj.pos, window.GAME_CONFIG.ultimate.explosionRange, window.GAME_CONFIG.ultimate.damage, true);
+        }
+        
         proj.pos = nextPos; proj.life -= dt; if (proj.life < 0) proj.dead = true;
     });
     STATE.projectiles = STATE.projectiles.filter(p => !p.dead);
@@ -1676,7 +1692,14 @@ function update(dt) {
 
 }
 
-function createExplosion(pos) { STATE.shake = 0.5; playAudio('shoot'); spawnParticles(pos, 30, [1, 0.5, 0]); const range = window.GAME_CONFIG.misc.barrelExplosionRange; if (V3.dist(pos, STATE.player.pos) < range) takeDamage(STATE.player, window.GAME_CONFIG.misc.barrelExplosionDamage); STATE.bots.forEach(b => { if (!b.isEvolvingLv3 && V3.dist(pos, b.pos) < range) b.hp -= window.GAME_CONFIG.misc.barrelExplosionDamage; }); }
+function createExplosion(pos, customRange, customDamage, isFriendly = false) { 
+    STATE.shake = 0.8; playAudio('shoot'); spawnParticles(pos, 40, [1, 0.5, 0]); 
+    const range = customRange || window.GAME_CONFIG.misc.barrelExplosionRange; 
+    const damage = customDamage || window.GAME_CONFIG.misc.barrelExplosionDamage;
+    if (!isFriendly && V3.dist(pos, STATE.player.pos) < range) takeDamage(STATE.player, damage); 
+    STATE.bots.forEach(b => { if (!b.isEvolvingLv3 && V3.dist(pos, b.pos) < range) { b.hp -= damage; STATE.player.damageDealt += damage; } }); 
+    if (STATE.boss && STATE.boss.active && V3.dist(pos, STATE.boss.pos) < range + 5) { STATE.boss.hp -= damage; STATE.player.damageDealt += damage; }
+}
 
 function fireWeapon(shooter, rot, weapon, isPlayer, dirOverride) {
     let dir; if (isPlayer) { const yaw = rot.y, pitch = rot.x; dir = V3.create(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)); } else dir = V3.norm(dirOverride);
@@ -1687,9 +1710,9 @@ function fireWeapon(shooter, rot, weapon, isPlayer, dirOverride) {
 }
 
 function takeDamage(p, amt) {
+    if (STATE.gameEnded || p.isInvincible) return;
     // FIX CRASH: Kiểm tra p.powerup tồn tại trước khi truy cập type
-    if (STATE.gameEnded || (p.powerup && p.powerup.time > 0 && p.powerup.type === 2)) amt *= 0.2;
-    if (STATE.gameEnded) return;
+    if (p.powerup && p.powerup.time > 0 && p.powerup.type === 2) amt *= 0.2;
     if (p.armor > 0) {
         const armDmg = amt * 0.7;
         p.armor -= armDmg;
