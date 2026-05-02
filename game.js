@@ -892,14 +892,9 @@ const OIIA_CAT = { spawned: false, active: false };
 
 function startGame() {
     const nameInput = document.getElementById('player-name-input');
-    const name = nameInput.value.trim();
-    if (!name) {
-        alert("VUI LÒNG NHẬP TÊN TRƯỚC KHI BẮT ĐẦU!");
-        nameInput.focus();
-        return;
-    }
+    const name = nameInput.value.trim() || "Survivor_" + Math.floor(Math.random() * 1000);
     STATE.playerName = name;
-    localStorage.setItem('savedPlayerName', name); // Lưu tên vào trình duyệt
+    localStorage.setItem('savedPlayerName', name); 
     STATE.screen = 'game';
     STATE.player.hp = window.GAME_CONFIG.player.maxHp;
     STATE.player.maxHp = window.GAME_CONFIG.player.maxHp;

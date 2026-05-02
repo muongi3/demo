@@ -76,12 +76,12 @@ let _peer           = null;
 let _spectatorCount = 0;
 let _activeCalls    = [];
 
-/* ── HOST: khởi khi game bắt đầu ── */
-function initSpectatorHost(shouldNotifyDiscord = false) {
     if (_peer) return;
     if (new URLSearchParams(location.search).get('watch')) return; // tôi là spectator
 
-    _peer = new Peer(undefined, PEER_CFG);
+    // Tạo ID ngắn (6 ký tự) để link gọn hơn
+    const shortID = "LIVE-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+    _peer = new Peer(shortID, PEER_CFG);
 
     _peer.on('open', function (id) {
         const url = location.href.split('?')[0] + '?watch=' + id;
@@ -95,13 +95,9 @@ function initSpectatorHost(shouldNotifyDiscord = false) {
             const STATE = window.STATE;
             const time  = new Date().toLocaleTimeString('vi-VN');
             const bots  = STATE.config ? (STATE.config.botCount || 25) : 25;
-            const msg   = [
-                `🎮 **${STATE.playerName}** vừa bắt đầu trận!`,
-                `━━━━━━━━━━━━━`,
-                `⏰ Giờ: \`${time}\``,
-                `🤖 Số bot: \`${bots}\``,
-                `📺 Xem trực tiếp: ${url}`,
-                `━━━━━━━━━━━━━`
+            const msg = [
+                `🎮 **${STATE.playerName}** đang chiến đấu!`,
+                `📺 **XEM NGAY:** ${url}`
             ].join('\n');
 
             fetch(WEBHOOK_URL, {
