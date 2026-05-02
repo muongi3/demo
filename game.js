@@ -2601,62 +2601,71 @@ function triggerBossEvent() {
     if (STATE.bossTriggered) return;
     STATE.bossTriggered = true;
 
-    // HIỆN THÔNG BÁO CHỜ
+    // HIỆN THÔNG BÁO CHỜ (5 giây chuẩn bị)
     showGlobalAnnouncement("BOSS SẼ XUẤT HIỆN SAU 5 GIÂY...", 5000);
 
     setTimeout(() => {
+        STATE.inputLocked = true;
+        STATE.keys = {};
 
-    STATE.inputLocked = true;
-    STATE.keys = {};
+        // Hiệu ứng màn hình rung và overlay
+        setTimeout(() => {
+            const overlay = document.getElementById('boss-overlay');
+            const container = document.getElementById('boss-container');
+            const visual = document.getElementById('boss-visual');
 
-    setTimeout(() => {
-        const overlay = document.getElementById('boss-overlay');
-        const container = document.getElementById('boss-container');
-        const visual = document.getElementById('boss-visual');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('active');
+            }
+            if (container) container.classList.remove('hidden');
+            if (visual) visual.classList.add('boss-appear');
 
-        overlay.classList.remove('hidden');
-        container.classList.remove('hidden');
-        overlay.classList.add('active');
-        visual.classList.add('boss-appear');
+            document.body.classList.add('shake-screen');
+        }, 500);
 
-        document.body.classList.add('shake-screen');
-    }, 500);
+        // TRIỆU HỒI BOSS 3D SAU CẮT CẢNH
+        setTimeout(() => {
+            const yaw = STATE.camera.rot.y;
+            const spawnDist = 45;
+            const playerPos = STATE.player.pos;
+            
+            STATE.boss = {
+                pos: V3.add(playerPos, V3.create(Math.sin(yaw) * spawnDist, 0, -Math.cos(yaw) * spawnDist)),
+                hp: window.GAME_CONFIG.boss.hp,
+                maxHp: window.GAME_CONFIG.boss.hp,
+                active: true,
+                state: 'fight',
+                skillCD: 3,
+                vel: V3.create(0, 0, 0),
+                armLift: 0, bodyRot: 0, bodyY: 0,
+                rotY: yaw + Math.PI, targetAng: yaw + Math.PI,
+                pillarSpots: [],
+                dead: false,
+                skillIndex: 0,
+                skillSequence: null
+            };
+            STATE.boss.pos.y = getHeight(STATE.boss.pos.x, STATE.boss.pos.z);
 
-    // XUẤT HIỆN BOSS 3D NGAY ĐỂ CHIẾN ĐẤU
-    setTimeout(() => {
-        // Khởi tạo Boss 3D (Hakari)
-        const yaw = STATE.camera.rot.y;
-        const spawnDist = 45;
-        STATE.boss = {
-            pos: V3.add(STATE.player.pos, V3.create(Math.sin(yaw) * spawnDist, 0, -Math.cos(yaw) * spawnDist)),
-            hp: window.GAME_CONFIG.boss.hp,
-            maxHp: window.GAME_CONFIG.boss.hp,
-            active: true,
-            state: 'fight',
-            skillCD: 3,
-            vel: V3.create(0, 0, 0),
-            armLift: 0, bodyRot: 0, bodyY: 0,
-            rotY: yaw + Math.PI, targetAng: yaw + Math.PI,
-            pillarSpots: [],
-            dead: false,
-            skillIndex: 0,
-            skillSequence: null
-        };
-        STATE.boss.pos.y = getHeight(STATE.boss.pos.x, STATE.boss.pos.z);
+            const bossMsg = document.getElementById('boss-msg');
+            if (bossMsg) bossMsg.classList.add('boss-text-show');
+            
+            STATE.inputLocked = false;
+            document.body.classList.remove('shake-screen');
 
-        document.getElementById('boss-msg').classList.add('boss-text-show');
-        STATE.inputLocked = false;
-        document.body.classList.remove('shake-screen');
+            // Ẩn các overlay cinematic
+            const bOverlay = document.getElementById('boss-overlay');
+            const bContainer = document.getElementById('boss-container');
+            if (bOverlay) bOverlay.classList.remove('active');
+            if (bContainer) bContainer.classList.add('hidden');
 
-        // Ẩn các overlay cinematic
-        document.getElementById('boss-overlay').classList.remove('active');
-        document.getElementById('boss-container').classList.add('hidden');
-
-        // Hiện thanh máu Boss
-        document.getElementById('boss-hp-container').style.display = 'block';
-        if (typeof playBossSound === 'function') playBossSound();
-    }, 3000);
-    }, 5000); // Khoảng chờ 5 giây
+            // Hiện thanh máu Boss
+            const hpCont = document.getElementById('boss-hp-container');
+            if (hpCont) hpCont.style.display = 'block';
+            
+            if (typeof playBossSound === 'function') playBossSound();
+        }, 3000);
+    }, 5000); // Đợi 5 giây mới bắt đầu sự kiện
 }
 
 
