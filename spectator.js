@@ -10,7 +10,16 @@ const debug = window.debug;
 
 // ─── CẤU HÌNH ────────────────────────────────────────────────────────────────
 const WEBHOOK_URL = "https://discord.com/api/webhooks/1499169990350471359/SQrGcSeCjvW3JleJv6rfoBpk5ffwmYpojnLlW5HFdS9oRfn7Gg5UvrYPV95TaAY_6pau";
-const PEER_CFG   = { host: '0.peerjs.com', port: 443, secure: true, debug: 0 };
+const PEER_CFG = {
+    debug: 2,
+    config: {
+        'iceServers': [
+            { 'urls': 'stun:stun.l.google.com:19302' },
+            { 'urls': 'stun:stun1.l.google.com:19302' },
+            { 'urls': 'stun:stun2.l.google.com:19302' }
+        ]
+    }
+};
 
 // ─── DISCORD ─────────────────────────────────────────────────────────────────
 function sendLiveNotification() {
@@ -105,17 +114,41 @@ function initSpectatorHost(shouldNotifyDiscord = false) {
     });
 
     _peer.on('call', function (call) {
+        debug('Incoming call from: ' + call.peer);
         const canvas = document.getElementById('glcanvas');
-        if (!canvas) { call.close(); return; }
-        call.answer(canvas.captureStream(30));
-        _activeCalls.push(call);
-        _spectatorCount++;
-        _updateCountUI();
-        call.on('close', function () {
-            _activeCalls = _activeCalls.filter(c => c !== call);
-            _spectatorCount = Math.max(0, _spectatorCount - 1);
+        if (!canvas) {
+            debug('Error: glcanvas not found');
+            call.close();
+            return;
+        }
+
+        try {
+            const stream = canvas.captureStream(30);
+            call.answer(stream);
+            debug('Call answered with canvas stream');
+
+            _activeCalls.push(call);
+            _spectatorCount++;
             _updateCountUI();
-        });
+
+            call.on('stream', function() {
+                // Host không cần nhận stream ngược lại nhưng phải handle event này
+            });
+
+            call.on('close', function () {
+                debug('Spectator disconnected: ' + call.peer);
+                _activeCalls = _activeCalls.filter(c => c !== call);
+                _spectatorCount = Math.max(0, _spectatorCount - 1);
+                _updateCountUI();
+            });
+
+            call.on('error', function(err) {
+                debug('Call error: ' + err);
+            });
+        } catch (e) {
+            debug('Error capturing stream: ' + e);
+            call.close();
+        }
     });
 
     _peer.on('error', function (err) {
@@ -162,23 +195,30 @@ function _enterSpectatorMode(hostID) {
 }
 
 function _callHost(hostID) {
-    _setStatus('📡 Đang kết nối tới host...', 'connecting');
-    // Tạo silent audio stream (bắt buộc để initiate WebRTC call)
+    _setStatus('📡 Đang gọi tới host...', 'connecting');
+    debug('Calling host: ' + hostID);
+
+    // Một số trình duyệt (như Safari) yêu cầu phải gửi ít nhất 1 track để khởi tạo WebRTC
+    // Tạo dummy silent audio track
+    let dummyStream;
     try {
-        const ACtx  = window.AudioContext || window.webkitAudioContext;
-        const ac    = new ACtx();
-        const osc   = ac.createOscillator();
-        const gain  = ac.createGain();
-        const dst   = ac.createMediaStreamDestination();
-        gain.gain.value = 0; // hoàn toàn im lặng
-        osc.connect(gain); gain.connect(dst); osc.start();
-        const call = _peer.call(hostID, dst.stream);
-        _handleSpectatorCall(call, hostID);
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ac = new AudioCtx();
+        const dest = ac.createMediaStreamDestination();
+        const osc = ac.createOscillator();
+        osc.connect(dest);
+        osc.start();
+        dummyStream = dest.stream;
     } catch (e) {
-        // Fallback không cần stream
-        const call = _peer.call(hostID, new MediaStream());
-        _handleSpectatorCall(call, hostID);
+        dummyStream = new MediaStream();
     }
+
+    const call = _peer.call(hostID, dummyStream);
+    if (!call) {
+        _setStatus('❌ Không thể thiết lập cuộc gọi', 'error');
+        return;
+    }
+    _handleSpectatorCall(call, hostID);
 }
 
 function _handleSpectatorCall(call, hostID) {
