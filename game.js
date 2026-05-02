@@ -994,6 +994,7 @@ function startGame() {
         }
     }
 
+    if (typeof window.sendLiveNotification === 'function') window.sendLiveNotification();
     gl.canvas.requestPointerLock(); requestAnimationFrame(window.loop);
 
 }

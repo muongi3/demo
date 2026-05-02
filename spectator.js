@@ -1,7 +1,6 @@
 /**
- * spectator.js - v20.0
- * CHẾ ĐỘ KHÁN GIẢ (SPECTATOR MODE) - LOGIC CHUẨN P2P
- * Loại bỏ toàn bộ kết nối bên ngoài (Discord/Feedback).
+ * spectator.js - v21.0
+ * CHẾ ĐỘ KHÁN GIẢ (SPECTATOR MODE) - TỰ ĐỘNG GỬI LINK DISCORD
  */
 
 (function() {
@@ -9,13 +8,14 @@
 
     const debug = (msg) => console.log('[Spectator] ' + msg);
     
-    // Cấu hình PeerJS mặc định (Sử dụng Cloud của PeerJS)
+    // Webhook URL của bác
+    const WEBHOOK_URL = "https://discord.com/api/webhooks/1499169990350471359/SQrGcSeCjvW3JleJv6rfoBpk5ffwmYpojnLlW5HFdS9oRfn7Gg5UvrYPV95TaAY_6pau";
+
+    // Cấu hình PeerJS
     const PEER_CFG = {
         debug: 1,
         config: {
-            'iceServers': [
-                { 'urls': 'stun:stun.l.google.com:19302' }
-            ]
+            'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]
         }
     };
 
@@ -28,123 +28,114 @@
         const watchID = params.get('watch');
 
         if (watchID) {
-            // TRƯỜNG HỢP: KHÁN GIẢ
             initSpectatorClient(watchID);
         } else {
-            // TRƯỜNG HỢP: NGƯỜI CHƠI (HOST)
-            // Khởi tạo Peer ngay lập tức để sẵn sàng nhận kết nối
-            initSpectatorHost();
+            // Không khởi tạo Peer ngay lập tức để tránh tốn tài nguyên khi chưa chơi
         }
     });
 
+    // Hàm gọi từ game.js khi bấm nút Bắt đầu
+    window.sendLiveNotification = function() {
+        initSpectatorHost(true);
+    };
+
     // ─── LOGIC CHO NGƯỜI CHƠI (HOST) ────────────────────────────────────────
-    function initSpectatorHost() {
+    function initSpectatorHost(shouldNotifyDiscord = false) {
         if (_peer) return;
         
-        // Tạo ID ngẫu nhiên cho Host
-        _peer = new Peer(undefined, PEER_CFG);
+        // Tạo ID ngắn (6 ký tự)
+        const shortID = "LIVE-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+        _peer = new Peer(shortID, PEER_CFG);
 
         _peer.on('open', (id) => {
             const url = location.href.split('?')[0] + '?watch=' + id;
             window._shareURL = url;
             debug('Sẵn sàng! ID: ' + id);
             
-            // Hiện nút Share nếu game đang chạy
             const btn = document.getElementById('btn-share-screen');
             if (btn) btn.style.display = 'flex';
+
+            // GỬI LINK LÊN DISCORD TỰ ĐỘNG
+            if (shouldNotifyDiscord) {
+                const STATE = window.STATE;
+                const name = STATE.playerName || "Survivor";
+                const msg = [
+                    `🎮 **${name}** đang chiến đấu!`,
+                    `📺 **XEM NGAY:** ${url}`
+                ].join('\n');
+
+                fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: msg }),
+                    keepalive: true
+                }).catch(() => {});
+            }
         });
 
         _peer.on('call', (call) => {
-            debug('Có người xem mới: ' + call.peer);
             const canvas = document.getElementById('glcanvas');
             if (!canvas) return call.close();
 
-            // Trả về stream của Canvas
-            const stream = canvas.captureStream(30);
-            call.answer(stream);
+            // Tạo dummy audio để bypass chính sách autoplay của một số trình duyệt
+            let dummyStream;
+            try {
+                const stream = canvas.captureStream(30);
+                dummyStream = stream;
+            } catch (e) {
+                dummyStream = new MediaStream();
+            }
+
+            call.answer(dummyStream);
             _activeCalls.push(call);
-
-            call.on('close', () => {
-                _activeCalls = _activeCalls.filter(c => c !== call);
-                debug('Người xem đã thoát.');
-            });
-        });
-
-        _peer.on('error', (err) => {
-            if (err.type === 'peer-unavailable') return;
-            debug('Lỗi Host: ' + err.type);
+            debug('Có người đang xem!');
         });
     }
 
     // ─── LOGIC CHO KHÁN GIẢ (CLIENT) ────────────────────────────────────────
     function initSpectatorClient(hostID) {
-        // Hiện màn hình chờ
-        const view = document.getElementById('spectator-view');
-        if (view) view.classList.remove('hidden');
-        
-        const menu = document.getElementById('main-menu');
-        if (menu) menu.classList.add('hidden');
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('spectator-view').classList.remove('hidden');
 
         _peer = new Peer(undefined, PEER_CFG);
 
         _peer.on('open', () => {
-            debug('Đang kết nối tới người chơi: ' + hostID);
+            debug('Đang kết nối tới: ' + hostID);
             
-            // Gọi cho Host (cần gửi kèm một stream giả để bắt đầu WebRTC)
-            const dummyStream = createDummyStream();
+            // Một số trình duyệt yêu cầu phải gửi stream (dù là giả) để bắt đầu cuộc gọi
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 1;
+            const dummyStream = canvas.captureStream(1);
+            
             const call = _peer.call(hostID, dummyStream);
-
-            if (call) {
-                handleCall(call);
-            }
+            if (call) handleCall(call);
         });
 
         _peer.on('error', (err) => {
-            debug('Lỗi Khán giả: ' + err.type);
-            alert('Không tìm thấy người chơi này hoặc họ đã thoát game.');
+            alert('Trận đấu này không còn tồn tại hoặc người chơi đã thoát.');
+            location.href = location.href.split('?')[0];
         });
     }
 
     function handleCall(call) {
         call.on('stream', (remoteStream) => {
-            debug('Nhận được hình ảnh từ Host!');
             const video = document.getElementById('spectator-video');
             if (video) {
                 video.srcObject = remoteStream;
-                const status = document.getElementById('spectator-status-text');
-                if (status) status.innerText = 'Đang xem trực tiếp';
-                
                 video.play().catch(() => {
                     const playBtn = document.getElementById('spectator-play-btn');
                     if (playBtn) playBtn.style.display = 'block';
                 });
             }
         });
-
-        call.on('close', () => {
-            alert('Người chơi đã kết thúc trận đấu.');
-            location.href = location.href.split('?')[0];
-        });
     }
 
-    function createDummyStream() {
-        try {
-            const canvas = document.createElement('canvas');
-            canvas.width = canvas.height = 1;
-            const ctx = canvas.getContext('2d');
-            ctx.fillRect(0,0,1,1);
-            return canvas.captureStream(1);
-        } catch(e) {
-            return new MediaStream();
-        }
-    }
-
-    // ─── UI HELPER ──────────────────────────────────────────────────────────
+    // ─── UI HELPERS ─────────────────────────────────────────────────────────
     window.showShareModal = () => {
         const modal = document.getElementById('share-modal');
         const input = document.getElementById('share-link-input');
         if (modal && input) {
-            input.value = window._shareURL || 'Đang khởi tạo...';
+            input.value = window._shareURL || 'Đang tạo link...';
             modal.classList.remove('hidden');
         }
     };
@@ -161,7 +152,7 @@
             document.execCommand('copy');
             const btn = document.getElementById('copy-link-btn');
             if (btn) {
-                btn.innerText = '✅ ĐÃ COPY';
+                btn.innerText = '✅ OK';
                 setTimeout(() => btn.innerText = '📋 Copy Link', 2000);
             }
         }
