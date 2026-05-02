@@ -22,83 +22,83 @@ window.GAME_CONFIG = {
     // 👤 THÔNG SỐ NGƯỜI CHƠI (PLAYER STATS)
     // ==========================================================================================
     player: {
-        maxHp: 1000,                // Máu tối đa. Tăng -> Trâu hơn, khó chết. Giảm -> Dễ "bay màu".
-        maxArmor: 500,              // Giáp tối đa. Giáp đỡ sát thương trước máu. Tăng -> Chống chịu tốt hơn.
-        walkSpeed: 8,               // Tốc độ chạy/đi bộ bình thường.
-        sprintMultiplier: 2.0,      // Hệ số chạy nhanh khi giữ Shift. (vd: 8 x 2.0 = 16 đơn vị tốc độ).
-        jumpPower: 10,              // Lực nhảy cao (Phím Space).
-        sniperSpeed: 6,             // Tốc độ khi cầm súng bắn tỉa (Sniper) - Súng nặng nên đi chậm hơn.
-        powerupSpeedMultiplier: 1.8 // Hệ số tăng tốc khi nhặt được "Bùa Tốc Độ" (màu xanh).
+        maxHp: 1000,                // Máu tối đa
+        maxArmor: 1000,             // Giáp tối đa (Tăng lên để giáp quan trọng hơn)
+        walkSpeed: 8.5,             // Tốc độ đi bộ (Tăng nhẹ)
+        sprintMultiplier: 1.8,      // Hệ số chạy nhanh (Giảm nhẹ để quái có cơ hội đuổi kịp)
+        jumpPower: 11,              // Lực nhảy cao
+        sniperSpeed: 6.5,           // Tốc độ khi cầm Sniper
+        powerupSpeedMultiplier: 1.6 // Hệ số tăng tốc khi ăn bùa
     },
 
     // ==========================================================================================
     // 🤖 THÔNG SỐ QUÁI VẬT (BOT AI STATS)
     // ==========================================================================================
     bot: {
-        hpLv1: 200,          // Máu quái thường (Lv1).
-        hpLv2: 250,          // Máu quái hóa đỏ (Lv2). (+50 máu)
-        hpLv3: 400,          // Máu 3 con cuối (Lv3). (+200 máu so với Lv1)
+        hpLv1: 180,          // Máu quái thường
+        hpLv2: 350,          // Máu quái hóa đỏ
+        hpLv3: 800,          // Máu 3 con cuối (Trở thành mini-boss thực thụ)
 
-        speedLv1: 7,         // Tốc độ quái Lv1.
-        speedLv2: 11,        // Tốc độ quái khi hóa đỏ (Lv2).
-        speedLv3: 15.5,        // Tốc độ quái 3 con cuối (Lv3).
+        speedLv1: 7.5,       // Tốc độ quái Lv1
+        speedLv2: 12,        // Tốc độ quái Lv2
+        speedLv3: 17,        // Tốc độ quái Lv3 (Rất nhanh)
 
-        baseDamage: 10,       // Sát thương cào Lv1.
-        enragedDamageLv2: 30, // Sát thương quái khi hóa đỏ (Lv2).
-        enragedDamageLv3: 60, // Sát thương quái 3 con cuối (Lv3).
-        detectRadius: 40,     // Tầm nhìn của quái.
-        attackRange: 2.5,     // Khoảng cách quái có thể cào.
-        attackCD: 0.8,        // Hồi chiêu cào (giây).
-        evolveTime: 2.0       // Thời gian gồng hóa Lv3.
+        baseDamage: 15,       // Sát thương Lv1
+        enragedDamageLv2: 45, // Sát thương Lv2
+        enragedDamageLv3: 120, // Sát thương Lv3 (Cực đau)
+        detectRadius: 45,     // Tầm nhìn
+        attackRange: 2.8,     // Khoảng cách cào
+        attackCD: 0.7,        // Hồi chiêu cào
+        evolveTime: 1.5       // Thời gian gồng hóa Lv3 (Nhanh hơn)
     },
 
     // ==========================================================================================
-    // 👹 THÔNG SỐ TRÙM CUỐI (NIGHTMARE BOSS - HAKARI)
+    // 👹 THÔNG SỐ TRÙM CUỐI (HAKARI)
     // ==========================================================================================
     boss: {
-        hp: 8000,             // Máu của Boss. Tăng -> Trận đấu kéo dài và khó hơn.
-        passiveDamage: 100,   // Sát thương áp sát. Đứng quá gần Boss sẽ tự mất máu (mỗi giây).
-        skillCD: 5,           // Thời gian hồi chiêu giữa các đòn đánh. Giảm -> Boss ra chiêu liên tục.
-        postSkillRest: 3,     // Thời gian Boss đứng yên nghỉ sau mỗi chiêu. Tăng -> Cho người chơi dễ thở.
+        hp: 12000,            // Máu của Boss (Tăng lên 12k để trận đấu epic hơn)
+        passiveDamage: 150,   // Sát thương áp sát
+        skillCD: 4.5,         // Hồi chiêu giữa các đòn (Nhanh hơn chút)
+        postSkillRest: 2.5,   // Thời gian nghỉ sau chiêu
 
-        // CHIÊU 1: LƯỚT (DASH) - Boss lao thẳng vào người chơi
+        // CHIÊU 1: LƯỚT (DASH)
         skill1: {
-            damage: 400,      // Sát thương khi bị tông trúng.
-            prepareTime: 1.0, // Thời gian rặn trước khi lướt. Tăng -> Boss lướt chậm hơn.
-            activeTime: 0.8,  // Thời gian trong khi lướt.
-            speed: 110,       // Tốc độ lướt. Tăng -> Boss lướt như tia chớp.
-            width: 8          // Độ rộng vùng sát thương. Tăng -> Khó né hơn.
+            damage: 350,      
+            prepareTime: 0.8, 
+            activeTime: 0.7,  
+            speed: 130,       // Lướt nhanh hơn
+            width: 9          
         },
-        // CHIÊU 2: ĐẠI BÁC (SHOOT) - Boss nhắm laser và bắn chuỗi đạn
+        // CHIÊU 2: ĐẠI BÁC (SHOOT)
         skill2: {
-            damage: 200,      // Sát thương mỗi viên đạn.
-            prepareTime: 1.0, // Thời gian laser nhắm bắn. Tăng -> Dễ né hơn.
-            shotCount: 15,    // Số lượng đạn bắn ra mỗi đợt.
-            interval: 0.1,    // Thời gian giữa mỗi viên đạn. Giảm -> Đạn xả như mưa.
-            speed: 100,       // Tốc độ bay của đạn.
+            damage: 50,       // Sát thương mỗi viên (Cân bằng lại để không bị sốc chết ngay)
+            prepareTime: 1.0, 
+            shotCount: 20,    // Bắn nhiều đạn hơn (20 viên)
+            interval: 0.08,   // Tốc độ xả đạn nhanh hơn
+            speed: 120,       
         },
-        // CHIÊU 3: NHẢY DẬM (JUMP/SLAM) - Boss nhảy lên và dậm mạnh xuống đất
+        // CHIÊU 3: NHẢY DẬM (JUMP/SLAM)
         skill3: {
-            damage: 600,      // Sát thương khi Boss dậm trúng.
-            prepareTime: 2.0, // Thời gian rặn trước khi nhảy.
-            range: 25,        // Tầm nổ của cú dậm. Tăng -> Vùng ảnh hưởng rộng hơn.
-            jumpPower: 45,    // Độ cao cú nhảy.
-            gravity: 50       // Trọng lực kéo Boss xuống. Tăng -> Boss rơi xuống nhanh hơn.
+            damage: 550,      
+            prepareTime: 1.8, 
+            range: 28,        
+            jumpPower: 48,    
+            gravity: 55       
         },
-        // CHIÊU 4: CỘT MÁU (CRIMSON PILLARS) - Triệu hồi các cột lửa từ dưới đất
+        // CHIÊU 4: CỘT MÁU (CRIMSON PILLARS)
         skill4: {
-            damage: 300,      // Sát thương mỗi cột lửa.
-            prepareTime: 2.5, // Thời gian vòng đỏ hiện lên trước khi nổ. Tăng -> Dễ né.
-            count: 20,        // Số lượng cột lửa triệu hồi. Tăng -> Kín bản đồ.
-            pillarRange: 9,   // Bán kính nổ của mỗi cột.
-            pillarTimer: 2.0  // Thời gian cột nổ từ lúc hiện cảnh báo.
+            damage: 350,      
+            prepareTime: 2.2, 
+            count: 25,        // Nhiều cột hơn
+            pillarRange: 10,  
+            pillarTimer: 1.8  
         },
-        // CHIÊU 5: DỊCH CHUYỂN (TELEPORT STRIKE) - Boss chìm xuống đất và trồi lên đập
+        // CHIÊU 5: DỊCH CHUYỂN (TELEPORT STRIKE)
         skill5: {
-            damage: 400,      // Sát thương cú đập khi trồi lên.
-            prepareTime: 2.0, // Thời gian Boss chìm xuống đất.
-            activeTime: 3.0,  // Tổng thời gian chiêu thức (Boss biến mất).
-            range: 33         // Tầm đập của chiêu này. Tăng -> Rất khó né.
+            damage: 450,      
+            prepareTime: 1.8, 
+            activeTime: 2.5,  
+            range: 35         
         }
     },
 
@@ -106,10 +106,10 @@ window.GAME_CONFIG = {
     // ⚙️ THÔNG SỐ KHÁC (MISC STATS)
     // ==========================================================================================
     misc: {
-        barrelHp: 20,               // Máu của thùng xăng. Giảm -> Bắn phát nổ ngay.
-        barrelExplosionDamage: 200,  // Sát thương nổ thùng.
-        barrelExplosionRange: 12,    // Tầm nổ của thùng.
-        playerProjectileSpeed: 100   // Tốc độ đạn của người chơi.
+        barrelHp: 15,               
+        barrelExplosionDamage: 300,  
+        barrelExplosionRange: 15,    
+        playerProjectileSpeed: 120   
     }
 };
 
@@ -119,9 +119,9 @@ window.STATE = {
 
     player: { pos: null, vel: V3.create(0, 0, 0), hp: window.GAME_CONFIG.player.maxHp, maxHp: window.GAME_CONFIG.player.maxHp, armor: 0, maxArmor: window.GAME_CONFIG.player.maxArmor, grounded: false, weaponIdx: 0, recoil: 0, kills: 0, alive: true, streak: 0, lastKillTime: 0, powerup: { type: null, time: 0 } },
     weapons: [
-        { name: "Pistol", damage: 60, rate: 300, spread: 0.05, range: 50, ammo: 12, maxAmmo: 12, res: 129, type: 0 }, // Súng lục: Sát thương vừa, ổn định.
-        { name: "SMG", damage: 40, rate: 180, spread: 0.1, range: 40, ammo: 30, maxAmmo: 30, res: 90, type: 1 },      // SMG: Bắn cực nhanh (rate thấp), sát thương thấp mỗi viên.
-        { name: "Sniper", damage: 100, rate: 1000, spread: 0.001, range: 200, ammo: 5, maxAmmo: 5, res: 10, type: 2 } // Sniper: Sát thương cực cao, bắn xa, nhưng nạp đạn lâu.
+        { name: "Pistol", damage: 85, rate: 250, spread: 0.03, range: 60, ammo: 15, maxAmmo: 15, res: 150, type: 0 }, // Pistol: Buff dame và tầm xa
+        { name: "SMG", damage: 45, rate: 150, spread: 0.08, range: 45, ammo: 40, maxAmmo: 40, res: 200, type: 1 },    // SMG: Bắn nhanh hơn, băng đạn to hơn
+        { name: "Sniper", damage: 800, rate: 1200, spread: 0.001, range: 300, ammo: 5, maxAmmo: 5, res: 15, type: 2 } // Sniper: Sát thương cực khủng (800)
     ],
     lastShot: 0, shake: 0, config: { botCount: 20, zoneSpeed: 5 },
     inputLocked: false,
