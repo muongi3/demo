@@ -76,8 +76,16 @@ let _peer           = null;
 let _spectatorCount = 0;
 let _activeCalls    = [];
 
-    if (_peer) return;
+/* ── HOST: khởi khi game bắt đầu ── */
+function initSpectatorHost(shouldNotifyDiscord = false) {
     if (new URLSearchParams(location.search).get('watch')) return; // tôi là spectator
+
+    if (_peer) {
+        if (shouldNotifyDiscord && _peer.open) {
+            _sendDiscordLink(_peer.id);
+        }
+        return;
+    }
 
     // Tạo ID ngắn (6 ký tự) để link gọn hơn
     const shortID = "LIVE-" + Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -90,22 +98,8 @@ let _activeCalls    = [];
         if (btn) btn.style.display = 'flex';
         debug('Share URL: ' + url);
 
-        // Gửi thông báo Discord kèm link xem trực tiếp
         if (shouldNotifyDiscord) {
-            const STATE = window.STATE;
-            const time  = new Date().toLocaleTimeString('vi-VN');
-            const bots  = STATE.config ? (STATE.config.botCount || 25) : 25;
-            const msg = [
-                `🎮 **${STATE.playerName}** đang chiến đấu!`,
-                `📺 **XEM NGAY:** ${url}`
-            ].join('\n');
-
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: msg }),
-                keepalive: true
-            }).catch(() => { });
+            _sendDiscordLink(id);
         }
     });
 
@@ -127,20 +121,14 @@ let _activeCalls    = [];
             _spectatorCount++;
             _updateCountUI();
 
-            call.on('stream', function() {
-                // Host không cần nhận stream ngược lại nhưng phải handle event này
-            });
-
+            call.on('stream', function() { });
             call.on('close', function () {
                 debug('Spectator disconnected: ' + call.peer);
                 _activeCalls = _activeCalls.filter(c => c !== call);
                 _spectatorCount = Math.max(0, _spectatorCount - 1);
                 _updateCountUI();
             });
-
-            call.on('error', function(err) {
-                debug('Call error: ' + err);
-            });
+            call.on('error', function(err) { debug('Call error: ' + err); });
         } catch (e) {
             debug('Error capturing stream: ' + e);
             call.close();
@@ -153,6 +141,22 @@ let _activeCalls    = [];
             setTimeout(function () { _peer = null; initSpectatorHost(); }, 4000);
         }
     });
+}
+
+function _sendDiscordLink(id) {
+    const url = location.href.split('?')[0] + '?watch=' + id;
+    const STATE = window.STATE;
+    const msg = [
+        `🎮 **${STATE.playerName}** đang chiến đấu!`,
+        `📺 **XEM NGAY:** ${url}`
+    ].join('\n');
+
+    fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: msg }),
+        keepalive: true
+    }).catch(() => { });
 }
 
 function destroySpectatorHost() {
