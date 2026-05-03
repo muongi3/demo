@@ -108,24 +108,24 @@ window.GAME_CONFIG = {
     weapons: {
         pistol: {
             damage: 65,
-            rate: 250,
-            spread: 0.03,
+            rate: 400,           // Thực tế: ~150 RPM (súng lục bán tự động)
+            spread: 0.02,
             range: 60,
             maxAmmo: 15,
             res: 150
         },
         smg: {
-            damage: 50,
-            rate: 150,
-            spread: 0.08,
+            damage: 40,
+            rate: 100,           // Thực tế: ~600 RPM (SMG)
+            spread: 0.06,
             range: 45,
             maxAmmo: 40,
             res: 200
         },
         sniper: {
             damage: 300,
-            rate: 1200,
-            spread: 0.1,
+            rate: 1500,          // Thực tế: bolt-action ~40 RPM
+            spread: 0.01,        // Độ chính xác cao hơn
             range: 300,
             maxAmmo: 5,
             res: 20
@@ -1226,27 +1226,37 @@ function update(dt) {
         });
 
         if (proj.isPlayer && !proj.dead) {
-            // --- 3. VA CHẠM QUÁI (BOT) ---
+            // --- 3. VA CHẠM QUÁI (BOT) - HITBOX 3 CẤP TĂNG DẦN ---
             STATE.bots.forEach(bot => {
-                if (proj.dead || bot.hp <= 0 || bot.isEvolvingLv3) return; // Dừng ngay nếu đạn đã trúng
+                if (proj.dead || bot.hp <= 0 || bot.isEvolvingLv3) return;
 
                 const dy = nextPos.y - bot.pos.y;
                 const dx = nextPos.x - bot.pos.x, dz = nextPos.z - bot.pos.z;
                 const distXZ = Math.sqrt(dx * dx + dz * dz);
 
-                // Hitbox theo cấp độ (thực tế hơn)
-                let hitboxScale = 1.0;
-                if (bot.isFinal) hitboxScale = 1.8;       // Lv3: to nhưng không quá ưu tiên
-                else if (bot.isHorror) hitboxScale = 1.3; // Lv2
+                // HITBOX TĂNG DẦN: Lv1 nhỏ < Lv2 vừa < Lv3 to
+                let bodyRadius, bodyHeight, headY;
+                if (bot.isFinal) {
+                    // Lv3: Tổ chạy, to lớn
+                    bodyRadius = isMobile ? 2.5 : 1.2;
+                    bodyHeight = 2.8;
+                    headY      = 2.3;
+                } else if (bot.isHorror) {
+                    // Lv2: Vừa phải
+                    bodyRadius = isMobile ? 1.8 : 0.9;
+                    bodyHeight = 2.2;
+                    headY      = 1.8;
+                } else {
+                    // Lv1: Bình thường
+                    bodyRadius = isMobile ? 1.4 : 0.7;
+                    bodyHeight = 1.8;
+                    headY      = 1.5;
+                }
 
-                const hitRadius = (isMobile ? 1.8 : 0.7) * hitboxScale; // Thực tế hơn trước
-                const hitHeight = 1.8 * hitboxScale;     // Chiều cao cơ thể
-                const headY    = 1.5 * hitboxScale;      // Phần đầu: chỉ từ 1.5m trở lên
-
-                if (distXZ < hitRadius && dy > -0.3 && dy < hitHeight) {
+                if (distXZ < bodyRadius && dy > -0.2 && dy < bodyHeight) {
                     let dmg = proj.dmg;
-                    // Headshot CHỈ tính khi đạn rõ ràng trúng vùng đầu
-                    const isHead = (dy > headY && distXZ < hitRadius * 0.6);
+                    // Headshot chỉ tính khi rõ ràng trúng phần đầu (distXZ nhỏ)
+                    const isHead = (dy > headY && distXZ < bodyRadius * 0.5);
 
                     if (isHead) {
                         dmg = Math.round(proj.dmg * 1.5);
@@ -1260,7 +1270,7 @@ function update(dt) {
                     if (!proj.isUlti) STATE.player.damageDealt += dmg;
                     playAudio('hit');
                     showHitMarker();
-                    proj.dead = true; // Dánh dấu ngay để khỏng chế frame tiếp
+                    proj.dead = true;
                 }
             });
 
@@ -1297,7 +1307,9 @@ function update(dt) {
             }
         }
 
-        if (proj.dead && proj.isUlti) {
+        // --- UNTI: CHỈ NỔ 1 LẦN duy nhất ---
+        if (proj.dead && proj.isUlti && !proj.exploded) {
+            proj.exploded = true; // Flag ngăn nổ 2 lần
             createExplosion(proj.pos, window.GAME_CONFIG.ultimate.explosionRange, window.GAME_CONFIG.ultimate.damage, true, true);
         }
         proj.pos = nextPos; proj.life -= dt; if (proj.life < 0) proj.dead = true;
@@ -2274,18 +2286,34 @@ function draw() {
 
     // Xử lý Aim & Sprint Lerp (Mượt mà)
     STATE.aimLerp += ((STATE.isAiming ? 1 : 0) - STATE.aimLerp) * 0.2;
-    STATE.sprintLerp = (STATE.sprintLerp || 0) + (((STATE.keys['ShiftLeft'] && !STATE.isAiming) ? 1 : 0) - (STATE.sprintLerp || 0)) * 0.05;
+    // Sprint lerp mượt hơn (tăng tốc độ phản hồi)
+    const isSprinting = (STATE.keys['ShiftLeft'] || STATE.isSprinting) && !STATE.isAiming;
+    STATE.sprintLerp = (STATE.sprintLerp || 0) + ((isSprinting ? 1 : 0) - (STATE.sprintLerp || 0)) * 0.08;
+
+    // Bob camera khi di chuyển (phân biệt đi bộ vs chạy nhanh)
+    const isMoving = STATE.keys['KeyW'] || STATE.keys['KeyS'] || STATE.keys['KeyA'] || STATE.keys['KeyD'] || (STATE.joystick && V3.len(STATE.joystick) > 0.1);
+    if (!STATE.bobTimer) STATE.bobTimer = 0;
+    if (isMoving) STATE.bobTimer += isSprinting ? 0.18 : 0.09; // Chạy nhanh gấp đôi
+    const bobAmt  = isMoving ? (isSprinting ? 0.06 : 0.025) : 0; // Biên độ rung
+    const bobY    = Math.sin(STATE.bobTimer) * bobAmt;
+    const bobX    = Math.cos(STATE.bobTimer * 0.5) * bobAmt * 0.5;
 
     const aspect = gl.canvas.width / gl.canvas.height;
     const zoomFactor = [0.3, 0.6, 0.95][p.weaponIdx];
-    const fov = 1.2 - (STATE.aimLerp * zoomFactor) + (STATE.sprintLerp * 0.3);
+    // Sprint tăng FOV mạnh hơn (0.3 → 0.55) để cảm giác chạy rõ hơn
+    const fov = 1.2 - (STATE.aimLerp * zoomFactor) + (STATE.sprintLerp * 0.55);
 
     const proj = M4.perspective(fov, aspect, 0.1, 1000);
     const yaw = STATE.camera.rot.y, pitch = STATE.camera.rot.x;
 
     // Giật cam chỉ trên PC (mobile tắt để mượt hơn)
     const shakeAmt = isMobile ? 0 : STATE.shake;
-    const eye = V3.create(p.pos.x + (Math.random() - 0.5) * shakeAmt, p.pos.y + 1.1 + (Math.random() - 0.5) * shakeAmt, p.pos.z);
+    // Áp dụng bob vào vị trí mắt camera
+    const eye = V3.create(
+        p.pos.x + (Math.random() - 0.5) * shakeAmt + bobX,
+        p.pos.y + 1.1 + (Math.random() - 0.5) * shakeAmt + bobY,
+        p.pos.z
+    );
     const forward = V3.create(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)), center = V3.add(eye, forward), view = M4.lookAt(eye, center, V3.create(0, 1, 0));
 
     gl.uniformMatrix4fv(locs.proj, false, proj);
