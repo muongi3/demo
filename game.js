@@ -1418,6 +1418,16 @@ function update(dt) {
     });
     STATE.particles = STATE.particles.filter(p => p.life > 0);
     if (STATE.particles.length > 1000) STATE.particles = STATE.particles.slice(-1000); // Giới hạn 1000 hạt để tránh lag
+    
+    // [CẢI TIẾN] Hiệu ứng tàn lửa rơi (Hellfire) khi đánh Boss
+    if (STATE.boss && STATE.boss.active && Math.random() < 0.2) {
+        const spawnPos = {
+            x: p.pos.x + (Math.random() - 0.5) * 100,
+            y: p.pos.y + 50 + Math.random() * 20,
+            z: p.pos.z + (Math.random() - 0.5) * 100
+        };
+        spawnParticles(spawnPos, 1, [0.5 + Math.random() * 0.5, 0, 0], 0.2, 'smoke');
+    }
 
     if (closeLoot) {
         let pickedName = "";
@@ -1894,7 +1904,22 @@ function takeDamage(p, amt, silent = false) {
     }
 }
 
-function showHitMarker() { const el = document.getElementById('hit-marker'); el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 100); }
+function showHitMarker() { 
+    const el = document.getElementById('hit-marker'); 
+    const ch = document.getElementById('crosshair');
+    el.style.opacity = 1; 
+    if (ch) {
+        ch.style.borderColor = '#ff3333';
+        ch.style.transform = 'translate(-50%, -50%) scale(1.6)';
+    }
+    setTimeout(() => {
+        el.style.opacity = 0;
+        if (ch) {
+            ch.style.borderColor = '#00ffcc';
+            ch.style.transform = 'translate(-50%, -50%) scale(1.0)';
+        }
+    }, 120); 
+}
 function spawnParticles(pos, count, color, speedMult = 1.0, type = 'fire') {
     // Giới hạn particles trên mobile thấp hơn để tránh lag CPU
     if (isMobile) count = Math.min(count, 12);

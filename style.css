@@ -110,13 +110,23 @@ canvas {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 8px;
-    height: 8px;
-    border: 2px solid rgba(0, 255, 0, 0.8);
+    width: 10px;
+    height: 10px;
+    border: 2px solid #00ffcc;
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+    transition: transform 0.1s ease, border-color 0.1s ease;
+    z-index: 100;
 }
+#crosshair::before, #crosshair::after {
+    content: "";
+    position: absolute;
+    background: #00ffcc;
+}
+/* Thêm các vạch nhỏ cho ngầu */
+#crosshair::before { top: 50%; left: -5px; width: 4px; height: 2px; transform: translateY(-50%); }
+#crosshair::after { top: 50%; right: -5px; width: 4px; height: 2px; transform: translateY(-50%); }
 
 #health-bar-container {
     bottom: 30px;
