@@ -2018,7 +2018,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    window.aimSensitivity = parseFloat(localStorage.getItem('aimSensitivity')) || 1.0;
+    window.aimSensitivity = parseFloat(localStorage.getItem('aimSensitivity')) || 2.0;
     const sensSlider = document.getElementById('sensitivity-slider');
     const sensVal = document.getElementById('sensitivity-val');
     if (sensSlider) {
