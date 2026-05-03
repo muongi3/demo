@@ -709,15 +709,19 @@ canvas {
 
 
 
-/* OIIA CAT */
+/* [CẢI TIẾN] OIIA CAT EPIC VERSION */
 #hakariphonk-cat {
     position: fixed;
-    left: 0;
-    top: 50%;
-    width: 300px;
+    left: 50%;
+    top: 45%;
+    transform: translate(-50%, -50%) scale(0);
+    width: min(450px, 80vw);
     pointer-events: none;
     display: none;
-    animation: oiiaRunFlip 2s linear infinite alternate, oiiaBounce 0.3s ease-in-out infinite;
+    z-index: 10000;
+    filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.8));
+    animation: oiiaEpicEntry 1.5s cubic-bezier(0.17, 0.89, 0.32, 1.49) forwards, 
+               oiiaEpicPulse 0.5s ease-in-out infinite alternate;
 }
 
 #click-anywhere {
@@ -752,21 +756,14 @@ canvas {
 
 /* --run-left / --run-right đã gộp vào :root ở trên */
 
-@keyframes oiiaRunFlip {
-    0% { transform: translateX(var(--run-left)) scaleX(2); }
-    24.99% { transform: translateX(var(--run-right)) scaleX(2); }
-    25% { transform: translateX(var(--run-right)) scaleX(-2); }
-    49.99% { transform: translateX(var(--run-left)) scaleX(-2); }
-    50% { transform: translateX(var(--run-left)) scaleX(2); }
-    74.99% { transform: translateX(var(--run-right)) scaleX(2); }
-    75% { transform: translateX(var(--run-right)) scaleX(-2); }
-    100% { transform: translateX(var(--run-left)) scaleX(-2); }
+@keyframes oiiaEpicEntry {
+    0% { transform: translate(-50%, -50%) scale(0) rotate(-45deg); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
 }
 
-@keyframes oiiaBounce {
-    0% { margin-top: 0; }
-    50% { margin-top: -100px; }
-    100% { margin-top: 0; }
+@keyframes oiiaEpicPulse {
+    from { filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.6)); }
+    to { filter: drop-shadow(0 0 40px rgba(255, 0, 255, 1)); transform: translate(-50%, -50%) scale(1.05); }
 }
 
 @keyframes fireGlow {
@@ -1428,9 +1425,31 @@ canvas {
         letter-spacing: 2px !important;
     }
 
-    /* [CẢI TIẾN] Tối ưu menu cài đặt HUD cho màn hình ngang */
     #settings-modal .card {
         margin-top: 5px !important;
     }
 }
+
+/* [CẢI TIẾN] Hiệu ứng số dame phong cách Free Fire */
+.damage-number {
+    position: fixed;
+    pointer-events: none;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 24px;
+    text-shadow: 2px 2px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000;
+    z-index: 100;
+    animation: damageFloat 0.8s ease-out forwards;
+    white-space: nowrap;
+}
+.damage-normal { color: #ffff00; } /* Vàng cho dame thường */
+.damage-headshot { color: #ff0000; font-size: 32px; } /* Đỏ to cho Headshot */
+
+@keyframes damageFloat {
+    0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+    20% { transform: translate(-50%, -20px) scale(1.2); opacity: 1; }
+    50% { transform: translate(-50%, -50px) scale(1.0); opacity: 1; }
+    100% { transform: translate(-50%, -100px) scale(0.8); opacity: 0; }
+}
+
 #sprint-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 5; background: radial-gradient(circle, transparent 60%, rgba(255,255,255,0.1) 100%); overflow: hidden; } #sprint-overlay::before { content: ''; position: absolute; inset: -50%; background-image: radial-gradient(ellipse at center, transparent 30%, white 31%, transparent 32%), radial-gradient(ellipse at center, transparent 40%, white 41%, transparent 42%); background-size: 15% 2%, 25% 1%; background-repeat: repeat; opacity: 0.3; animation: speedLines 0.3s linear infinite; } @keyframes speedLines { 0% { transform: scale(1) rotate(0deg); opacity: 0; } 50% { opacity: 0.4; } 100% { transform: scale(1.5) rotate(0.1deg); opacity: 0; } } #sprint-overlay.hidden { display: none; }
