@@ -165,8 +165,9 @@ window.DIFFICULTY_PRESETS = {
         enrageLv2Pct: 0.30, lv3Count: 3,
         bossHpMult: 0.6, bossDmgMult: 0.5, bossSkillCdMult: 1.5, bossSpeedMult: 0.7,
         playerHpMult: 1.2, playerSpdMult: 1.0,
-        weaponDmgMult: 1.0,   // súng cơ bản
-        ultiDmgMult:   1.0,   // unti cơ bản
+        weaponDmgMult: 1.0,
+        ultiDmgMult:   1.0,
+        ultiChargeMult: 0.75,  // Cần 1500 dame — DỄ charge Unti
     },
     normal: {
         label: '⚔️ THƯỜNG', color: '#ffcc00',
@@ -174,8 +175,9 @@ window.DIFFICULTY_PRESETS = {
         enrageLv2Pct: 0.40, lv3Count: 5,
         bossHpMult: 1.0, bossDmgMult: 1.0, bossSkillCdMult: 1.0, bossSpeedMult: 1.0,
         playerHpMult: 1.0, playerSpdMult: 1.0,
-        weaponDmgMult: 1.1,   // +10% dame súng
-        ultiDmgMult:   1.2,   // +20% dame unti
+        weaponDmgMult: 1.1,
+        ultiDmgMult:   1.2,
+        ultiChargeMult: 1.0,   // Cần 2000 dame — cơ bản
     },
     hard: {
         label: '🔥 KHÓ', color: '#ff6600',
@@ -183,8 +185,9 @@ window.DIFFICULTY_PRESETS = {
         enrageLv2Pct: 0.55, lv3Count: 7,
         bossHpMult: 1.5, bossDmgMult: 1.6, bossSkillCdMult: 0.75, bossSpeedMult: 1.3,
         playerHpMult: 0.85, playerSpdMult: 0.9,
-        weaponDmgMult: 1.2,   // +20% dame súng
-        ultiDmgMult:   1.4,   // +40% dame unti
+        weaponDmgMult: 1.2,
+        ultiDmgMult:   1.4,
+        ultiChargeMult: 1.3,   // Cần 2600 dame — phải đánh thật nhiều
     },
     extreme: {
         label: '💀 CỰC KHÓ', color: '#ff0033',
@@ -192,8 +195,9 @@ window.DIFFICULTY_PRESETS = {
         enrageLv2Pct: 0.70, lv3Count: 10,
         bossHpMult: 2.2, bossDmgMult: 2.5, bossSkillCdMult: 0.55, bossSpeedMult: 1.6,
         playerHpMult: 0.7, playerSpdMult: 0.85,
-        weaponDmgMult: 1.3,   // +30% dame súng
-        ultiDmgMult:   1.6,   // +60% dame unti (khó hơn nhưng phần thưởng to hơn)
+        weaponDmgMult: 1.3,
+        ultiDmgMult:   1.6,
+        ultiChargeMult: 1.75,  // Cần 3500 dame — cần kỹ năng thực sự
     }
 };
 
@@ -232,14 +236,16 @@ window.applyDifficulty = function(key) {
     b.player.maxArmor        = Math.round(1000 * d.playerHpMult);
     b.player.walkSpeed       = 8.5 * d.playerSpdMult;
     b.player.sprintMultiplier= 1.9 * d.playerSpdMult;
-    // Vũ khí người chơi (+10% mỗi cấp)
+    // Vũ khí người chơi
     const wm = d.weaponDmgMult || 1.0;
     b.weapons.pistol.damage = Math.round(65  * wm);
     b.weapons.smg.damage    = Math.round(40  * wm);
     b.weapons.sniper.damage = Math.round(300 * wm);
-    // Unti (+20% mỗi cấp)
-    const um = d.ultiDmgMult || 1.0;
-    b.ultimate.damage = Math.round(800 * um);
+    // Unti — dame và ngưỡng tích lũy
+    const um = d.ultiDmgMult    || 1.0;
+    const cm = d.ultiChargeMult || 1.0;
+    b.ultimate.damage        = Math.round(800  * um);
+    b.ultimate.requiredDamage= Math.round(2000 * cm); // Càng khó càng phải gom dame nhiều
     localStorage.setItem('difficulty', key);
 };
 
@@ -3143,10 +3149,10 @@ window.addEventListener('DOMContentLoaded', () => {
     const diffBtns = document.querySelectorAll('.diff-btn');
     const diffDesc = document.getElementById('diff-desc');
     const diffDescTexts = {
-        easy:    '😊 Bot/Boss yếu, máu +20% | Súng cơ bản, Unti cơ bản',
-        normal:  '⚔️ Cân bằng | Súng +10%, Unti +20%',
-        hard:    '🔥 Bot/Boss mạnh | Súng +20%, Unti +40%',
-        extreme: '💀 Cực kỳ nguy hiểm | Súng +30%, Unti +60%!',
+        easy:    '😊 Bot/Boss yếu, máu +20% | Unti: cần 1500 dame (dễ charge)',
+        normal:  '⚔️ Cân bằng | Unti: cần 2000 dame, dame +20%',
+        hard:    '🔥 Bot/Boss mạnh | Unti: cần 2600 dame, dame +40%',
+        extreme: '💀 Cực nguy hiểm | Unti: cần 3500 dame, dame +60%!',
     };
     function syncDiffButtons() {
         diffBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.diff === window.CURRENT_DIFFICULTY));
