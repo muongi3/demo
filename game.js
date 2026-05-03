@@ -944,7 +944,7 @@ document.addEventListener("contextmenu", e => e.preventDefault());
 
 
 
-const OIIA_CAT = { spawned: false, active: false };
+const HAKARI_DANCE = { spawned: false, active: false };
 
 function startGame() {
     const nameInput = document.getElementById('player-name-input');
@@ -1899,7 +1899,7 @@ function killBoss() {
     }
 
     document.getElementById('boss-hp-container').style.display = 'none';
-    spawnOiiaCat();
+    spawnHakariDance();
     playBossSound();
     showClickAnywhere(5000); // Đợi 5s rồi hiện chữ Tiếp tục
     
@@ -2921,13 +2921,13 @@ function resumeGame() {
     document.getElementById('pause-menu').classList.add('hidden'); if (gl && gl.canvas) gl.canvas.requestPointerLock();
 }
 
-function spawnOiiaCat() { 
-    OIIA_CAT.spawned = true; 
-    const cat = document.getElementById("hakariphonk-cat"), sound = document.getElementById("hakariphonk-sound"); 
+function spawnHakariDance() { 
+    HAKARI_DANCE.spawned = true; 
+    const img = document.getElementById("hakari-dance-img"), sound = document.getElementById("hakari-dance-sound"); 
     const vBg = document.getElementById("victory-bg");
     if (vBg) vBg.style.display = "block";
-    cat.style.display = "block"; 
-    sound.currentTime = 0; sound.play(); 
+    if (img) img.style.display = "block"; 
+    if (sound) { sound.currentTime = 0; sound.play(); }
 }
 
 function loop(now) {
@@ -2955,10 +2955,10 @@ function showClickAnywhere(delay = 10000) {
         overlay.onclick = () => {
             overlay.style.display = "none";
             continueText.style.display = "none";
-            const cat = document.getElementById("hakariphonk-cat");
+            const img = document.getElementById("hakari-dance-img");
             const vBg = document.getElementById("victory-bg");
-            const sound = document.getElementById("hakariphonk-sound");
-            if (cat) cat.style.display = "none";
+            // Không tắt nhạc, để nó tiếp tục cháy
+            if (img) img.style.display = "none";
             if (vBg) vBg.style.display = "none";
             // Không tắt nhạc, để nó tiếp tục cháy
             overlay.onclick = null;
