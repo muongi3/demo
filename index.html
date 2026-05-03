@@ -116,19 +116,18 @@
                         style="width: 100%; height: 2px;">
                 </div>
                 <div style="margin-bottom: 15px; color: white; text-align: left;">
-                    <label for="sensitivity-slider" style="font-size: 10px;">Tốc độ xoay màn hình: <span
+                    <label for="sensitivity-slider" style="font-size: 10px;">Độ nhạy ngắm: <span
                             id="sensitivity-val">1.0</span>x</label>
                     <input type="range" id="sensitivity-slider" min="0.1" max="5.0" step="0.1" value="1.0"
                         style="width: 100%; height: 2px;">
                 </div>
-                <div style="display:flex; gap:5px; justify-content:center;">
+                <div style="display:flex; gap:4px; justify-content:center;">
                     <button id="btn-reset-hud" class="menu-btn"
-                        style="width:auto; padding: 5px 8px; font-size: 9px; background: rgba(255,0,0,0.4)">MẶC
-                        ĐỊNH</button>
+                        style="width:auto; min-width:unset; padding: 4px 6px; font-size: 8px; background: rgba(255,0,0,0.4); border-radius: 4px;">MẶC ĐỊNH</button>
                     <button id="btn-cancel-hud" class="menu-btn"
-                        style="width:auto; padding: 5px 8px; font-size: 9px; background: rgba(100,100,100,0.4)">HỦY</button>
+                        style="width:auto; min-width:unset; padding: 4px 6px; font-size: 8px; background: rgba(100,100,100,0.4); border-radius: 4px;">HỦY</button>
                     <button id="btn-save-hud" class="menu-btn"
-                        style="width:auto; padding: 5px 8px; font-size: 9px; background: rgba(0,255,0,0.4)">LƯU</button>
+                        style="width:auto; min-width:unset; padding: 4px 6px; font-size: 8px; background: rgba(0,255,0,0.4); border-radius: 4px;">LƯU</button>
                 </div>
             </div>
         </div>
@@ -160,12 +159,12 @@
 
         <!-- BOSS HEALTH BAR -->
         <div id="boss-hp-container"
-            style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); width:50%; height:25px; background:rgba(0,0,0,0.8); border:2px solid #ff0000; z-index:100; box-shadow: 0 0 30px rgba(255,0,0,0.4);">
+            style="display:none; position:fixed; top:15px; left:50%; transform:translateX(-50%); width:40%; height:18px; background:rgba(0,0,0,0.8); border:1px solid #ff0000; z-index:100; box-shadow: 0 0 20px rgba(255,0,0,0.3);">
             <div id="boss-hp-fill"
                 style="width:100%; height:100%; background:linear-gradient(90deg, #990000, #ff0000); transition:width 0.2s;">
             </div>
             <div
-                style="position:absolute; width:100%; text-align:center; color:white; font-weight:900; top:3px; text-shadow:2px 2px 4px black; font-size:14px; letter-spacing:4px;">
+                style="position:absolute; width:100%; text-align:center; color:white; font-weight:900; top:2px; text-shadow:2px 2px 4px black; font-size:11px; letter-spacing:3px;">
                 HAKARI: THE DIVINE</div>
         </div>
 
@@ -183,9 +182,7 @@
 
             <!-- Nhập tên -->
             <div class="menu-input-wrap">
-                <input type="text" id="player-name-input"
-                    class="menu-name-input"
-                    placeholder="NHẬP TÊN CỦA BẠN..."
+                <input type="text" id="player-name-input" class="menu-name-input" placeholder="NHẬP TÊN CỦA BẠN..."
                     maxlength="15">
             </div>
 
@@ -194,9 +191,7 @@
                 <div class="menu-slider-label">
                     Số lượng Bot: <span id="bot-count-val" class="menu-slider-val">25</span>
                 </div>
-                <input type="range" id="bot-count-slider"
-                    class="menu-range"
-                    min="1" max="100" value="25">
+                <input type="range" id="bot-count-slider" class="menu-range" min="5" max="100" value="25">
             </div>
 
             <!-- Nút chính -->
@@ -204,7 +199,7 @@
 
             <!-- Hàng nút phụ -->
             <div class="menu-btn-row">
-                <button id="btn-open-guide"  class="menu-btn menu-btn-guide">📖 Hướng dẫn</button>
+                <button id="btn-open-guide" class="menu-btn menu-btn-guide">📖 Hướng dẫn</button>
                 <button id="btn-open-feedback" class="menu-btn menu-btn-feedback">📝 Góp ý</button>
             </div>
 
@@ -226,16 +221,19 @@
 
             <div class="guide-section">
                 <h3 style="color: #00ffcc;">🎮 HỆ THỐNG ĐIỀU KHIỂN</h3>
-                <p>• <b>PC:</b> WASD (Di chuyển), SHIFT (Chạy), SPACE (Nhảy), E (UNTI), CTRL (Ẩn/Hiện chuột), 1/2/3 (Đổi súng).</p>
+                <p>• <b>PC:</b> WASD (Di chuyển), SHIFT (Chạy), SPACE (Nhảy), E (UNTI), CTRL (Ẩn/Hiện chuột), 1/2/3 (Đổi
+                    súng).</p>
                 <p>• <b>Mobile:</b> Joystick trái, Vuốt phải xoay Camera, Nút UNTI sáng lên khi đủ nộ.</p>
             </div>
 
             <div class="guide-section">
                 <h3 style="color: #ffcc00;">⚔️ CƠ CHẾ CHIẾN ĐẤU & TIẾN HÓA</h3>
-                <p>• <b>Tiến hóa Bot:</b> Quái sẽ mạnh dần theo 3 giai đoạn. <b>3 con cuối cùng</b> sẽ hóa khổng lồ, máu cực trâu và sát thương cao.</p>
+                <p>• <b>Tiến hóa Bot:</b> Quái sẽ mạnh dần theo 3 giai đoạn. <b>3 con cuối cùng</b> sẽ hóa khổng lồ, máu
+                    cực trâu và sát thương cao.</p>
                 <p>• <b>Headshot:</b> Bắn vào đầu (Bot & Boss) gây <b>x1.5 sát thương</b> và hiện tia lửa vàng.</p>
                 <p>• <b>Giáp (Armor):</b> Là lớp bảo vệ quan trọng nhất, giảm tới <b>70% sát thương</b> nhận vào.</p>
-                <p>• <b>Nộ (Ultimate):</b> Gây 1000 sát thương để sạc. Khi dùng UNTI, bạn sẽ <b>Bất tử</b> trong lúc gồng và làm Boss bị <b>Choáng (Flinch)</b>.</p>
+                <p>• <b>Nộ (Ultimate):</b> Gây 1000 sát thương để sạc. Khi dùng UNTI, bạn sẽ <b>Bất tử</b> trong lúc
+                    gồng và làm Boss bị <b>Choáng (Flinch)</b>.</p>
             </div>
 
             <div class="guide-section">
@@ -243,7 +241,8 @@
                 <p>• <b>Né vùng đỏ:</b> Luôn đứng ngoài các vòng tròn hoặc hình chữ nhật màu đỏ trên đất.</p>
                 <p>• <b>Tận dụng Jump Pad:</b> Dùng bàn nhún xanh lá để bay lên cao, né cú dậm nhảy của Boss.</p>
                 <p>• <b>Lợi thế độ cao:</b> Nhảy lên nóc xe hoặc nóc nhà để tránh bị quái vây quanh.</p>
-                <p>• <b>Vật phẩm tiếp tế:</b> Các hòm máu/giáp/đạn hồi lại sau <b>20 giây</b>. Hãy ghi nhớ vị trí của chúng!</p>
+                <p>• <b>Vật phẩm tiếp tế:</b> Các hòm máu/giáp/đạn hồi lại sau <b>20 giây</b>. Hãy ghi nhớ vị trí của
+                    chúng!</p>
             </div>
 
             <div class="guide-section">
@@ -315,61 +314,61 @@
 
     <!-- Script giảm thông báo truy cập: request Fullscreen trước Pointer Lock -->
     <script>
-    (function () {
-        'use strict';
+        (function () {
+            'use strict';
 
-        // Hàm request fullscreen cross-browser
-        function requestFullscreen(el) {
-            if (el.requestFullscreen)           return el.requestFullscreen({ navigationUI: 'hide' });
-            if (el.webkitRequestFullscreen)     return el.webkitRequestFullscreen();
-            if (el.mozRequestFullScreen)        return el.mozRequestFullScreen();
-            if (el.msRequestFullscreen)         return el.msRequestFullscreen();
-            return Promise.resolve(); // thiết bị không hỗ trợ
-        }
+            // Hàm request fullscreen cross-browser
+            function requestFullscreen(el) {
+                if (el.requestFullscreen) return el.requestFullscreen({ navigationUI: 'hide' });
+                if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+                if (el.mozRequestFullScreen) return el.mozRequestFullScreen();
+                if (el.msRequestFullscreen) return el.msRequestFullscreen();
+                return Promise.resolve(); // thiết bị không hỗ trợ
+            }
 
-        // Sau khi game.js load xong, wrap startGame() để yêu cầu fullscreen trước
-        window.addEventListener('load', function () {
-            var originalStartGame = window.startGame;
-            if (typeof originalStartGame !== 'function') return;
+            // Sau khi game.js load xong, wrap startGame() để yêu cầu fullscreen trước
+            window.addEventListener('load', function () {
+                var originalStartGame = window.startGame;
+                if (typeof originalStartGame !== 'function') return;
 
-            window.startGame = function () {
-                var docEl = document.documentElement;
-                var isAlreadyFullscreen = !!(document.fullscreenElement ||
-                    document.webkitFullscreenElement ||
-                    document.mozFullScreenElement);
+                window.startGame = function () {
+                    var docEl = document.documentElement;
+                    var isAlreadyFullscreen = !!(document.fullscreenElement ||
+                        document.webkitFullscreenElement ||
+                        document.mozFullScreenElement);
 
-                if (!isAlreadyFullscreen) {
-                    requestFullscreen(docEl)
-                        .catch(function () { /* bỏ qua nếu user từ chối fullscreen */ })
-                        .finally(function () {
-                            originalStartGame();
-                        });
-                } else {
-                    originalStartGame();
+                    if (!isAlreadyFullscreen) {
+                        requestFullscreen(docEl)
+                            .catch(function () { /* bỏ qua nếu user từ chối fullscreen */ })
+                            .finally(function () {
+                                originalStartGame();
+                            });
+                    } else {
+                        originalStartGame();
+                    }
+                };
+            });
+
+            // Tắt thông báo "Leave site?" khi ở trong game
+            window.addEventListener('beforeunload', function (e) {
+                // Chỉ chặn khi game đang chạy (ui-layer đang hiện)
+                var uiLayer = document.getElementById('ui-layer');
+                if (uiLayer && uiLayer.style.display !== 'none' && uiLayer.style.display !== '') {
+                    // Bỏ kông đặt e.returnValue - tránh làm phép dư để không làm chậm trang
                 }
-            };
-        });
+            });
 
-        // Tắt thông báo "Leave site?" khi ở trong game
-        window.addEventListener('beforeunload', function (e) {
-            // Chỉ chặn khi game đang chạy (ui-layer đang hiện)
-            var uiLayer = document.getElementById('ui-layer');
-            if (uiLayer && uiLayer.style.display !== 'none' && uiLayer.style.display !== '') {
-                // Bỏ kông đặt e.returnValue - tránh làm phép dư để không làm chậm trang
-            }
-        });
+            // Khi canvas được click lần đầu, autoplay audio sẽ được mở khóa
+            document.addEventListener('click', function unlock() {
+                var ctx = window.AudioContext || window.webkitAudioContext;
+                if (ctx) {
+                    var ac = new ctx();
+                    ac.resume().then(function () { ac.close(); });
+                }
+                document.removeEventListener('click', unlock);
+            }, { once: true });
 
-        // Khi canvas được click lần đầu, autoplay audio sẽ được mở khóa
-        document.addEventListener('click', function unlock() {
-            var ctx = window.AudioContext || window.webkitAudioContext;
-            if (ctx) {
-                var ac = new ctx();
-                ac.resume().then(function () { ac.close(); });
-            }
-            document.removeEventListener('click', unlock);
-        }, { once: true });
-
-    })();
+        })();
     </script>
 
     <!-- OIIA CAT Assets -->
