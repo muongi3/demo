@@ -965,7 +965,6 @@ function startGame() {
 
 
     STATE.startTime = Date.now(); STATE.gameEnded = false;
-    if (typeof sendLiveNotification === 'function') sendLiveNotification();
 
 
     STATE.player.pos = V3.create(0, getHeight(0, 0) + 100, 0); STATE.player.vel = V3.create(0, -1, 0); STATE.player.alive = true; STATE.player.kills = 0; STATE.player.streak = 0; STATE.player.damageFlash = 0;
