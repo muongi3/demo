@@ -25,7 +25,7 @@ window.GAME_CONFIG = {
         maxHp: 1000,                // Máu tối đa
         maxArmor: 1000,             // Giáp tối đa (Tăng lên để giáp quan trọng hơn)
         walkSpeed: 8.5,             // Tốc độ đi bộ (Tăng nhẹ)
-        sprintMultiplier: 1.8,      // Hệ số chạy nhanh (Giảm nhẹ để quái có cơ hội đuổi kịp)
+        sprintMultiplier: 1.9,      // Hệ số chạy nhanh (Giảm nhẹ để quái có cơ hội đuổi kịp)
         jumpPower: 11,              // Lực nhảy cao
         sniperSpeed: 6.5,           // Tốc độ khi cầm Sniper
         powerupSpeedMultiplier: 1.6 // Hệ số tăng tốc khi ăn bùa
@@ -45,7 +45,7 @@ window.GAME_CONFIG = {
 
         baseDamage: 15,       // Sát thương Lv1
         enragedDamageLv2: 45, // Sát thương Lv2
-        enragedDamageLv3: 120, // Sát thương Lv3 (Cực đau)
+        enragedDamageLv3: 80, // Sát thương Lv3 (Cực đau)
         detectRadius: 45,     // Tầm nhìn
         attackRange: 2.8,     // Khoảng cách cào
         attackCD: 0.7,        // Hồi chiêu cào
@@ -115,7 +115,7 @@ window.GAME_CONFIG = {
             res: 150
         },
         smg: {
-            damage: 45,
+            damage: 50,
             rate: 150,
             spread: 0.08,
             range: 45,
@@ -136,7 +136,7 @@ window.GAME_CONFIG = {
     // 🔥 KỸ NĂNG ĐẶC BIỆT (ULTIMATE SKILL)
     // ==========================================================================================
     ultimate: {
-        requiredDamage: 1000,    // Gây 1000 dame để sạc đầy Unti
+        requiredDamage: 1500,    // Gây 1000 dame để sạc đầy Unti
         chargeTime: 2.0,         // Thời gian gồng (1s)
         invincibleTime: 2.0,     // Bất tử 1s lúc tung chiêu
         damage: 800,             // Sát thương nổ
@@ -1152,86 +1152,50 @@ function update(dt) {
     p.recoil *= 0.8; if (STATE.keys['Digit1']) p.weaponIdx = 0; if (STATE.keys['Digit2']) p.weaponIdx = 1; if (STATE.keys['Digit3']) p.weaponIdx = 2;
     // Nạp đạn dùng maxAmmo theo loại súng (Pistol:12, SMG:30, Sniper:5)
     if (STATE.keys['KeyR'] && weapon.ammo < weapon.maxAmmo) { let needed = weapon.maxAmmo - weapon.ammo; if (weapon.res >= needed) { weapon.res -= needed; weapon.ammo = weapon.maxAmmo; } else { weapon.ammo += weapon.res; weapon.res = 0; } }
-        STATE.projectiles.forEach((proj, i) => {
-            const speed = proj.speed || (proj.isBoss ? 40 : window.GAME_CONFIG.misc.playerProjectileSpeed);
-            const step = V3.mul(proj.dir, speed * dt), nextPos = V3.add(proj.pos, step);
+    STATE.projectiles.forEach((proj, i) => {
+        // Ưu tiên dùng tốc độ tùy chỉnh (proj.speed), nếu không mới dùng mặc định
+        const speed = proj.speed || (proj.isBoss ? 40 : window.GAME_CONFIG.misc.playerProjectileSpeed);
+        const step = V3.mul(proj.dir, speed * dt), nextPos = V3.add(proj.pos, step);
 
-            // 1. VA CHẠM ĐỊA HÌNH & VẬT CẢN (Ground & Obstacles)
-            const floorY = getHeight(nextPos.x, nextPos.z);
-            if (nextPos.y <= floorY) {
-                proj.dead = true;
-                nextPos.y = floorY; // Nổ ngay mặt đất
-            }
-            for (let obs of STATE.obstacles) {
-                const dx = nextPos.x - obs.pos.x, dz = nextPos.z - obs.pos.z;
-                const distSq = dx * dx + dz * dz;
-                if (distSq < obs.radius * obs.radius) {
-                    const hLimit = (obs.type === 'house' ? 6 : (obs.type === 'car' ? 2 : 10));
-                    if (nextPos.y < obs.pos.y + hLimit) {
-                        proj.dead = true;
-                        break;
+        STATE.barrels.forEach(b => { if (b.hp > 0 && V3.dist(nextPos, V3.add(b.pos, V3.create(0, 0.6, 0))) < 2.5) { b.hp -= proj.dmg; playAudio('hit'); showHitMarker(); spawnParticles(nextPos, 5, [1, 0.5, 0]); proj.dead = true; if (b.hp <= 0) createExplosion(b.pos); } });
+
+        if (proj.isPlayer) {
+            // Hitbox quái thường (bot) - Hỗ trợ Headshot
+            STATE.bots.forEach(bot => {
+                if (bot.hp <= 0 || bot.isEvolvingLv3) return;
+
+                const dy = nextPos.y - bot.pos.y;
+                const dx = nextPos.x - bot.pos.x, dz = nextPos.z - bot.pos.z;
+                const distXZ = Math.sqrt(dx * dx + dz * dz);
+
+                // Bán kính va chạm linh hoạt
+                const hitRadius = isMobile ? 2.0 : 0.7;
+
+                if (distXZ < hitRadius && dy > -0.5 && dy < 1.7) {
+                    let dmg = proj.dmg;
+                    let isHead = dy > 0.95; // Phần đầu nằm ở phía trên cao
+
+                    if (isHead) {
+                        dmg *= 1.5;
+                        spawnParticles(nextPos, 8, [1, 1, 0], 1.5); // Tia lửa vàng khi trúng đầu
+                    } else {
+                        spawnParticles(nextPos, 5, [1, 0, 0], 1.0);
                     }
+
+                    bot.hp -= dmg;
+                    if (!proj.isUlti) STATE.player.damageDealt += dmg;
+                    playAudio('hit');
+                    showHitMarker();
+                    proj.dead = true;
                 }
-            }
-
-            if (proj.dead) {
-                // Nếu là đạn Unti thì tạo nổ khi chạm bất cứ thứ gì
-                if (proj.isUlti) createExplosion(nextPos, window.GAME_CONFIG.ultimate.explosionRange, window.GAME_CONFIG.ultimate.damage, true, true);
-                return; 
-            }
-
-            // 2. VA CHẠM THÙNG NỔ
-            STATE.barrels.forEach(b => { 
-                if (b.hp > 0 && V3.dist(nextPos, V3.add(b.pos, V3.create(0, 0.6, 0))) < 2.5) { 
-                    b.hp -= proj.dmg; playAudio('hit'); showHitMarker(); spawnParticles(nextPos, 5, [1, 0.5, 0]); 
-                    proj.dead = true; 
-                    if (b.hp <= 0) createExplosion(b.pos); 
-                } 
             });
-
-            if (proj.isPlayer) {
-                // 3. VA CHẠM QUÁI (BOT) - Tỉ lệ hitbox theo LV
-                STATE.bots.forEach(bot => {
-                    if (bot.hp <= 0 || bot.isEvolvingLv3) return;
-                    
-                    const dy = nextPos.y - bot.pos.y;
-                    const dx = nextPos.x - bot.pos.x, dz = nextPos.z - bot.pos.z;
-                    const distXZ = Math.sqrt(dx * dx + dz * dz);
-                    
-                    // --- HITBOX THEO CẤP ĐỘ ---
-                    let hitboxScale = 1.0;
-                    if (bot.isFinal) hitboxScale = 2.4;     // LV3: Khổng lồ
-                    else if (bot.isHorror) hitboxScale = 1.4; // LV2: To hơn
-                    
-                    const hitRadius = (isMobile ? 2.2 : 0.8) * hitboxScale; 
-                    const hitHeight = 1.7 * hitboxScale;
-                    const headThreshold = 0.95 * hitboxScale;
-                    
-                    if (distXZ < hitRadius && dy > -0.5 && dy < hitHeight) {
-                        let dmg = proj.dmg;
-                        let isHead = dy > headThreshold;
-                        
-                        if (isHead) {
-                            dmg *= 1.5; 
-                            spawnParticles(nextPos, 8, [1, 1, 0], 1.5); 
-                        } else {
-                            spawnParticles(nextPos, 5, [1, 0, 0], 1.0);
-                        }
-                        
-                        bot.hp -= dmg;
-                        if (!proj.isUlti) STATE.player.damageDealt += dmg;
-                        playAudio('hit');
-                        showHitMarker();
-                        proj.dead = true;
-                    }
-                });
 
             // --- VA CHẠM BOSS: ĐA ĐIỂM (Thân & Đầu) ---
             if (STATE.boss && STATE.boss.active) {
                 const b = STATE.boss;
                 const dx = nextPos.x - b.pos.x, dz = nextPos.z - b.pos.z, dy = nextPos.y - b.pos.y;
                 const distXZ = Math.sqrt(dx * dx + dz * dz);
-                
+
                 let hit = false;
                 let isHeadshot = false;
 
@@ -1254,7 +1218,7 @@ function update(dt) {
                     }
                     b.hp -= finalDmg;
                     if (!proj.isUlti) STATE.player.damageDealt += finalDmg;
-                    
+
                     proj.dead = true;
                     playAudio('hit');
                     showHitMarker();
@@ -1262,7 +1226,7 @@ function update(dt) {
                     // Hiệu ứng Giật (Flinch) khi dính Unti
                     if (proj.isUlti) {
                         STATE.shake = 10.0;
-                        b.flinchTime = 0.6; 
+                        b.flinchTime = 0.6;
                         const pushDir = V3.norm(V3.sub(b.pos, STATE.player.pos));
                         b.pos.x += pushDir.x * 2.5; b.pos.z += pushDir.z * 2.5; // Bị đẩy lùi nhẹ
                     }
@@ -1286,8 +1250,6 @@ function update(dt) {
             }
         }
         if (proj.dead && proj.isUlti) {
-            // createExplosion đã được gọi ở trên cho chạm đất/vật cản, 
-            // ở đây chỉ là dự phòng nếu dead do hết thời gian (life)
             createExplosion(proj.pos, window.GAME_CONFIG.ultimate.explosionRange, window.GAME_CONFIG.ultimate.damage, true, true);
         }
 
@@ -1456,7 +1418,7 @@ function update(dt) {
     });
     STATE.particles = STATE.particles.filter(p => p.life > 0);
     if (STATE.particles.length > 1000) STATE.particles = STATE.particles.slice(-1000); // Giới hạn 1000 hạt để tránh lag
-    
+
     // [CẢI TIẾN] Hiệu ứng tàn lửa rơi (Hellfire) khi đánh Boss
     if (STATE.boss && STATE.boss.active && Math.random() < 0.2) {
         const spawnPos = {
@@ -1942,10 +1904,10 @@ function takeDamage(p, amt, silent = false) {
     }
 }
 
-function showHitMarker() { 
-    const el = document.getElementById('hit-marker'); 
+function showHitMarker() {
+    const el = document.getElementById('hit-marker');
     const ch = document.getElementById('crosshair');
-    el.style.opacity = 1; 
+    el.style.opacity = 1;
     if (ch) {
         ch.style.borderColor = '#ff3333';
         ch.style.transform = 'translate(-50%, -50%) scale(1.6)';
@@ -1956,7 +1918,7 @@ function showHitMarker() {
             ch.style.borderColor = '#00ffcc';
             ch.style.transform = 'translate(-50%, -50%) scale(1.0)';
         }
-    }, 120); 
+    }, 120);
 }
 function spawnParticles(pos, count, color, speedMult = 1.0, type = 'fire') {
     // Giới hạn particles trên mobile thấp hơn để tránh lag CPU
@@ -2964,10 +2926,10 @@ window.addEventListener('load', () => {
     }
 });
 
-// --- CẤU HÌNH SỐ LƯỢNG BOT (ĐÃ FIX OVERWRITE) ---
+// --- CẤU HÌNH SỐ LƯỢNG BOT (ĐÃ FIX OVERWRITE & CLAMP MIN 5) ---
 const savedBotCount = localStorage.getItem('botCount');
 if (savedBotCount) {
-    STATE.config.botCount = parseInt(savedBotCount);
+    STATE.config.botCount = Math.max(5, parseInt(savedBotCount) || 25);
 } else {
     STATE.config.botCount = isMobile ? 15 : 25;
 }
@@ -2983,9 +2945,9 @@ window.addEventListener('DOMContentLoaded', () => {
         botSlider.value = STATE.config.botCount;
         botVal.innerText = STATE.config.botCount;
         const updateBotVal = (e) => {
-            const val = e.target.value;
+            const val = Math.max(5, parseInt(e.target.value) || 5);
             botVal.innerText = val;
-            STATE.config.botCount = parseInt(val);
+            STATE.config.botCount = val;
             localStorage.setItem('botCount', val);
         };
         botSlider.addEventListener('input', updateBotVal);
