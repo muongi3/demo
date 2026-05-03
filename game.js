@@ -149,7 +149,7 @@ window.GAME_CONFIG = {
     // ==========================================================================================
     misc: {
         barrelHp: 15,
-        barrelExplosionDamage: 300,
+        barrelExplosionDamage: 400,  // Đủ one-hit Lv2 Hard (HP=336), tăng lên từ 300
         barrelExplosionRange: 15,
         playerProjectileSpeed: 120
     }
@@ -1111,7 +1111,7 @@ function startGame() {
         STATE.loot.push({ pos: V3.create(x, y + 0.5, z), type: i % 4 });
     }
 
-    for (let i = 0; i < (isMobile ? 5 : 20); i++) {
+    for (let i = 0; i < (isMobile ? 10 : 40); i++) {  // x2 thùng nổ
         let x, z, y;
         do {
             x = (Math.random() - 0.5) * MAP_SIZE * 0.8;
@@ -2028,7 +2028,8 @@ function createExplosion(pos, customRange, customDamage, isFriendly = false, noC
     spawnParticles(pos, 25, [0.4, 0.4, 0.4], 0.8, 'smoke'); // Khói xám
     const range = customRange || window.GAME_CONFIG.misc.barrelExplosionRange;
     const damage = customDamage || window.GAME_CONFIG.misc.barrelExplosionDamage;
-    if (!isFriendly && V3.dist(pos, STATE.player.pos) < range) takeDamage(STATE.player, damage);
+    // Player chỉ nhận 30% dame từ thùng nổ (để khỏ thùng nổ thoải mái hơn)
+    if (!isFriendly && V3.dist(pos, STATE.player.pos) < range) takeDamage(STATE.player, damage * 0.3);
     STATE.bots.forEach(b => {
         if (!b.isEvolvingLv3 && V3.dist(pos, b.pos) < range) {
             b.hp -= damage;
