@@ -1414,5 +1414,25 @@ canvas {
 
     .guide-section h3 { font-size: 13px; }
     .guide-section p  { font-size: 11px; line-height: 1.4; }
+
+    /* [CẢI TIẾN] Tối ưu hóa thanh máu Boss cho màn hình ngang */
+    #boss-hp-container {
+        top: 8px !important;
+        width: 35% !important;
+        height: 12px !important;
+        border-width: 1px !important;
+    }
+    #boss-hp-container div[style*="font-size"] {
+        font-size: 8px !important;
+        top: 0px !important;
+        letter-spacing: 2px !important;
+    }
+
+    /* [CẢI TIẾN] Tối ưu menu cài đặt HUD cho màn hình ngang */
+    #settings-modal .feedback-content {
+        margin-top: 20px !important;
+        transform: scale(0.85);
+        transform-origin: top center;
+    }
 }
 #sprint-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 5; background: radial-gradient(circle, transparent 60%, rgba(255,255,255,0.1) 100%); overflow: hidden; } #sprint-overlay::before { content: ''; position: absolute; inset: -50%; background-image: radial-gradient(ellipse at center, transparent 30%, white 31%, transparent 32%), radial-gradient(ellipse at center, transparent 40%, white 41%, transparent 42%); background-size: 15% 2%, 25% 1%; background-repeat: repeat; opacity: 0.3; animation: speedLines 0.3s linear infinite; } @keyframes speedLines { 0% { transform: scale(1) rotate(0deg); opacity: 0; } 50% { opacity: 0.4; } 100% { transform: scale(1.5) rotate(0.1deg); opacity: 0; } } #sprint-overlay.hidden { display: none; }
