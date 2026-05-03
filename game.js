@@ -56,7 +56,7 @@ window.GAME_CONFIG = {
     // 👹 THÔNG SỐ TRÙM CUỐI (HAKARI)
     // ==========================================================================================
     boss: {
-        hp: 10000,            // Máu của Boss (Tăng lên 12k để trận đấu epic hơn)
+        hp: 20000,            // Máu của Boss (Tăng lên 12k để trận đấu epic hơn)
         passiveDamage: 150,   // Sát thương áp sát
         skillCD: 4.5,         // Hồi chiêu giữa các đòn (Nhanh hơn chút)
         postSkillRest: 2.5,   // Thời gian nghỉ sau chiêu
@@ -108,24 +108,24 @@ window.GAME_CONFIG = {
     weapons: {
         pistol: {
             damage: 65,
-            rate: 400,           // Thực tế: ~150 RPM (súng lục bán tự động)
-            spread: 0.02,
+            rate: 250,
+            spread: 0.03,
             range: 60,
             maxAmmo: 15,
             res: 150
         },
         smg: {
-            damage: 40,
-            rate: 100,           // Thực tế: ~600 RPM (SMG)
-            spread: 0.06,
+            damage: 50,
+            rate: 150,
+            spread: 0.08,
             range: 45,
             maxAmmo: 40,
             res: 200
         },
         sniper: {
-            damage: 300,
-            rate: 1500,          // Thực tế: bolt-action ~40 RPM
-            spread: 0.01,        // Độ chính xác cao hơn
+            damage: 200,
+            rate: 1200,
+            spread: 0.1,
             range: 300,
             maxAmmo: 5,
             res: 20
@@ -136,11 +136,11 @@ window.GAME_CONFIG = {
     // 🔥 KỸ NĂNG ĐẶC BIỆT (ULTIMATE SKILL)
     // ==========================================================================================
     ultimate: {
-        requiredDamage: 1500,    // Gây 1000 dame để sạc đầy Unti
+        requiredDamage: 2000,    // Gây 1000 dame để sạc đầy Unti
         chargeTime: 2.0,         // Thời gian gồng (1s)
         invincibleTime: 2.0,     // Bất tử 1s lúc tung chiêu
         damage: 800,             // Sát thương nổ
-        explosionRange: 20,      // Tầm nổ
+        explosionRange: 30,      // Tầm nổ
         projectileSpeed: 100
     },
 
@@ -154,6 +154,82 @@ window.GAME_CONFIG = {
         playerProjectileSpeed: 120
     }
 };
+
+// ==========================================================================================
+// 🎮 HỆ THỐNG ĐỘ KHÓ
+// ==========================================================================================
+window.DIFFICULTY_PRESETS = {
+    easy: {
+        label: '😊 DỄ', color: '#00e676',
+        botHpMult: 0.7, botDmgMult: 0.6, botSpeedMult: 0.8,
+        enrageLv2Pct: 0.30, lv3Count: 3,
+        bossHpMult: 0.6, bossDmgMult: 0.5, bossSkillCdMult: 1.5, bossSpeedMult: 0.7,
+        playerHpMult: 1.2, playerSpdMult: 1.0,
+    },
+    normal: {
+        label: '⚔️ THƯỜNG', color: '#ffcc00',
+        botHpMult: 1.0, botDmgMult: 1.0, botSpeedMult: 1.0,
+        enrageLv2Pct: 0.40, lv3Count: 5,
+        bossHpMult: 1.0, bossDmgMult: 1.0, bossSkillCdMult: 1.0, bossSpeedMult: 1.0,
+        playerHpMult: 1.0, playerSpdMult: 1.0,
+    },
+    hard: {
+        label: '🔥 KHÓ', color: '#ff6600',
+        botHpMult: 1.4, botDmgMult: 1.5, botSpeedMult: 1.3,
+        enrageLv2Pct: 0.55, lv3Count: 7,
+        bossHpMult: 1.5, bossDmgMult: 1.6, bossSkillCdMult: 0.75, bossSpeedMult: 1.3,
+        playerHpMult: 0.85, playerSpdMult: 0.9,
+    },
+    extreme: {
+        label: '💀 CỰC KHÓ', color: '#ff0033',
+        botHpMult: 2.0, botDmgMult: 2.2, botSpeedMult: 1.6,
+        enrageLv2Pct: 0.70, lv3Count: 10,
+        bossHpMult: 2.2, bossDmgMult: 2.5, bossSkillCdMult: 0.55, bossSpeedMult: 1.6,
+        playerHpMult: 0.7, playerSpdMult: 0.85,
+    }
+};
+
+window.CURRENT_DIFFICULTY = 'normal';
+
+window.applyDifficulty = function(key) {
+    window.CURRENT_DIFFICULTY = key;
+    const d = window.DIFFICULTY_PRESETS[key];
+    const b = window.GAME_CONFIG;
+    // Bot
+    b.bot.hpLv1 = Math.round(180 * d.botHpMult);
+    b.bot.hpLv2 = Math.round(240 * d.botHpMult);
+    b.bot.hpLv3 = Math.round(300 * d.botHpMult);
+    b.bot.speedLv1 = 7.5 * d.botSpeedMult;
+    b.bot.speedLv2 = 12  * d.botSpeedMult;
+    b.bot.speedLv3 = 17  * d.botSpeedMult;
+    b.bot.baseDamage       = Math.round(15 * d.botDmgMult);
+    b.bot.enragedDamageLv2 = Math.round(45 * d.botDmgMult);
+    b.bot.enragedDamageLv3 = Math.round(80 * d.botDmgMult);
+    b.bot.enrageLv2Pct = d.enrageLv2Pct;
+    b.bot.lv3Count     = d.lv3Count;
+    // Boss
+    b.boss.hp             = Math.round(20000 * d.bossHpMult);
+    b.boss.passiveDamage  = Math.round(150   * d.bossDmgMult);
+    b.boss.skill1.damage  = Math.round(350   * d.bossDmgMult);
+    b.boss.skill1.speed   = Math.round(130   * d.bossSpeedMult);
+    b.boss.skill2.damage  = Math.round(100   * d.bossDmgMult);
+    b.boss.skill2.speed   = Math.round(120   * d.bossSpeedMult);
+    b.boss.skill3.damage  = Math.round(550   * d.bossDmgMult);
+    b.boss.skill4.damage  = Math.round(350   * d.bossDmgMult);
+    b.boss.skill5.damage  = Math.round(450   * d.bossDmgMult);
+    b.boss.skillCD        = 4.5 * d.bossSkillCdMult;
+    b.boss.postSkillRest  = 2.5 * d.bossSkillCdMult;
+    // Player
+    b.player.maxHp           = Math.round(1000 * d.playerHpMult);
+    b.player.maxArmor        = Math.round(1000 * d.playerHpMult);
+    b.player.walkSpeed       = 8.5 * d.playerSpdMult;
+    b.player.sprintMultiplier= 1.9 * d.playerSpdMult;
+    localStorage.setItem('difficulty', key);
+};
+
+// Load độ khó đã lưu
+const _savedDiff = localStorage.getItem('difficulty') || 'normal';
+window.applyDifficulty(_savedDiff);
 
 window.STATE = {
     screen: 'menu', lastTime: 0, camera: { pos: V3.create(0, 10, 20), rot: { x: 0, y: 0 } }, keys: {},
@@ -957,12 +1033,19 @@ function startGame() {
     STATE.playerName = name;
     localStorage.setItem('savedPlayerName', name); // Lưu tên vào trình duyệt
     STATE.screen = 'game';
-    STATE.player.hp = window.GAME_CONFIG.player.maxHp;
+    // Áp dụng lại độ khó (đảm bảo stats đúng khi bắt đầu trận)
+    window.applyDifficulty(window.CURRENT_DIFFICULTY);
+
+    STATE.player.hp    = window.GAME_CONFIG.player.maxHp;
     STATE.player.maxHp = window.GAME_CONFIG.player.maxHp;
-    STATE.player.armor = 0;
+    STATE.player.armor    = 0;
     STATE.player.maxArmor = window.GAME_CONFIG.player.maxArmor;
 
-
+    // Reset boss với HP đúng theo độ khó
+    STATE.boss.hp    = window.GAME_CONFIG.boss.hp;
+    STATE.boss.maxHp = window.GAME_CONFIG.boss.hp;
+    STATE.boss.active = false; STATE.boss.dead = false;
+    STATE.bossTriggered = false;
 
     STATE.startTime = Date.now(); STATE.gameEnded = false;
 
@@ -1226,37 +1309,27 @@ function update(dt) {
         });
 
         if (proj.isPlayer && !proj.dead) {
-            // --- 3. VA CHẠM QUÁI (BOT) - HITBOX 3 CẤP TĂNG DẦN ---
+            // --- 3. VA CHẠM QUÁI (BOT) ---
             STATE.bots.forEach(bot => {
-                if (proj.dead || bot.hp <= 0 || bot.isEvolvingLv3) return;
+                if (proj.dead || bot.hp <= 0 || bot.isEvolvingLv3) return; // Dừng ngay nếu đạn đã trúng
 
                 const dy = nextPos.y - bot.pos.y;
                 const dx = nextPos.x - bot.pos.x, dz = nextPos.z - bot.pos.z;
                 const distXZ = Math.sqrt(dx * dx + dz * dz);
 
-                // HITBOX TĂNG DẦN: Lv1 nhỏ < Lv2 vừa < Lv3 to
-                let bodyRadius, bodyHeight, headY;
-                if (bot.isFinal) {
-                    // Lv3: Tổ chạy, to lớn
-                    bodyRadius = isMobile ? 2.5 : 1.2;
-                    bodyHeight = 2.8;
-                    headY      = 2.3;
-                } else if (bot.isHorror) {
-                    // Lv2: Vừa phải
-                    bodyRadius = isMobile ? 1.8 : 0.9;
-                    bodyHeight = 2.2;
-                    headY      = 1.8;
-                } else {
-                    // Lv1: Bình thường
-                    bodyRadius = isMobile ? 1.4 : 0.7;
-                    bodyHeight = 1.8;
-                    headY      = 1.5;
-                }
+                // Hitbox theo cấp độ (thực tế hơn)
+                let hitboxScale = 1.0;
+                if (bot.isFinal) hitboxScale = 1.8;       // Lv3: to nhưng không quá ưu tiên
+                else if (bot.isHorror) hitboxScale = 1.3; // Lv2
 
-                if (distXZ < bodyRadius && dy > -0.2 && dy < bodyHeight) {
+                const hitRadius = (isMobile ? 1.8 : 0.7) * hitboxScale; // Thực tế hơn trước
+                const hitHeight = 1.8 * hitboxScale;     // Chiều cao cơ thể
+                const headY = 1.5 * hitboxScale;      // Phần đầu: chỉ từ 1.5m trở lên
+
+                if (distXZ < hitRadius && dy > -0.3 && dy < hitHeight) {
                     let dmg = proj.dmg;
-                    // Headshot chỉ tính khi rõ ràng trúng phần đầu (distXZ nhỏ)
-                    const isHead = (dy > headY && distXZ < bodyRadius * 0.5);
+                    // Headshot CHỈ tính khi đạn rõ ràng trúng vùng đầu
+                    const isHead = (dy > headY && distXZ < hitRadius * 0.6);
 
                     if (isHead) {
                         dmg = Math.round(proj.dmg * 1.5);
@@ -1270,7 +1343,7 @@ function update(dt) {
                     if (!proj.isUlti) STATE.player.damageDealt += dmg;
                     playAudio('hit');
                     showHitMarker();
-                    proj.dead = true;
+                    proj.dead = true; // Dánh dấu ngay để khỏng chế frame tiếp
                 }
             });
 
@@ -1307,9 +1380,7 @@ function update(dt) {
             }
         }
 
-        // --- UNTI: CHỈ NỔ 1 LẦN duy nhất ---
-        if (proj.dead && proj.isUlti && !proj.exploded) {
-            proj.exploded = true; // Flag ngăn nổ 2 lần
+        if (proj.dead && proj.isUlti) {
             createExplosion(proj.pos, window.GAME_CONFIG.ultimate.explosionRange, window.GAME_CONFIG.ultimate.damage, true, true);
         }
         proj.pos = nextPos; proj.life -= dt; if (proj.life < 0) proj.dead = true;
@@ -1334,8 +1405,10 @@ function update(dt) {
         // --- 3 GIAI ĐOẠN TIẾN HÓA CỦA BOT ---
         const botCount = STATE.bots.length;
         const initialCount = STATE.config.botCount || 25;
-        const isEnragedLv2 = botCount <= initialCount * 0.4; // Cuồng bạo 40%
-        const isEnragedLv3 = botCount <= 3; // 3 con cuối cùng (Giai đoạn cuối)
+        const enragePct   = window.GAME_CONFIG.bot.enrageLv2Pct || 0.40;
+        const lv3Count    = window.GAME_CONFIG.bot.lv3Count     || 5;
+        const isEnragedLv2 = botCount <= initialCount * enragePct; // Cuồng bạo theo độ khó
+        const isEnragedLv3 = botCount <= lv3Count;                  // Lv3 count theo độ khó
 
         // [MỚI] Tăng máu khi tiến hóa
         if (isEnragedLv2 && !bot.hasEvolvedLv2) {
@@ -2286,34 +2359,18 @@ function draw() {
 
     // Xử lý Aim & Sprint Lerp (Mượt mà)
     STATE.aimLerp += ((STATE.isAiming ? 1 : 0) - STATE.aimLerp) * 0.2;
-    // Sprint lerp mượt hơn (tăng tốc độ phản hồi)
-    const isSprinting = (STATE.keys['ShiftLeft'] || STATE.isSprinting) && !STATE.isAiming;
-    STATE.sprintLerp = (STATE.sprintLerp || 0) + ((isSprinting ? 1 : 0) - (STATE.sprintLerp || 0)) * 0.08;
-
-    // Bob camera khi di chuyển (phân biệt đi bộ vs chạy nhanh)
-    const isMoving = STATE.keys['KeyW'] || STATE.keys['KeyS'] || STATE.keys['KeyA'] || STATE.keys['KeyD'] || (STATE.joystick && V3.len(STATE.joystick) > 0.1);
-    if (!STATE.bobTimer) STATE.bobTimer = 0;
-    if (isMoving) STATE.bobTimer += isSprinting ? 0.18 : 0.09; // Chạy nhanh gấp đôi
-    const bobAmt  = isMoving ? (isSprinting ? 0.06 : 0.025) : 0; // Biên độ rung
-    const bobY    = Math.sin(STATE.bobTimer) * bobAmt;
-    const bobX    = Math.cos(STATE.bobTimer * 0.5) * bobAmt * 0.5;
+    STATE.sprintLerp = (STATE.sprintLerp || 0) + (((STATE.keys['ShiftLeft'] && !STATE.isAiming) ? 1 : 0) - (STATE.sprintLerp || 0)) * 0.05;
 
     const aspect = gl.canvas.width / gl.canvas.height;
     const zoomFactor = [0.3, 0.6, 0.95][p.weaponIdx];
-    // Sprint tăng FOV mạnh hơn (0.3 → 0.55) để cảm giác chạy rõ hơn
-    const fov = 1.2 - (STATE.aimLerp * zoomFactor) + (STATE.sprintLerp * 0.55);
+    const fov = 1.2 - (STATE.aimLerp * zoomFactor) + (STATE.sprintLerp * 0.3);
 
     const proj = M4.perspective(fov, aspect, 0.1, 1000);
     const yaw = STATE.camera.rot.y, pitch = STATE.camera.rot.x;
 
     // Giật cam chỉ trên PC (mobile tắt để mượt hơn)
     const shakeAmt = isMobile ? 0 : STATE.shake;
-    // Áp dụng bob vào vị trí mắt camera
-    const eye = V3.create(
-        p.pos.x + (Math.random() - 0.5) * shakeAmt + bobX,
-        p.pos.y + 1.1 + (Math.random() - 0.5) * shakeAmt + bobY,
-        p.pos.z
-    );
+    const eye = V3.create(p.pos.x + (Math.random() - 0.5) * shakeAmt, p.pos.y + 1.1 + (Math.random() - 0.5) * shakeAmt, p.pos.z);
     const forward = V3.create(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)), center = V3.add(eye, forward), view = M4.lookAt(eye, center, V3.create(0, 1, 0));
 
     gl.uniformMatrix4fv(locs.proj, false, proj);
@@ -2376,8 +2433,8 @@ function draw() {
 
         const botCount = STATE.bots.length;
         const initialCount = STATE.config.botCount || 25;
-        const isLv2 = botCount <= initialCount * 0.4;
-        const isLv3 = botCount <= 3;
+        const isLv2 = botCount <= initialCount * (window.GAME_CONFIG.bot.enrageLv2Pct || 0.40);
+        const isLv3 = botCount <= (window.GAME_CONFIG.bot.lv3Count || 5);
 
         let mesh = ASSETS.bot;
         let scale = 1.0;
@@ -3060,6 +3117,25 @@ window.addEventListener('DOMContentLoaded', () => {
         botSlider.addEventListener('input', updateBotVal);
         botSlider.addEventListener('change', updateBotVal);
     }
+
+    // --- NÚT CHỌN ĐỘ KHÓ ---
+    const diffBtns = document.querySelectorAll('.diff-btn');
+    const diffDesc = document.getElementById('diff-desc');
+    const diffDescTexts = {
+        easy:    '😊 Bot/Boss yếu hơn, máu player +20% — Phù hợp người mới',
+        normal:  '⚔️ Cân bằng tiêu chuẩn — Thử thách vừa phải',
+        hard:    '🔥 Bot/Boss mạnh & nhanh hơn, máu player -15% — Khó win',
+        extreme: '💀 Bot/Boss cực kỳ hung hãn, 10 con Lv3 — Gần như không thể win!',
+    };
+    function syncDiffButtons() {
+        diffBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.diff === window.CURRENT_DIFFICULTY));
+        if (diffDesc) diffDesc.textContent = diffDescTexts[window.CURRENT_DIFFICULTY] || '';
+    }
+    syncDiffButtons();
+    diffBtns.forEach(btn => btn.addEventListener('click', () => {
+        window.applyDifficulty(btn.dataset.diff);
+        syncDiffButtons();
+    }));
 
     // --- XỬ LÝ SỔ TAY HƯỚNG DẪN ---
     const btnGuide = document.getElementById('btn-open-guide');

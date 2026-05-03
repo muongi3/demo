@@ -1484,3 +1484,25 @@ canvas {
 }
 
 #sprint-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 5; background: radial-gradient(circle, transparent 60%, rgba(255,255,255,0.1) 100%); overflow: hidden; } #sprint-overlay::before { content: ''; position: absolute; inset: -50%; background-image: radial-gradient(ellipse at center, transparent 30%, white 31%, transparent 32%), radial-gradient(ellipse at center, transparent 40%, white 41%, transparent 42%); background-size: 15% 2%, 25% 1%; background-repeat: repeat; opacity: 0.3; animation: speedLines 0.3s linear infinite; } @keyframes speedLines { 0% { transform: scale(1) rotate(0deg); opacity: 0; } 50% { opacity: 0.4; } 100% { transform: scale(1.5) rotate(0.1deg); opacity: 0; } } #sprint-overlay.hidden { display: none; }
+
+/* NÚT CHỌN ĐỘ KHÓ */
+.diff-btn {
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 900;
+    font-family: 'Outfit', sans-serif;
+    border-radius: 8px;
+    border: 2px solid var(--dc, #ffcc00);
+    background: rgba(0,0,0,0.4);
+    color: var(--dc, #ffcc00);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    white-space: nowrap;
+}
+.diff-btn:hover { background: rgba(255,255,255,0.1); transform: scale(1.05); }
+.diff-btn.active {
+    background: var(--dc, #ffcc00);
+    color: #000 !important;
+    box-shadow: 0 0 16px var(--dc);
+    transform: scale(1.1);
+}
