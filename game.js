@@ -401,8 +401,8 @@ window.addEventListener('load', () => {
         return;
     }
     console.log("✅ WebGL2 OK");
-    // Đồng bộ độ phân giải: Giữ 75% trên mobile để cân bằng giữa hiệu năng và hình ảnh
-    const resScale = isMobile ? 0.75 : 1.0;
+    // Tối ưu hóa mạnh cho mobile: Giảm độ phân giải render xuống 60% để mượt hơn
+    const resScale = isMobile ? 0.6 : 1.0;
     gl.canvas.width = window.innerWidth * resScale;
     gl.canvas.height = window.innerHeight * resScale;
     console.log("🎨 Khởi tạo Graphics...");
@@ -1206,7 +1206,7 @@ function startGame() {
 
         STATE.bots.push({ pos: V3.create(x, y + 1, z), hp: window.GAME_CONFIG.bot.hpLv1, target: null, state: 'roam', nextMove: 0, fireCD: 0, id: i });
     }
-    for (let i = 0; i < (isMobile ? 50 : 300); i++) {
+    for (let i = 0; i < 300; i++) {
         let x, z, y;
         do {
             x = (Math.random() - 0.5) * MAP_SIZE * 0.9;
@@ -1217,7 +1217,7 @@ function startGame() {
         STATE.loot.push({ pos: V3.create(x, y + 0.5, z), type: i % 4 });
     }
 
-    for (let i = 0; i < (isMobile ? 10 : 40); i++) {  // x2 thùng nổ
+    for (let i = 0; i < 40; i++) {  // x2 thùng nổ
         let x, z, y;
         do {
             x = (Math.random() - 0.5) * MAP_SIZE * 0.8;
@@ -1226,7 +1226,7 @@ function startGame() {
         } while (y <= -8.5);
         STATE.barrels.push({ pos: V3.create(x, y, z), hp: 20 });
     }
-    for (let i = 0; i < (isMobile ? 10 : 40); i++) {
+    for (let i = 0; i < 40; i++) {
         let x, z, y;
         do {
             x = (Math.random() - 0.5) * MAP_SIZE * 0.8;
@@ -1237,13 +1237,13 @@ function startGame() {
     }
 
     // Khởi tạo Vật cản (Cây, Nhà, Xe)
-    for (let i = 0; i < (isMobile ? 20 : 60); i++) {
+    for (let i = 0; i < (isMobile ? 25 : 60); i++) {
         const x = Math.sin(i * 132.1) * MAP_SIZE * 0.4;
         const z = Math.cos(i * 52.3) * MAP_SIZE * 0.4;
         const y = getHeight(x, z);
         if (y > -8.5) STATE.obstacles.push({ type: 'tree', pos: { x, y: y - 0.5, z }, radius: 1.0, scale: 1.5 + Math.sin(i) * 0.5, rot: 0 });
     }
-    for (let i = 0; i < (isMobile ? 5 : 12); i++) {
+    for (let i = 0; i < 12; i++) {
         let x, z, y;
         do {
             x = (Math.random() - 0.5) * MAP_SIZE * 0.8;
@@ -1252,7 +1252,7 @@ function startGame() {
         } while (y <= -8.5);
         STATE.obstacles.push({ type: 'house', pos: { x, y: y - 1.0, z }, radius: 4.5, rot: Math.random() * Math.PI, scale: 1 });
     }
-    for (let i = 0; i < (isMobile ? 8 : 20); i++) {
+    for (let i = 0; i < 20; i++) {
         let x, z, y;
         do {
             x = (Math.random() - 0.5) * MAP_SIZE * 0.8;
@@ -2524,7 +2524,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // Giảm mạnh grass trên mobile để giảm draw call cực đoan
-const GRASS_PATCHES = []; for (let i = 0; i < (isMobile ? 12 : 200); i++) { const x = Math.sin(i * 12.989) * MAP_SIZE * 0.45, z = Math.cos(i * 78.233) * MAP_SIZE * 0.45, y = getHeight(x, z), scale = 0.6 + Math.random() * 0.6; GRASS_PATCHES.push({ x, y, z, scale }); }
+const GRASS_PATCHES = []; for (let i = 0; i < (isMobile ? 40 : 200); i++) { const x = Math.sin(i * 12.989) * MAP_SIZE * 0.45, z = Math.cos(i * 78.233) * MAP_SIZE * 0.45, y = getHeight(x, z), scale = 0.6 + Math.random() * 0.6; GRASS_PATCHES.push({ x, y, z, scale }); }
 
 function draw() {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -3244,7 +3244,7 @@ function loop(now) {
     requestAnimationFrame(window.loop);
 }
 
-function showClickAnywhere(delay = 10000) {
+function showClickAnywhere(delay = 1000) {
     setTimeout(() => {
         const overlay = document.getElementById("click-anywhere");
         const continueText = document.getElementById("continue-text");
