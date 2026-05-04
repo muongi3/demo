@@ -155,6 +155,10 @@ window.GAME_CONFIG = {
     }
 };
 
+// --- [QUAN TRỌNG] SAO LƯU THÔNG SỐ GỐC ĐỂ DÙNG TRONG ĐỘ KHÓ ---
+// Bác chỉnh gì ở GAME_CONFIG trên kia thì nó sẽ lấy cái đó làm mốc gốc
+window.ORIGINAL_CONFIG = JSON.parse(JSON.stringify(window.GAME_CONFIG));
+
 // ==========================================================================================
 // 🎮 HỆ THỐNG ĐỘ KHÓ
 // ==========================================================================================
@@ -164,8 +168,9 @@ window.DIFFICULTY_PRESETS = {
         botHpMult: 0.7, botDmgMult: 0.6, botSpeedMult: 0.75,
         enrageLv2Pct: 0.30, lv3Count: 3,
         bossHpMult: 0.6, bossDmgMult: 0.5, bossSkillCdMult: 1.5, bossSpeedMult: 0.7,
-        bossSkillPreTimeMult: 1.4, // Boss "rặn" chiêu cực chậm
+        bossSkillPreTimeMult: 1.5, // Boss "rặn" chiêu cực chậm (Chậm)
         bossSkillActiveTimeMult: 1.2, // Hiệu ứng chiêu kéo dài/kết thúc chậm
+        bossSkill5Buffer: 1.5,        // Dễ: Dư 1.5s
         playerHpMult: 1.2, playerSpdMult: 1.0,
         weaponDmgMult: 1.0,
         ultiDmgMult: 1.0,
@@ -176,8 +181,9 @@ window.DIFFICULTY_PRESETS = {
         botHpMult: 1.0, botDmgMult: 1.0, botSpeedMult: 1.0,
         enrageLv2Pct: 0.40, lv3Count: 5,
         bossHpMult: 1.0, bossDmgMult: 1.0, bossSkillCdMult: 1.0, bossSpeedMult: 1.0,
-        bossSkillPreTimeMult: 1.0, // Chuẩn
+        bossSkillPreTimeMult: 1.0, // Chuẩn (Standard)
         bossSkillActiveTimeMult: 1.0,
+        bossSkill5Buffer: 1.0,        // Thường: Dư 1.0s
         playerHpMult: 1.0, playerSpdMult: 1.0,
         weaponDmgMult: 1.1,
         ultiDmgMult: 1.2,
@@ -187,9 +193,10 @@ window.DIFFICULTY_PRESETS = {
         label: '🔥 KHÓ', color: '#ff6600',
         botHpMult: 1.4, botDmgMult: 1.5, botSpeedMult: 1.2,
         enrageLv2Pct: 0.55, lv3Count: 7,
-        bossHpMult: 1.5, bossDmgMult: 1.6, bossSkillCdMult: 0.75, bossSpeedMult: 1.3,
-        bossSkillPreTimeMult: 0.85, // Boss "rặn" chiêu nhanh hơn
+        bossHpMult: 1.5, bossDmgMult: 1.1, bossSkillCdMult: 0.75, bossSpeedMult: 1.3,
+        bossSkillPreTimeMult: 0.8, // Boss "rặn" chiêu nhanh (Hơi nhanh tý)
         bossSkillActiveTimeMult: 0.85,
+        bossSkill5Buffer: 0.5,        // Khó: Dư 0.5s
         playerHpMult: 0.85, playerSpdMult: 0.9,
         weaponDmgMult: 1.2,
         ultiDmgMult: 1.4,
@@ -199,9 +206,10 @@ window.DIFFICULTY_PRESETS = {
         label: '💀 CỰC KHÓ', color: '#ff0033',
         botHpMult: 2.0, botDmgMult: 2.2, botSpeedMult: 1.4,
         enrageLv2Pct: 0.70, lv3Count: 10,
-        bossHpMult: 2.2, bossDmgMult: 2.5, bossSkillCdMult: 0.55, bossSpeedMult: 1.6,
-        bossSkillPreTimeMult: 0.7, // Boss tung chiêu cực chớp nhoáng
+        bossHpMult: 2.2, bossDmgMult: 1.2, bossSkillCdMult: 0.55, bossSpeedMult: 1.6,
+        bossSkillPreTimeMult: 0.65, // Boss tung chiêu cực chớp nhoáng (Sít)
         bossSkillActiveTimeMult: 0.7,
+        bossSkill5Buffer: 0.2,        // Cực khó: Dư 0.2s (Vừa thoát là đập)
         playerHpMult: 0.7, playerSpdMult: 0.85,
         weaponDmgMult: 1.3,
         ultiDmgMult: 1.6,
@@ -211,69 +219,103 @@ window.DIFFICULTY_PRESETS = {
 
 window.CURRENT_DIFFICULTY = 'normal';
 
+/**
+ * Hàm áp dụng độ khó và tính toán lại các chỉ số game
+ * ĐẶC BIỆT: Tính toán thời gian chiêu của Boss dựa trên tốc độ chạy của người chơi.
+ */
 window.applyDifficulty = function (key) {
     window.CURRENT_DIFFICULTY = key;
     const d = window.DIFFICULTY_PRESETS[key];
     const b = window.GAME_CONFIG;
-    // Bot
-    b.bot.hpLv1 = Math.round(180 * d.botHpMult);
-    b.bot.hpLv2 = Math.round(240 * d.botHpMult);
-    b.bot.hpLv3 = Math.round(300 * d.botHpMult);
-    b.bot.speedLv1 = 7.5 * d.botSpeedMult;
-    b.bot.speedLv2 = 12 * d.botSpeedMult;
-    b.bot.speedLv3 = 17 * d.botSpeedMult;
-    b.bot.baseDamage = Math.round(15 * d.botDmgMult);
-    b.bot.enragedDamageLv2 = Math.round(45 * d.botDmgMult);
-    b.bot.enragedDamageLv3 = Math.round(80 * d.botDmgMult);
+    const orig = window.ORIGINAL_CONFIG;
+
+    // --- CẬP NHẬT THÔNG SỐ BOT ---
+    b.bot.hpLv1 = Math.round(orig.bot.hpLv1 * d.botHpMult);
+    b.bot.hpLv2 = Math.round(orig.bot.hpLv2 * d.botHpMult);
+    b.bot.hpLv3 = Math.round(orig.bot.hpLv3 * d.botHpMult);
+    b.bot.speedLv1 = orig.bot.speedLv1 * d.botSpeedMult;
+    b.bot.speedLv2 = orig.bot.speedLv2 * d.botSpeedMult;
+    b.bot.speedLv3 = orig.bot.speedLv3 * d.botSpeedMult;
+    b.bot.baseDamage = Math.round(orig.bot.baseDamage * d.botDmgMult);
+    b.bot.enragedDamageLv2 = Math.round(orig.bot.enragedDamageLv2 * d.botDmgMult);
+    b.bot.enragedDamageLv3 = Math.round(orig.bot.enragedDamageLv3 * d.botDmgMult);
     b.bot.enrageLv2Pct = d.enrageLv2Pct;
     b.bot.lv3Count = d.lv3Count;
-    // Boss
-    b.boss.hp = Math.round(20000 * d.bossHpMult);
-    b.boss.passiveDamage = Math.round(150 * d.bossDmgMult);
-    b.boss.skill1.damage = Math.round(350 * d.bossDmgMult);
-    b.boss.skill1.speed = Math.round(130 * d.bossSpeedMult);
-    b.boss.skill2.damage = Math.round(100 * d.bossDmgMult);
-    b.boss.skill2.speed = Math.round(120 * d.bossSpeedMult);
-    // --- HỆ THỐNG THỜI GIAN CHIÊU BOSS (DYNAMIC TIMING) ---
-    // Tính toán dựa trên tốc độ chạy (Sprint) của người chơi để đảm bảo "sít sát mé né được"
-    const sprintSpeed = b.player.walkSpeed * b.player.sprintMultiplier;
-    const pm = d.bossSkillPreTimeMult || 1.0;   // Multiplier cho Gồng (Prepare)
-    const am = d.bossSkillActiveTimeMult || 1.0; // Multiplier cho Thực thi (Active/Recovery)
 
-    // Chiêu 1 (Dash): Né ngang (Width=9). Cần né ~4.5 units.
-    b.boss.skill1.prepareTime = (5 / sprintSpeed) * 2.5 * pm; // Cần ~0.3s để né, cho hẳn ~0.8-1.5s
+    // --- CẬP NHẬT THÔNG SỐ BOSS ---
+    b.boss.hp = Math.round(orig.boss.hp * d.bossHpMult);
+    b.boss.passiveDamage = Math.round(orig.boss.passiveDamage * d.bossDmgMult);
+    b.boss.skill1.damage = Math.round(orig.boss.skill1.damage * d.bossDmgMult);
+    b.boss.skill1.speed = Math.round(orig.boss.skill1.speed * d.bossSpeedMult);
+    b.boss.skill2.damage = Math.round(orig.boss.skill2.damage * d.bossDmgMult);
+    b.boss.skill2.speed = Math.round(orig.boss.skill2.speed * d.bossSpeedMult);
+
+    // ==========================================================================================
+    // ⚡ HỆ THỐNG THỜI GIAN CHIÊU BOSS (DYNAMIC TIMING)
+    // Công thức: (Khoảng cách cần né / Tốc độ chạy của người chơi) * Hệ số an toàn * Multiplier độ khó
+    // ==========================================================================================
+    const sprintSpeed = b.player.walkSpeed * b.player.sprintMultiplier;
+    const pm = d.bossSkillPreTimeMult || 1.0;   // Multiplier cho giai đoạn Gồng (Prepare)
+    const am = d.bossSkillActiveTimeMult || 1.0; // Multiplier cho giai đoạn Thực thi/Hồi (Active/Recovery)
+
+    // CHIÊU 1 (DASH - Lướt): Né ngang (Width=9). Cần né ít nhất 4.5 units để thoát khỏi đường lướt.
+    // Công thức: (4.5 / sprintSpeed) * 2.5 (hệ số an toàn) * pm
+    b.boss.skill1.prepareTime = (5 / sprintSpeed) * 2.5 * pm;
     b.boss.skill1.activeTime = 0.7 * am;
 
-    // Chiêu 2 (Shoot): Không đổi vì là đạn bay
+    // CHIÊU 2 (SHOOT - Đại bác): Thời gian chuẩn bị trước khi xả đạn
     b.boss.skill2.prepareTime = 1.0 * pm;
 
-    // Chiêu 3 (Jump/Slam): Range=28. Cần thoát khỏi tâm.
-    // DỄ: ~2.5s | THƯỜNG: ~1.9s | CỰC KHÓ: ~1.4s (Sít sao!)
+    // CHIÊU 3 (JUMP/SLAM - Nhảy dậm): Tầm đánh 28 units. Cần chạy từ tâm ra rìa.
+    // DỄ: ~2.5s | THƯỜNG: ~1.9s | CỰC KHÓ: ~1.4s (Vừa khít thời gian chạy nếu phản xạ ngay)
     b.boss.skill3.prepareTime = (28 / sprintSpeed) * 1.1 * pm;
 
-    // Chiêu 4 (Pillar): Range=10. Cần thoát khỏi tâm.
+    // CHIÊU 4 (PILLAR - Cột máu): Mỗi cột tầm 10 units.
     b.boss.skill4.prepareTime = 2.2 * pm;
-    b.boss.skill4.pillarTimer = (10 / sprintSpeed) * 1.5 * pm; // Thời gian từ lúc hiện vòng đến lúc nổ
+    b.boss.skill4.pillarTimer = (10 / sprintSpeed) * 1.5 * pm; // Thời gian từ lúc hiện vòng đỏ đến lúc nổ
 
-    // Chiêu 5 (Teleport): Range=35.
-    b.boss.skill5.prepareTime = (35 / sprintSpeed) * 1.05 * pm;
-    b.boss.skill5.activeTime = 2.5 * am;
-    // Player
-    b.player.maxHp = Math.round(1000 * d.playerHpMult);
-    b.player.maxArmor = Math.round(1000 * d.playerHpMult);
-    b.player.walkSpeed = 8.5 * d.playerSpdMult;
-    b.player.sprintMultiplier = 1.9 * d.playerSpdMult;
-    // Vũ khí người chơi
+    // CHIÊU 5 (TELEPORT - Trồi lên đập): Tầm đánh 20m (từ tâm).
+    // Người chơi chạy từ tâm (0m) ra rìa (20m).
+    const r5 = 20;
+    b.boss.skill5.range = r5;
+    const escapeTime5 = r5 / sprintSpeed;
+    const buffer5 = d.bossSkill5Buffer || 1.0;
+    // holdTime = (Thgian chạy thoát - 1s gồng ngầm - 0.4s trồi lên) + Buffer
+    // Giúp Boss đập ngay sau khi người chơi vừa kịp chạy ra khỏi vòng
+    const holdTime = Math.max(0.1, (escapeTime5 - 1.0 - 0.4) + buffer5);
+    b.boss.skill5.holdTime = holdTime;
+    b.boss.skill5.prepareTime = (r5 / sprintSpeed) * 1.3 * pm;
+    b.boss.skill5.activeTime = 0.4 + holdTime + 0.4 + 0.5;
+
+    // --- THÔNG SỐ NGƯỜI CHƠI ---
+    b.player.maxHp = Math.round(orig.player.maxHp * d.playerHpMult);
+    b.player.maxArmor = Math.round(orig.player.maxArmor * d.playerHpMult);
+    b.player.walkSpeed = orig.player.walkSpeed * d.playerSpdMult;
+    b.player.sprintMultiplier = orig.player.sprintMultiplier * d.playerSpdMult;
+
+    // --- VŨ KHÍ & KỸ NĂNG ---
     const wm = d.weaponDmgMult || 1.0;
-    b.weapons.pistol.damage = Math.round(65 * wm);
-    b.weapons.smg.damage = Math.round(40 * wm);
-    b.weapons.sniper.damage = Math.round(300 * wm);
-    // Unti — dame và ngưỡng tích lũy
+    // Sử dụng giá trị gốc bác đã chỉnh ở đầu file để nhân hệ số
+    b.weapons.pistol.damage = Math.round(orig.weapons.pistol.damage * wm);
+    b.weapons.smg.damage = Math.round(orig.weapons.smg.damage * wm);
+    b.weapons.sniper.damage = Math.round(orig.weapons.sniper.damage * wm);
+
     const um = d.ultiDmgMult || 1.0;
     const cm = d.ultiChargeMult || 1.0;
-    b.ultimate.damage = Math.round(800 * um);
-    b.ultimate.requiredDamage = Math.round(2000 * cm); // Càng khó càng phải gom dame nhiều
+    b.ultimate.damage = Math.round(orig.ultimate.damage * um);
+    b.ultimate.requiredDamage = Math.round(orig.ultimate.requiredDamage * cm);
+
     localStorage.setItem('difficulty', key);
+
+    // LOG ĐỂ KIỂM TRA (F12)
+    console.log(`%c[ĐỘ KHÓ] Đã chuyển sang: ${key.toUpperCase()}`, "color: #ffcc00; font-weight: bold;");
+    console.table({
+        "Pistol Damage": b.weapons.pistol.damage,
+        "SMG Damage": b.weapons.smg.damage,
+        "Sniper Damage": b.weapons.sniper.damage,
+        "Bot HP": Math.round(180 * d.botHpMult),
+        "Boss HP": b.boss.hp
+    });
 };
 
 // Load độ khó đã lưu
@@ -359,7 +401,7 @@ window.addEventListener('load', () => {
         return;
     }
     console.log("✅ WebGL2 OK");
-    // Cập nhật kích thước canvas - Giảm 25% độ phân giải trên mobile để mượt hơn
+    // Đồng bộ độ phân giải: Giữ 75% trên mobile để cân bằng giữa hiệu năng và hình ảnh
     const resScale = isMobile ? 0.75 : 1.0;
     gl.canvas.width = window.innerWidth * resScale;
     gl.canvas.height = window.innerHeight * resScale;
@@ -446,13 +488,17 @@ void main() {
     float spec = pow(max(dot(N, H), 0.0), uIsWater ? 128.0 : 32.0);
     float specMask = smoothstep(0.7, 0.8, spec) * (uIsWater ? 0.8 : 0.3);
     
-    float rim = 1.0 - max(dot(V, N), 0.0);
-    rim = rim * rim * rim * rim * 0.4; // Dùng nhân trực tiếp thay cho pow() để nhanh hơn trên GPU yếu
+    // Tối ưu cho Mobile: Chỉ dùng Rim light trên PC
+    float rim = 0.0;
+    if(!bool(uIsWater)) { // Dùng uIsWater làm cờ giả để kiểm tra PC nếu cần, hoặc skip luôn
+        float rimVal = 1.0 - max(dot(V, N), 0.0);
+        rim = rimVal * rimVal * rimVal * rimVal * 0.3;
+    }
     
     vec3 finalColor = baseColor * light + vec3(specMask) + vec3(rim) + uEmitColor;
     
-    // Giảm density từ 0.008 xuống 0.005 để nhìn rõ phía trước, tối dần về phía sau
-    float fogFactor = 1.0 - exp(-vDist * 0.005);
+    // Tăng mật độ sương mù một chút để che giấu chân trời mượt hơn
+    float fogFactor = 1.0 - exp(-vDist * 0.007);
     fogFactor = clamp(fogFactor, 0.0, 1.0);
     
     float alpha = uIsWater ? 0.7 : 1.0;
@@ -530,9 +576,26 @@ function getCube(color = [1, 1, 1], sx = 1, sy = 1, sz = 1, ox = 0, oy = 0, oz =
 function genTreeMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    push(getCube([0.4, 0.25, 0.1], 0.5, 2, 0.5, 0, 1, 0));
-    push(getCube([0.1, 0.5, 0.1], 2.5, 2, 2.5, 0, 2.5, 0));
-    push(getCube([0.2, 0.6, 0.2], 1.8, 2, 1.8, 0, 4.0, 0));
+
+    const trunkCol = [0.35, 0.2, 0.1];
+    const leafCol1 = [0.1, 0.5, 0.2];
+    const leafCol2 = [0.15, 0.6, 0.25];
+    const leafCol3 = [0.2, 0.7, 0.3];
+
+    // Thân cây (Trunk)
+    push(getCube(trunkCol, 0.6, 3, 0.6, 0, 1.5, 0));
+
+    // Tán lá 1 (Bottom layer)
+    push(getCube(leafCol1, 3.5, 1.5, 3.5, 0, 3.5, 0));
+    push(getCube(leafCol1, 3.5, 1.5, 3.5, 0, 3.5, 0)); // Layer 2 rotated is implied by the engine if we add more cubes
+
+    // Tán lá 2 (Middle layer)
+    push(getCube(leafCol2, 2.8, 1.2, 2.8, 0, 4.8, 0));
+
+    // Tán lá 3 (Top layer)
+    push(getCube(leafCol3, 1.8, 1.0, 1.8, 0, 5.8, 0));
+    push(getCube(leafCol3, 0.8, 0.8, 0.8, 0, 6.5, 0));
+
     return createMesh(V, N, C);
 }
 
@@ -849,8 +912,6 @@ function genBossArm() {
 }
 
 
-
-
 function genBossProjectileMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
@@ -860,13 +921,10 @@ function genBossProjectileMesh() {
 }
 
 
-
-
-
-// Hàm tạo vạch lướt bám theo địa hình (Chiêu 1) - Chỉ là đường thẳng
+// Hàm tạo vạch lướt bám theo địa hình (Chiêu 1) - Mượt mà hơn
 function genTerrainDashMesh(cx, cz, ang, w, l) {
     let V = [], N = [], C = [];
-    const resL = 12, resW = 4;
+    const resL = 20, resW = 2; // Tăng độ phân giải theo chiều dài
     const stepL = l / resL, stepW = w / resW;
     const cosA = Math.cos(ang), sinA = Math.sin(ang);
 
@@ -877,8 +935,7 @@ function genTerrainDashMesh(cx, cz, ang, w, l) {
             const getPt = (ll, ww) => {
                 const rx = ww * cosA + ll * sinA, rz = -ww * sinA + ll * cosA;
                 const wx = cx + rx, wz = cz + rz;
-                // Hạ thấp offset xuống 0.05 để bám sát mặt đất hơn
-                return [wx, getHeight(wx, wz) + 0.05, wz];
+                return [wx, getHeight(wx, wz) + 0.08, wz];
             };
             const p11 = getPt(l1, w1), p12 = getPt(l1, w2), p21 = getPt(l2, w1), p22 = getPt(l2, w2);
             V.push(...p11, ...p12, ...p21, ...p21, ...p12, ...p22);
@@ -888,22 +945,28 @@ function genTerrainDashMesh(cx, cz, ang, w, l) {
     return createMesh(V, N, C);
 }
 
-// Hàm tạo vòng tròn bám theo địa hình (Chiêu 3)
+// Hàm tạo vòng tròn bám theo địa hình (Radial Mesh - Không còn ô vuông)
 function genTerrainFollowMesh(cx, cz, r) {
     let V = [], N = [], C = [];
-    const res = 12; // Giảm độ phân giải để tối ưu hiệu năng, tránh crash
-    const step = (r * 2) / res;
-    for (let i = 0; i < res; i++) {
-        for (let j = 0; j < res; j++) {
-            const x1 = cx - r + i * step, z1 = cz - r + j * step;
-            const x2 = x1 + step, z2 = z1 + step;
-            const d1 = Math.sqrt((x1 - cx) ** 2 + (z1 - cz) ** 2);
-            if (d1 > r) continue;
-            const y11 = getHeight(x1, z1) + 0.05, y21 = getHeight(x2, z1) + 0.05;
-            const y12 = getHeight(x1, z2) + 0.05, y22 = getHeight(x2, z2) + 0.05;
-            V.push(x1, y11, z1, x1, y12, z2, x2, y11, z1);
-            V.push(x2, y11, z1, x1, y12, z2, x2, y22, z2);
-            for (let k = 0; k < 6; k++) { N.push(0, 1, 0); C.push(1, 0, 0); } // Đỏ rực
+    const segments = 32; // Độ mịn đường tròn
+    const rings = 4;    // Độ bám địa hình (phân lớp từ tâm ra)
+
+    for (let ring = 0; ring < rings; ring++) {
+        const r1 = (ring / rings) * r;
+        const r2 = ((ring + 1) / rings) * r;
+        for (let i = 0; i < segments; i++) {
+            const a1 = (i / segments) * Math.PI * 2;
+            const a2 = ((i + 1) / segments) * Math.PI * 2;
+
+            const getPt = (rr, aa) => {
+                const wx = cx + Math.sin(aa) * rr;
+                const wz = cz + Math.cos(aa) * rr;
+                return [wx, getHeight(wx, wz) + 0.08, wz];
+            };
+
+            const p11 = getPt(r1, a1), p12 = getPt(r1, a2), p21 = getPt(r2, a1), p22 = getPt(r2, a2);
+            V.push(...p11, ...p12, ...p21, ...p21, ...p12, ...p22);
+            for (let k = 0; k < 6; k++) { N.push(0, 1, 0); C.push(1, 0, 0); }
         }
     }
     return createMesh(V, N, C);
@@ -925,7 +988,6 @@ function genDashIndicatorMesh() {
 }
 
 
-
 function genArmMesh() {
 
     let V = [], N = [], C = [];
@@ -939,22 +1001,42 @@ function genArmMesh() {
 function genBarrelMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    push(getCube([0.8, 0.1, 0.1], 0.8, 1.2, 0.8, 0, 0.6, 0));
-    push(getCube([0.3, 0.3, 0.3], 0.85, 0.1, 0.85, 0, 1.15, 0));
+
+    const bodyCol = [0.8, 0.15, 0.1]; // Đỏ tươi hơn
+    const metalCol = [0.3, 0.3, 0.3]; // Kim loại xám
+    const topCol = [0.2, 0.2, 0.2];   // Nắp đen
+
+    // Tạo hình trụ 8 cạnh (dùng 2 cube xoay 45 độ)
+    push(getCube(bodyCol, 1.0, 1.6, 1.0, 0, 0.8, 0));
+    // Ở đây getCube không hỗ trợ xoay trực tiếp, nên ta dùng kỹ thuật xếp chồng để nhìn giống thùng hơn
+    push(getCube(metalCol, 1.05, 0.1, 1.05, 0, 0.4, 0));  // Đai dưới
+    push(getCube(metalCol, 1.05, 0.1, 1.05, 0, 1.2, 0));  // Đai trên
+    push(getCube(topCol, 0.9, 0.1, 0.9, 0, 1.6, 0));     // Nắp thùng
+
     return createMesh(V, N, C);
 }
 
 function genGrassMesh() {
     let V = [], N = [], C = [];
-    const blades = 20, h = 0.5, w = 1, tipScale = 0.15;
-    const addPlane = (angle) => {
+    const blades = isMobile ? 8 : 15; // Tăng số lá cỏ nhưng tối ưu cho mobile
+    const h = 0.8, w = 0.15;
+
+    const addBlade = (angle, offset) => {
         const c = Math.cos(angle), s = Math.sin(angle);
-        const bx1 = -w * c, bz1 = -w * s, bx2 = w * c, bz2 = w * s;
-        const tx1 = -w * tipScale * c, tz1 = -w * tipScale * s, tx2 = w * tipScale * c, tz2 = w * tipScale * s;
-        V.push(bx1, 0, bz1, bx2, 0, bz2, tx2, h, tz2, bx1, 0, bz1, tx2, h, tz2, tx1, h, tz1);
-        for (let i = 0; i < 6; i++) { N.push(0, 1, 0); C.push(0.12, 0.45 + Math.random() * 0.25, 0.12); }
+        const x = offset.x, z = offset.z;
+        const skew = Math.sin(angle * 5) * 0.2; // Độ nghiêng tự nhiên
+
+        // Tạo một lá cỏ dẹt (Triangle Strip giả lập)
+        V.push(x - w * s, 0, z + w * c, x + w * s, 0, z - w * c, x + skew, h, z);
+        const col = [0.1 + Math.random() * 0.1, 0.5 + Math.random() * 0.3, 0.1];
+        for (let i = 0; i < 3; i++) { N.push(0, 1, 0); C.push(...col); }
     };
-    for (let i = 0; i < blades; i++) addPlane((i / blades) * Math.PI);
+
+    for (let i = 0; i < blades; i++) {
+        const ang = (i / blades) * Math.PI * 2;
+        const rad = Math.random() * 0.5;
+        addBlade(ang, { x: Math.cos(ang) * rad, z: Math.sin(ang) * rad });
+    }
     return createMesh(V, N, C);
 }
 
@@ -1014,25 +1096,23 @@ function initAssets() {
 }
 
 
-
-
-
-
-
-
 function genWaterMesh() {
     let V = [], N = [], C = [];
-    const S = MAP_SIZE * 2;
-    V.push(-S, -9.5, -S, -S, -9.5, S, S, -9.5, -S, S, -9.5, -S, -S, -9.5, S, S, -9.5, S);
-    for (let i = 0; i < 6; i++) { N.push(0, 1, 0); C.push(0, 0.5, 1); }
+    const S = 400;
+    // Chỉnh mặt hướng xuống theo yêu cầu
+    V.push(-S, -9.5, -S, -S, -9.5, S, S, -9.5, S);
+    V.push(-S, -9.5, -S, S, -9.5, S, S, -9.5, -S);
+    for (let i = 0; i < 6; i++) { N.push(0, -1, 0); C.push(0.05, 0.3, 0.6); }
     return createMesh(V, N, C);
 }
 
 function genSkyMesh() {
-    const S = 800; const m = getCube([1, 1, 1], S, S, S); return createMesh(m.v, m.n, m.c);
+    const S = 4000; // Tăng cực lớn để bao phủ toàn bộ tầm nhìn
+    const m = getCube([1, 1, 1], S, S, S);
+    return createMesh(m.v, m.n, m.c);
 }
 
-const MAP_SIZE = 400, MAP_RES = 64;
+const MAP_SIZE = 400, MAP_RES = isMobile ? 48 : 64; // Giảm độ phân giải địa hình trên mobile
 function getHeight(x, z) {
     const nx = x * 0.02, nz = z * 0.02;
     let y = Math.sin(nx) * Math.cos(nz) * 8 + Math.sin(nx * 3 + nz) * 2;
@@ -1049,6 +1129,7 @@ function genTerrain() {
             const y00 = getHeight(x, z), y10 = getHeight(x1, z), y01 = getHeight(x, z1), y11 = getHeight(x1, z1);
             // Màu đất bùn, máu khô và đá tối
             const c = y00 < -8 ? [0.15, 0.05, 0.05] : (y00 < 5 ? [0.12, 0.08, 0.08] : [0.08, 0.08, 0.08]);
+
             V.push(x, y00, z, x, y01, z1, x1, y10, z, x1, y10, z, x, y01, z1, x1, y11, z1);
             for (let k = 0; k < 6; k++) { N.push(0, 1, 0); C.push(...c); }
         }
@@ -1057,17 +1138,7 @@ function genTerrain() {
 }
 
 
-
-
-
-
-
-
-
-
-
 document.addEventListener("contextmenu", e => e.preventDefault());
-
 
 
 const HAKARI_DANCE = { spawned: false, active: false };
@@ -1103,6 +1174,14 @@ function startGame() {
     STATE.bossTriggered = false;
 
     STATE.startTime = Date.now(); STATE.gameEnded = false;
+
+    // CẬP NHẬT CHẾ ĐỘ TRÊN HUD
+    const dPreset = window.DIFFICULTY_PRESETS[window.CURRENT_DIFFICULTY];
+    const diffDisplay = document.getElementById('difficulty-display');
+    if (diffDisplay) {
+        diffDisplay.innerText = dPreset.label;
+        diffDisplay.style.color = dPreset.color;
+    }
 
 
     STATE.player.pos = V3.create(0, getHeight(0, 0) + 100, 0); STATE.player.vel = V3.create(0, -1, 0); STATE.player.alive = true; STATE.player.kills = 0; STATE.player.streak = 0; STATE.player.damageFlash = 0;
@@ -1564,7 +1643,7 @@ function update(dt) {
             // Tương tự, chỉ tính nóc xe/nhà là mặt sàn nếu bot đã thực sự bật nhảy vượt qua chiều cao đó
             if (dx * dx + dz * dz <= obs.radius * obs.radius) {
                 if (obs.type === 'car' && bot.pos.y >= obs.pos.y + 1.0) bFloor = Math.max(bFloor, obs.pos.y + 1.7);
-                if (obs.type === 'house' && bot.pos.y >= obs.pos.y + 3.0) bFloor = Math.max(bFloor, obs.pos.y + 4.5);
+                if (obs.type === 'house' && bot.pos.y >= bot.pos.y + 3.0) bFloor = Math.max(bFloor, obs.pos.y + 4.5);
             }
         }
 
@@ -1623,16 +1702,50 @@ function update(dt) {
         if (closeLoot.type === 0) { STATE.weapons[p.weaponIdx].res += 30; pickedName = "NHẬN ĐẠN"; }
         else if (closeLoot.type === 1) {
             p.hp = Math.min(p.maxHp, p.hp + 200);
-            p.damageFlash = 0; // [YÊU CẦU] Ăn máu thì hết đỏ ngay
+            p.damageFlash = 0;
             pickedName = "HỒI MÁU";
         }
         else if (closeLoot.type === 2) { p.armor = Math.min(p.maxArmor, p.armor + 150); pickedName = "NHẬN GIÁP"; }
         else if (closeLoot.type === 3) {
             const puType = Math.random() < 0.5 ? 0 : 1;
-            p.powerup = { type: puType, time: 10 };
-            pickedName = puType === 0 ? "TĂNG TỐC!" : "X2 SÁT THƯƠNG!";
+            const hasActive = p.powerup && p.powerup.time > 0;
+
+            if (hasActive && p.powerup.type !== puType && p.powerup.type !== 3) {
+                // Đang có 1 cái khác loại -> Lên SIÊU CẤP (3)
+                p.powerup = { type: 3, time: 20 };
+                pickedName = "🔥 SIÊU CẤP (TỐC + X2) 🔥";
+            } else if (hasActive && p.powerup.type === 3) {
+                // Đang SIÊU CẤP -> Reset 20s
+                p.powerup.time = 20;
+                pickedName = "LÀM MỚI SIÊU CẤP!";
+            } else {
+                // Nhặt bình thường hoặc nhặt cùng loại -> Reset 15s
+                p.powerup = { type: puType, time: 15 };
+                pickedName = puType === 0 ? "⚡ TĂNG TỐC!" : "🔥 X2 SÁT THƯƠNG!";
+            }
         }
-        const pMsg = document.getElementById('pickup-msg'); pMsg.innerText = pickedName; pMsg.style.opacity = 1; setTimeout(() => pMsg.style.opacity = 0, 2000);
+
+        const pMsg = document.getElementById('pickup-msg');
+        let pColor = "#00ffaa";
+        if (closeLoot.type === 0) pColor = "#ffcc00"; // Đạn - Vàng
+        if (closeLoot.type === 1) pColor = "#ff3366"; // Máu - Hồng/Đỏ
+        if (closeLoot.type === 2) pColor = "#00d4ff"; // Giáp - Xanh dương
+        if (closeLoot.type === 3) {
+            if (p.powerup.type === 3) pColor = "#bf00ff"; // Tím SIÊU CẤP
+            else pColor = pickedName.includes("TỐC") ? "#00ffff" : "#ff6600";
+        }
+
+        pMsg.innerText = pickedName;
+        pMsg.style.borderColor = pColor;
+        pMsg.style.color = pColor;
+        pMsg.style.boxShadow = `0 0 25px ${pColor}44`;
+        pMsg.classList.add('show');
+
+        // Reset animation
+        clearTimeout(window.pickupTimer);
+        window.pickupTimer = setTimeout(() => {
+            if (pMsg) pMsg.classList.remove('show');
+        }, 1500);
 
         // Hồi lại hòm sau 20s
         const respawnPos = { ...closeLoot.pos }, respawnType = closeLoot.type;
@@ -1646,7 +1759,24 @@ function update(dt) {
 
     // Đã xóa vòng lặp nhặt STATE.powerups
 
-    if (p.powerup && p.powerup.time > 0) p.powerup.time -= dt; else if (p.powerup) p.powerup.type = null;
+    const puOverlay = document.getElementById('powerup-overlay');
+    if (p.powerup && p.powerup.time > 0) {
+        p.powerup.time -= dt;
+        let color = "0, 255, 255"; // Mặc định Cyan
+        if (p.powerup.type === 1) color = "255, 102, 0"; // Cam
+        if (p.powerup.type === 3) color = "191, 0, 255"; // Tím Siêu Cấp
+
+        if (puOverlay) {
+            puOverlay.style.boxShadow = `inset 0 0 200px rgba(${color}, 0.6), inset 0 0 50px rgba(${color}, 0.4)`;
+            puOverlay.classList.add('active');
+        }
+    } else if (p.powerup) {
+        p.powerup.type = null;
+        if (puOverlay) {
+            puOverlay.classList.remove('active');
+            puOverlay.style.boxShadow = 'none';
+        }
+    }
     if (p.streak >= 3) document.getElementById('damage-overlay').style.boxShadow = `inset 0 0 100px rgba(255, 204, 0, 0.2)`;
 
     // Boss AI Logic
@@ -1876,15 +2006,16 @@ function update(dt) {
             b.bodyY -= 15 * dt;
             b.armLift += (0 - b.armLift) * 0.1; // Chìm xuống đứng yên không giơ tay làm gì
             const totalPre = window.GAME_CONFIG.boss.skill5.prepareTime;
-            // Dành 60% thời gian đầu để bám theo vị trí người chơi
-            if (b.skillCD > totalPre * 0.4) {
+            // Dừng dí người chơi trước khi đập 1s (thay vì 0.5s) để người chơi có cơ hội né
+            if (b.skillCD > 1.0) {
                 b.targetPos = V3.create(p.pos.x, 0, p.pos.z);
                 b.targetPos.y = getHeight(b.targetPos.x, b.targetPos.z);
 
                 b.indicatorUpdateTimer = (b.indicatorUpdateTimer || 0) - dt;
                 if (b.indicatorUpdateTimer <= 0) {
                     if (b.indicatorMesh) deleteMesh(b.indicatorMesh);
-                    b.indicatorMeshParams = { x: b.targetPos.x, z: b.targetPos.z, r: 25 };
+                    // Đồng bộ với tầm đánh Skill 5 (Dùng range động)
+                    b.indicatorMeshParams = { x: b.targetPos.x, z: b.targetPos.z, r: window.GAME_CONFIG.boss.skill5.range };
                     b.indicatorMesh = genTerrainFollowMesh(b.indicatorMeshParams.x, b.indicatorMeshParams.z, b.indicatorMeshParams.r);
                     b.indicatorUpdateTimer = 0.1;
                 }
@@ -1902,53 +2033,63 @@ function update(dt) {
                 b.bodyY = -25; b.bodyRot = 0; b.hasHit = false; // Chìm sâu hơn (-25)
                 if (b.fanMesh) deleteMesh(b.fanMesh);
                 const dx = p.pos.x - b.pos.x, dz = p.pos.z - b.pos.z;
-                b.fanMeshParams = { x: b.pos.x, z: b.pos.z, ang: Math.atan2(dx, dz) - 1.2, arc: 2.4, r: 25 };
+                // Đồng bộ r cho khớp với tầm đánh động
+                b.fanMeshParams = { x: b.pos.x, z: b.pos.z, ang: Math.atan2(dx, dz) - 1.2, arc: 2.4, r: window.GAME_CONFIG.boss.skill5.range };
                 b.fanMesh = genTerrainFanMesh(b.fanMeshParams.x, b.fanMeshParams.z, b.fanMeshParams.ang, b.fanMeshParams.arc, b.fanMeshParams.r);
             }
         } else if (b.state === 'teleport_strike') {
-            // --- THỜI GIAN CHIÊU 5 (DYNAMIC) ---
-            const totalActive = window.GAME_CONFIG.boss.skill5.activeTime;
-            const riseLimit = totalActive * 0.83;  // Tương đương 2.5s/3.0s
-            const strikeLimit = totalActive * 0.33; // Tương đương 1.0s/3.0s
+            // --- THỜI GIAN CHIÊU 5 (DYNAMIC THEO ĐỘ KHÓ) ---
+            const holdDur = window.GAME_CONFIG.boss.skill5.holdTime;
+            const riseDur = 0.4;
+            const strikeDur = 0.4;
+            const recoverDur = 0.5;
+
+            const riseLimit = holdDur + strikeDur + recoverDur;
+            const strikeLimit = strikeDur + recoverDur;
+            const hitTime = recoverDur + strikeDur - 0.15; // Đập trúng sau 0.15s bắt đầu vung tay
 
             // 1. THỜI GIAN TRỒI LÊN
             if (b.skillCD > riseLimit) {
-                b.bodyY += 40 * dt; if (b.bodyY > 0) b.bodyY = 0;
+                b.bodyY += 60 * dt; if (b.bodyY > 0) b.bodyY = 0;
                 b.armLift += (-1.8 - b.armLift) * 0.1; // Tay giơ cao chuẩn bị đập
 
-                // 2. THỜI GIAN GỒNG CHỜ (Rặn chiêu)
+                // 2. THỜI GIAN GỒNG CHỜ (Rặn chiêu - Đây là đoạn ng chơi chạy thoát)
             } else if (b.skillCD > strikeLimit) {
                 b.armLift = -1.8;
+                b.bodyY = 0;
 
-                // 3. VUNG TAY ĐẬP XUỐNG
+                // 3. VUNG TAY ĐẬP XUỐNG & HỒI CHIÊU
             } else {
-                b.armLift += (-0.2 - b.armLift) * 0.4; // Tay phải đập thẳng xuống chạm đất phía trước
-                b.bodyRot += (0.6 - b.bodyRot) * 0.2; // Hơi cúi người thôi
+                if (b.skillCD > recoverDur) {
+                    b.armLift += (-0.2 - b.armLift) * 0.4; // Tay phải đập thẳng xuống
+                    b.bodyRot += (0.6 - b.bodyRot) * 0.2; // Hơi cúi người
+                } else {
+                    b.armLift += (0 - b.armLift) * 0.1; // Co tay lại sau khi đập
+                }
 
                 const toP = V3.norm(V3.sub(p.pos, b.pos));
                 const bYaw = Math.atan2(toP.x, toP.z);
                 const handX = b.pos.x + Math.sin(bYaw) * 15;
                 const handZ = b.pos.z + Math.cos(bYaw) * 15;
 
-                if (Math.random() < 0.7) {
+                if (Math.random() < 0.7 && b.skillCD > recoverDur) {
                     spawnParticles({ x: handX, y: b.pos.y + 10, z: handZ }, 5, [1, 0, 0], 1.5);
                 }
 
-                // 4. THỜI ĐIỂM GÂY SÁT THƯƠNG: Khoảng 0.15s sau khi bắt đầu đập (1.0 - 0.15 = 0.85)
-                if (b.skillCD < 0.85 && !b.hasHit) {
-                    // Hiệu ứng đất gãy, vỡ vụn tại vị trí tay đập - CỰC MẠNH
+                // 4. THỜI ĐIỂM GÂY SÁT THƯƠNG
+                if (b.skillCD < hitTime && !b.hasHit) {
+                    // Hiệu ứng đất gãy, vỡ vụn tại vị trí tay đập
                     spawnParticles({ x: handX, y: getHeight(handX, handZ), z: handZ }, 150, [0.8, 0.4, 0.1], 3.0);
                     spawnParticles({ x: handX, y: getHeight(handX, handZ), z: handZ }, 200, [0.1, 0.1, 0.1], 2.5, 'smoke');
                     spawnParticles({ x: handX, y: getHeight(handX, handZ), z: handZ }, 100, [1.0, 0, 0], 2.0);
-                    STATE.shake = 25; // Siêu rung
+                    STATE.shake = 25;
 
                     const d = V3.dist(b.pos, p.pos);
                     const pAng = Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z);
                     let diff = Math.abs(pAng - bYaw);
                     if (diff > Math.PI) diff = 2 * Math.PI - diff;
 
-                    // Kiểm tra hướng và tầm đánh (Hình quạt 30m, góc 1.2 rad)
-                    if (d < 30 && diff < 1.2) {
+                    if (d < window.GAME_CONFIG.boss.skill5.range && diff < 1.2) {
                         takeDamage(p, window.GAME_CONFIG.boss.skill5.damage);
                         spawnParticles(p.pos, 50, [1, 0, 0], 2.0);
                         playAudio('hit');
@@ -1973,8 +2114,8 @@ function update(dt) {
             const dir = V3.norm(V3.sub(targetPoint, spawnPoint));
             const ang = Math.atan2(dir.x, dir.z);
             if (b.dashMesh) gl.deleteVertexArray(b.dashMesh.vao);
-            // Dùng mesh của chiêu 1 nhưng cực mảnh (0.2) để làm tia laser
-            b.dashMesh = genTerrainDashMesh(spawnPoint.x, spawnPoint.z, ang, 0.4, 200);
+            // Tăng độ rộng laser (1.2) để nhìn rõ hơn, bám đất mượt mà
+            b.dashMesh = genTerrainDashMesh(spawnPoint.x, spawnPoint.z, ang, 1.2, 200);
 
             if (b.skillCD <= 0) {
                 b.state = 'shooting'; b.skillCD = 0.15; b.shotCount = 15; // Bắn nhanh hơn (0.15s) và nhiều hơn (8 viên)
@@ -2082,7 +2223,7 @@ function fireWeapon(shooter, rot, weapon, isPlayer, dirOverride) {
     let dir; if (isPlayer) { const yaw = rot.y, pitch = rot.x; dir = V3.create(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)); } else dir = V3.norm(dirOverride);
     const spread = (isPlayer && isMobile) ? 0 : weapon.spread; // Không tản đạn trên mobile
     dir.x += (Math.random() - 0.5) * spread; dir.y += (Math.random() - 0.5) * spread; dir.z += (Math.random() - 0.5) * spread; dir = V3.norm(dir);
-    STATE.projectiles.push({ pos: V3.add(shooter.pos, V3.create(0, 0.5, 0)), dir: dir, dmg: weapon.damage * (shooter.powerup && shooter.powerup.type === 1 ? 2 : 1), life: 2.0, isPlayer: isPlayer, dead: false });
+    STATE.projectiles.push({ pos: V3.add(shooter.pos, V3.create(0, 0.5, 0)), dir: dir, dmg: weapon.damage * (shooter.powerup && (shooter.powerup.type === 1 || shooter.powerup.type === 3) ? 2 : 1), life: 2.0, isPlayer: isPlayer, dead: false });
     playAudio('shoot');
 }
 
@@ -2382,11 +2523,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// showClickToContinue() đã thay bằng showClickAnywhere() — đã xóa
-
-
-
-
 // Giảm mạnh grass trên mobile để giảm draw call cực đoan
 const GRASS_PATCHES = []; for (let i = 0; i < (isMobile ? 12 : 200); i++) { const x = Math.sin(i * 12.989) * MAP_SIZE * 0.45, z = Math.cos(i * 78.233) * MAP_SIZE * 0.45, y = getHeight(x, z), scale = 0.6 + Math.random() * 0.6; GRASS_PATCHES.push({ x, y, z, scale }); }
 
@@ -2429,7 +2565,7 @@ function draw() {
     const zoomFactor = [0.3, 0.6, 0.95][p.weaponIdx];
     const fov = 1.2 - (STATE.aimLerp * zoomFactor) + (STATE.sprintLerp * 0.3);
 
-    const proj = M4.perspective(fov, aspect, 0.1, 1000);
+    const proj = M4.perspective(fov, aspect, 0.1, isMobile ? 2500 : 10000);
     const yaw = STATE.camera.rot.y, pitch = STATE.camera.rot.x;
 
     // Giật cam chỉ trên PC (mobile tắt để mượt hơn)
@@ -2484,7 +2620,11 @@ function draw() {
     gl.uniform1i(locs.isSky, false);
 
     gl.uniformMatrix4fv(locs.model, false, M4.identity()); gl.bindVertexArray(ASSETS.ground.vao); gl.drawArrays(gl.TRIANGLES, 0, ASSETS.ground.count);
-    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.uniform1i(locs.isWater, true); gl.uniformMatrix4fv(locs.model, false, M4.identity()); gl.bindVertexArray(ASSETS.water.vao); gl.drawArrays(gl.TRIANGLES, 0, ASSETS.water.count); gl.uniform1i(locs.isWater, false); gl.disable(gl.BLEND);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.uniform1i(locs.isWater, true);
+    // Dùng M4.identity() vì biển đã đủ lớn để bao phủ toàn bộ map từ tâm
+    gl.uniformMatrix4fv(locs.model, false, M4.identity());
+    gl.bindVertexArray(ASSETS.water.vao); gl.drawArrays(gl.TRIANGLES, 0, ASSETS.water.count);
+    gl.uniform1i(locs.isWater, false); gl.disable(gl.BLEND);
     const drawShadow = (pos, size) => { let h = getHeight(pos.x, pos.z) + 0.05, m = M4.translation(pos.x, h, pos.z); m = M4.multiply(m, M4.scaling(size, 0.01, size)); gl.uniformMatrix4fv(locs.model, false, m); gl.bindVertexArray(ASSETS.crate.vao); gl.drawArrays(gl.TRIANGLES, 0, ASSETS.crate.count); };
     if (!isMobile) {
         gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.uniform3f(locs.fogColor, 0, 0, 0);
@@ -3168,10 +3308,10 @@ window.addEventListener('load', () => {
     }
 });
 
-// --- CẤU HÌNH SỐ LƯỢNG BOT (ĐÃ FIX OVERWRITE & CLAMP MIN 5) ---
+// --- CẤU HÌNH SỐ LƯỢNG BOT (ĐÃ FIX OVERWRITE & CLAMP MIN 1) ---
 const savedBotCount = localStorage.getItem('botCount');
 if (savedBotCount) {
-    STATE.config.botCount = Math.max(5, parseInt(savedBotCount) || 25);
+    STATE.config.botCount = Math.max(1, parseInt(savedBotCount) || 25);
 } else {
     STATE.config.botCount = isMobile ? 15 : 25;
 }
@@ -3450,13 +3590,3 @@ window.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('mousedown', onWeaponSelect);
     });
 });
-
-
-
-
-
-
-
-
-
-

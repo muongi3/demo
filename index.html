@@ -1,19 +1,19 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <!-- Giáº£m thĂ´ng bĂ¡o trĂ¬nh duyá»‡t khi má»Ÿ link -->
+    <!-- Giảm thông báo trình duyệt khi mở link -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#050505">
-    <!-- KhĂ´ng hiá»‡n cáº£nh bĂ¡o referrer khi chuyá»ƒn trang -->
+    <!-- Không hiện cảnh báo referrer khi chuyển trang -->
     <meta name="referrer" content="no-referrer">
 
-    <!-- Chá»‘ng lÆ°u Cache trĂªn Ä‘iá»‡n thoáº¡i -->
+    <!-- Chống lưu Cache trên điện thoại -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -24,17 +24,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <!-- TÄƒng version Ä‘á»ƒ trĂ¬nh duyá»‡t xĂ³a Cache cÅ© -->
+    <!-- Tăng version để trình duyệt xóa Cache cũ -->
     <link rel="stylesheet" href="style.css?v=19.1.5">
 </head>
 
 <body>
     <div id="victory-bg"></div>
-    <!-- Cáº£nh bĂ¡o xoay ngang Ä‘iá»‡n thoáº¡i -->
+    <!-- Cảnh báo xoay ngang điện thoại -->
     <div id="portrait-warning">
-        <div style="font-size: 60px; margin-bottom: 20px; animation: rotatePhone 2s infinite;">đŸ“±</div>
-        <h2 style="color:#ffcc00; margin:0;">VUI LĂ’NG XOAY NGANG ÄIá»†N THOáº I</h2>
-        <p style="font-size:16px; color:#ccc;">Game báº¯n sĂºng khĂ´ng há»— trá»£ mĂ n hĂ¬nh dá»c!</p>
+        <div style="font-size: 60px; margin-bottom: 20px; animation: rotatePhone 2s infinite;">📱</div>
+        <h2 style="color:#ffcc00; margin:0;">VUI LÒNG XOAY NGANG ĐIỆN THOẠI</h2>
+        <p style="font-size:16px; color:#ccc;">Game bắn súng không hỗ trợ màn hình dọc!</p>
     </div>
 
 
@@ -42,32 +42,33 @@
 
     <!-- Damage Overlay -->
     <div id="damage-overlay"></div>
+    <div id="powerup-overlay"></div>
     <div id="global-announcement"></div>
 
     <!-- UI Layer -->
     <div id="ui-layer">
-        <!-- Bá»˜ ÄIá»€U KHIá»‚N MOBILE (FREE FIRE STYLE) -->
+        <!-- BỘ ĐIỀU KHIỂN MOBILE (FREE FIRE STYLE) -->
         <div id="mobile-controls">
             <div id="joystick-zone">
                 <div id="joystick-base"></div>
                 <div id="joystick-knob"></div>
             </div>
-            <button id="btn-sprint">CHáº Y</button>
+            <button id="btn-sprint">CHẠY</button>
             <div id="touch-aim-zone"></div>
             <div id="mobile-weapons">
-                <button class="weapon-btn active" data-idx="0">Lá»¤C</button>
+                <button class="weapon-btn active" data-idx="0">LỰC</button>
                 <button class="weapon-btn" data-idx="1">SMG</button>
-                <button class="weapon-btn" data-idx="2">Tá»ˆA</button>
+                <button class="weapon-btn" data-idx="2">TỈA</button>
             </div>
             <button id="btn-ulti" class="hidden">UNTI</button>
             <div class="action-buttons">
-                <button id="btn-reload">Náº P</button>
-                <button id="btn-aim">NGáº®M</button>
-                <button id="btn-jump">NHáº¢Y</button>
-                <button id="btn-shoot">Báº®N</button>
+                <button id="btn-reload">NẠP</button>
+                <button id="btn-aim">NGẮM</button>
+                <button id="btn-jump">NHẢY</button>
+                <button id="btn-shoot">BẮN</button>
             </div>
             <button id="btn-settings"
-                style="position: absolute; top: 30px; right: 230px; background: rgba(0,0,0,0.5); border: 2px solid #fff; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; z-index: 1000; color: white; display: block; pointer-events: auto;">â™ï¸</button>
+                style="position: absolute; top: 30px; right: 230px; background: rgba(0,0,0,0.5); border: 2px solid #fff; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; z-index: 1000; color: white; display: block; pointer-events: auto;">⚙️</button>
         </div>
 
         <div id="crosshair"></div>
@@ -83,7 +84,7 @@
         </div>
 
         <div id="continue-text" class="continue-text hidden">
-            đŸ‘† Báº¤M CHUá»˜T Äá»‚ TIáº¾P Tá»¤C đŸ‘†
+            👆 BẤM CHUỘT ĐỂ TIẾP TỤC 👆
         </div>
 
         <div id="ammo-display" class="hud-panel">
@@ -94,21 +95,22 @@
         <div id="stats-display" class="hud-panel">
             <div><span id="alive-count" style="color:#ffcc00">50</span></div>
             <div><span id="kill-count">0</span></div>
+            <div id="difficulty-display" style="font-size: 10px; font-weight: 900; margin-top: 3px; letter-spacing: 1px;"></div>
         </div>
 
         <div id="loot-legend" class="hud-panel">
-            <div style="font-size: 10px; color:#aaa; margin-bottom:5px">Há»˜P TIáº¾P Táº¾</div>
-            <div><span style="color:#e6cc00">â– </span> Nháº­n Äáº¡n</div>
-            <div><span style="color:#00cc00">â– </span> Há»“i MĂ¡u</div>
-            <div><span style="color:#0066ff">â– </span> ThĂªm GiĂ¡p</div>
-            <div><span style="color:#ff6600">â– </span> Ká»¹ NÄƒng</div>
+            <div style="font-size: 10px; color:#aaa; margin-bottom:5px">HỘP TIẾP TẾ</div>
+            <div><span style="color:#e6cc00">■</span> Nhận Đạn</div>
+            <div><span style="color:#00cc00">■</span> Hồi Máu</div>
+            <div><span style="color:#0066ff">■</span> Thêm Giáp</div>
+            <div><span style="color:#ff6600">■</span> Kỹ Năng</div>
         </div>
 
         <div id="settings-modal" class="hidden" style="background: transparent; pointer-events: none;">
             <div class="card bg-dark text-white border-secondary shadow-lg"
                 style="width: fit-content; min-width: 130px; pointer-events: auto; margin: 10px auto 0; border-radius: 8px; backdrop-filter: blur(8px); background: rgba(15,15,15,0.9) !important; border: 1px solid rgba(255,255,255,0.2) !important;">
                 <div class="card-body p-2">
-                    <h6 class="card-title text-center mb-1" style="font-size: 9px; color: #ffcc00; font-weight: 900;">â™ï¸
+                    <h6 class="card-title text-center mb-1" style="font-size: 9px; color: #ffcc00; font-weight: 900;">⚙️
                         HUD SETTINGS</h6>
 
                     <div class="mb-1">
@@ -143,7 +145,7 @@
 
 
 
-        <div id="interaction-msg" class="hud-panel">NHáº¤N [E] Äá»‚ LOOT</div>
+        <div id="interaction-msg" class="hud-panel">NHẤN [E] ĐỂ LOOT</div>
 
         <div id="scope-overlay" class="scope-overlay">
             <div class="scope-lens"></div>
@@ -157,12 +159,12 @@
         <!-- BOSS EVENT UI -->
         <button id="kill-last-bot-btn" class="menu-btn primary"
             style="display: none; pointer-events: auto; position: absolute; top: 10px; left: 140px; font-size: 10px; padding: 6px 12px; border-radius: 6px; background: rgba(200, 0, 0, 0.7); border: 1px solid #ff0000; white-space: nowrap; z-index: 3000; box-shadow: 0 0 15px rgba(255,0,0,0.3);">
-            đŸ’€ TRIá»†U Há»’I BOSS đŸ’€
+            💀 TRIỆU HỒI BOSS 💀
         </button>
 
         <div id="boss-overlay" class="hidden"></div>
         <div id="boss-container" class="hidden">
-            <div id="boss-visual">đŸ‘¹</div>
+            <div id="boss-visual">👺</div>
             <h1 id="boss-msg">HAKARI ARRIVED!</h1>
         </div>
 
@@ -189,96 +191,107 @@
         <div class="menu-inner container-fluid px-3">
             <h1 class="menu-title">Survival Royale</h1>
 
-            <!-- Nháº­p tĂªn (gá»™p vĂ o cá»™t trĂ¡i phĂ­a dÆ°á»›i) -->
-            <!-- 2 cá»™t ngang cá»‘ Ä‘á»‹nh: trĂ¡i 7 pháº£n Ä‘á»‹nh + pháº£i 5 nĂºt -->
+            <!-- Nhập tên (gộp vào cột trái phía dưới) -->
+            <!-- 2 cột ngang cố định: trái 7 phản định + phải 5 nút -->
             <div class="row g-2 w-100 align-items-center">
-                <!-- Cá»˜T TRĂI: Input + Slider + Äá»™ khĂ³ -->
+                <!-- CỘT TRÁI: Input + Slider + Độ khó -->
                 <div class="col-7">
-                    <input type="text" id="player-name-input" class="menu-name-input"
-                        placeholder="NHáº¬P TĂN..." maxlength="15"
+                    <input type="text" id="player-name-input" class="menu-name-input" placeholder="NHẬP TÊN..."
+                        maxlength="15"
                         style="font-size:12px; padding:6px 10px; width:100%; display:block; margin-bottom:6px;">
 
                     <div class="menu-slider-box py-1 px-2" style="margin-bottom:6px;">
-                        <div style="font-size:10px; font-weight:700; color:#ffcc00; letter-spacing:1px; margin-bottom:2px;">
-                            Sá» BOT: <span id="bot-count-val" style="color:#fff;">25</span>
+                        <div
+                            style="font-size:10px; font-weight:700; color:#ffcc00; letter-spacing:1px; margin-bottom:2px;">
+                            SỐ BOT: <span id="bot-count-val" style="color:#fff;">25</span>
                         </div>
-                        <input type="range" id="bot-count-slider" class="menu-range" min="5" max="100" value="25">
+                        <input type="range" id="bot-count-slider" class="menu-range" min="1" max="100" value="25">
                     </div>
 
                     <div class="menu-slider-box py-1 px-2" id="difficulty-box">
-                        <div style="font-size:10px; font-weight:700; color:#ffcc00; letter-spacing:1px; margin-bottom:3px;">đŸ® Äá»˜ KHĂ“:</div>
+                        <div
+                            style="font-size:10px; font-weight:700; color:#ffcc00; letter-spacing:1px; margin-bottom:3px;">
+                            🎮 ĐỘ KHÓ:</div>
                         <div class="d-flex flex-wrap gap-1">
-                            <button class="diff-btn" data-diff="easy"    style="--dc:#00e676; font-size:9px; padding:3px 6px;">đŸ˜ Dá»„</button>
-                            <button class="diff-btn" data-diff="normal"  style="--dc:#ffcc00; font-size:9px; padding:3px 6px;">â”ï¸ THÆ¯á»œNG</button>
-                            <button class="diff-btn" data-diff="hard"    style="--dc:#ff6600; font-size:9px; padding:3px 6px;">đŸ”¥ KHĂ“</button>
-                            <button class="diff-btn" data-diff="extreme" style="--dc:#ff0033; font-size:9px; padding:3px 6px;">đŸ’€ Cá»°C KHĂ“</button>
+                            <button class="diff-btn" data-diff="easy"
+                                style="--dc:#00e676; font-size:9px; padding:3px 6px;">😊 DỄ</button>
+                            <button class="diff-btn" data-diff="normal"
+                                style="--dc:#ffcc00; font-size:9px; padding:3px 6px;">⚔️ THƯỜNG</button>
+                            <button class="diff-btn" data-diff="hard"
+                                style="--dc:#ff6600; font-size:9px; padding:3px 6px;">🔥 KHÓ</button>
+                            <button class="diff-btn" data-diff="extreme"
+                                style="--dc:#ff0033; font-size:9px; padding:3px 6px;">💀 CỰC KHÓ</button>
                         </div>
                         <div id="diff-desc" style="font-size:9px; color:#aaa; margin-top:3px; min-height:12px;"></div>
                     </div>
                 </div>
 
-                <!-- Cá»˜T PHáº¢I: NĂºt -->
+                <!-- CỘT PHẢI: Nút -->
                 <div class="col-5 d-flex flex-column gap-2">
                     <button class="menu-btn primary" onclick="startGame()"
-                        style="font-size:12px; padding:9px 6px; white-space:nowrap;">â–¶ Báº¯t Ä‘áº§u</button>
+                        style="font-size:12px; padding:9px 6px; white-space:nowrap;">▶ Bắt đầu</button>
                     <button id="btn-open-guide" class="menu-btn menu-btn-guide"
-                        style="font-size:10px; padding:7px 6px;">đŸ“– HÆ°á»›ng dáº«n</button>
+                        style="font-size:10px; padding:7px 6px;">📖 Hướng dẫn</button>
                     <button id="btn-open-feedback" class="menu-btn menu-btn-feedback"
-                        style="font-size:10px; padding:7px 6px;">đŸ“ GĂ³p Ă½</button>
+                        style="font-size:10px; padding:7px 6px;">💬 Góp ý</button>
                 </div>
             </div>
 
-            <!-- áº¨n discord -->
-            <button id="btn-join-discord" class="menu-btn" style="display:none;">đŸ’¬ JOIN DISCORD</button>
+            <!-- Ẩn discord -->
+            <button id="btn-join-discord" class="menu-btn" style="display:none;">💬 JOIN DISCORD</button>
 
             <div class="menu-guide">
-                WASD: Di chuyá»ƒn &nbsp;|&nbsp; SHIFT: Cháº¡y &nbsp;|&nbsp; SPACE: Nháº£y &nbsp;|&nbsp; E: UNTI<br>
-                R: Náº¡p Ä‘áº¡n &nbsp;|&nbsp; 1/2/3: Äá»•i vÅ© khĂ­
+                WASD: Di chuyển &nbsp;|&nbsp; SHIFT: Chạy &nbsp;|&nbsp; SPACE: Nhảy &nbsp;|&nbsp; E: UNTI<br>
+                R: Nạp đạn &nbsp;|&nbsp; 1/2/3: Đổi vũ khí
             </div>
             <div class="menu-update">Ver 0.4 Premium Edition</div>
         </div>
     </div>
 
-    <!-- SĂCH HÆ¯á»NG DáºªN -->
+    <!-- SÁCH HƯỚNG DẪN -->
     <div id="guide-modal" class="hidden">
         <div class="guide-content">
-            <h2 style="color: #ffcc00; margin-bottom: 20px;">đŸ“– Sá»” TAY SINH Tá»’N</h2>
+            <h2 style="color: #ffcc00; margin-bottom: 20px;">📖 SỔ TAY SINH TỒN</h2>
 
             <div class="guide-section">
-                <h3 style="color: #00ffcc;">đŸ® Há»† THá»NG ÄIá»€U KHIá»‚N</h3>
-                <p>â€¢ <b>PC:</b> WASD (Di chuyá»ƒn), SHIFT (Cháº¡y), SPACE (Nháº£y), E (UNTI), CTRL (áº¨n/Hiá»‡n chuá»™t), 1/2/3 (Äá»•i
-                    sĂºng).</p>
-                <p>â€¢ <b>Mobile:</b> Joystick trĂ¡i, Vuá»‘t pháº£i xoay Camera, NĂºt UNTI sĂ¡ng lĂªn khi Ä‘á»§ ná»™.</p>
+                <h3 style="color: #00ffcc;">🎮 HỆ THỐNG ĐIỀU KHIỂN</h3>
+                <p>• <b>PC:</b> WASD (Di chuyển), SHIFT (Chạy), SPACE (Nhảy), E (UNTI), CTRL (Ẩn/Hiện chuột), 1/2/3 (Đổi
+                    súng).</p>
+                <p>• <b>Mobile:</b> Joystick trái, Vuốt phải xoay Camera, Nút UNTI sáng lên khi đủ nộ.</p>
             </div>
 
             <div class="guide-section">
-                <h3 style="color: #ffcc00;">â”ï¸ CÆ  CHáº¾ CHIáº¾N Äáº¤U & TIáº¾N HĂ“A</h3>
-                <p>â€¢ <b>Tiáº¿n hĂ³a Bot:</b> QuĂ¡i sáº½ máº¡nh dáº§n theo 3 giai Ä‘oáº¡n. <b>3 con cuá»‘i cĂ¹ng</b> sáº½ hĂ³a khá»•ng lá»“, mĂ¡u
-                    cá»±c trĂ¢u vĂ  sĂ¡t thÆ°Æ¡ng cao.</p>
-                <p>â€¢ <b>Headshot:</b> Báº¯n vĂ o Ä‘áº§u (Bot & Boss) gĂ¢y <b>x1.5 sĂ¡t thÆ°Æ¡ng</b> vĂ  hiá»‡n tia lá»­a vĂ ng.</p>
-                <p>â€¢ <b>GiĂ¡p (Armor):</b> LĂ  lá»›p báº£o vá»‡ quan trá»ng nháº¥t, giáº£m tá»›i <b>70% sĂ¡t thÆ°Æ¡ng</b> nháº­n vĂ o.</p>
-                <p>â€¢ <b>Ná»™ (Ultimate):</b> GĂ¢y 1500 sĂ¡t thÆ°Æ¡ng Ä‘á»ƒ sáº¡c. Khi dĂ¹ng UNTI, báº¡n sáº½ <b>Báº¥t tá»­</b> trong lĂºc
-                    gá»“ng vĂ  lĂ m Boss bá»‹ <b>ChoĂ¡ng (Flinch)</b>.</p>
+                <h3 style="color: #ffcc00;">⚔️ CHIẾN THUẬT SINH TỒN</h3>
+                <p>• <b>Thùng Nổ (Explosive Barrel):</b> Các thùng đỏ gây sát thương diện rộng cực lớn. Hãy dẫn dụ bầy Bot lại gần rồi kích nổ để tiêu diệt chúng nhanh hơn!</p>
+                <p>• <b>Tiến hóa Bot:</b> Khi số Bot giảm, những con còn lại sẽ hóa khổng lồ (Lv3) với HP và Dame cực cao.</p>
+                <p>• <b>Kỹ năng Nộ (E):</b> Nhấn <b>[E]</b> để hóa đại bác bất tử. Phát bắn từ Unti sẽ khiến Boss bị choáng.</p>
             </div>
 
             <div class="guide-section">
-                <h3 style="color: #ff3333;">đŸ”¥ BĂ KĂP Äá»I Äáº¦U BOSS HAKARI</h3>
-                <p>â€¢ <b>NĂ© vĂ¹ng Ä‘á»:</b> LuĂ´n Ä‘á»©ng ngoĂ i cĂ¡c vĂ²ng trĂ²n hoáº·c hĂ¬nh chá»¯ nháº­t mĂ u Ä‘á» trĂªn Ä‘áº¥t.</p>
-                <p>â€¢ <b>Táº­n dá»¥ng Jump Pad:</b> DĂ¹ng bĂ n nhĂºn xanh lĂ¡ Ä‘á»ƒ bay lĂªn cao, nĂ© cĂº dáº­m nháº£y cá»§a Boss.</p>
-                <p>â€¢ <b>Lá»£i tháº¿ Ä‘á»™ cao:</b> Nháº£y lĂªn nĂ³c xe hoáº·c nĂ³c nhĂ  Ä‘á»ƒ trĂ¡nh bá»‹ quĂ¡i vĂ¢y quanh.</p>
-                <p>â€¢ <b>Váº­t pháº©m tiáº¿p táº¿:</b> CĂ¡c hĂ²m mĂ¡u/giĂ¡p/Ä‘áº¡n há»“i láº¡i sau <b>20 giĂ¢y</b>. HĂ£y ghi nhá»› vá»‹ trĂ­ cá»§a
-                    chĂºng!</p>
+                <h3 style="color: #bf00ff;">✨ HỆ THỐNG BÙA LỢI (POWER-UPS)</h3>
+                <p>• <b>⚡ Tăng Tốc (Cyan):</b> Nhặt bình bùa để chạy nhanh hơn trong 15 giây.</p>
+                <p>• <b>🔥 X2 Sát Thương (Cam):</b> Gấp đôi sát thương mọi loại súng trong 15 giây.</p>
+                <p>• <b>🟣 SIÊU CẤP (Combo Tím):</b> Nhặt 2 loại bùa khác nhau để vào trạng thái <b>SIÊU CẤP</b> (Vừa nhanh vừa mạnh) trong 20 giây. Nhặt thêm bùa sẽ reset thời gian về 20 giây!</p>
             </div>
 
             <div class="guide-section">
-                <h3 style="color: #0088ff;">âœ¨ THĂ”NG TIN Bá»” SUNG</h3>
-                <p>â€¢ <b>ThĂ¹ng xÄƒng:</b> CĂ³ thá»ƒ báº¯n ná»• Ä‘á»ƒ tiĂªu diá»‡t nhĂ³m quĂ¡i Ä‘Ă´ng.</p>
-                <p>â€¢ <b>Powerup:</b> HĂ²m vĂ ng cho báº¡n <b>Tá»‘c Ä‘á»™ x2</b> hoáº·c <b>SĂ¡t thÆ°Æ¡ng x2</b> trong 10 giĂ¢y.</p>
-                <p>â€¢ <b>Ká»· lá»¥c:</b> Káº¿t quáº£ tráº­n Ä‘áº¥u sáº½ Ä‘Æ°á»£c gá»­i vá» há»‡ thá»‘ng Discord Ä‘á»ƒ ghi danh.</p>
+                <h3 style="color: #ff3333;">🔥 ĐỐI ĐẦU BOSS HAKARI</h3>
+                <p>• <b>Né Chiêu 5 (Dịch chuyển đập):</b> Khi thấy vòng đỏ xuất hiện, hãy nhấn <b>SHIFT</b> để chạy thoát thật nhanh.</p>
+                <p>• <b>Jump Pad (Bàn nhún):</b> Dùng bàn nhún xanh lá để bay lên cao, né tránh các đòn đánh mặt đất.</p>
+                <p>• <b>Hòm Tiếp Tế:</b> Hòm Máu/Giáp sẽ hồi lại sau mỗi 20 giây, hãy tận dụng chúng để cầm cự.</p>
             </div>
 
-            <button id="close-guide-btn" class="menu-btn" style="margin-top: 15px; width: auto; padding: 10px 40px;">TĂ”I
-                ÄĂƒ HIá»‚U</button>
+            <div class="guide-section">
+                <h3 style="color: #0088ff;">💡 MẸO NHỎ CHO CAO THỦ</h3>
+                <p>• <b>Thả diều (Kiting):</b> Vừa chạy vừa bắn để giữ khoảng cách an toàn với Bot Lv2.</p>
+                <p>• <b>Headshot:</b> Bắn vào đầu để gây x1.5 sát thương. Cực kỳ hiệu quả khi dùng súng Tỉa (Sniper).
+                </p>
+                <p>• <b>Lợi thế địa hình:</b> Nhảy lên nóc các công trình hoặc xe cộ để hạn chế hướng tấn công của kẻ
+                    địch.</p>
+            </div>
+
+            <button id="close-guide-btn" class="menu-btn" style="margin-top: 15px; width: auto; padding: 10px 40px;">TÔI
+                ĐÃ HIỂU</button>
         </div>
     </div>
 
@@ -288,8 +301,8 @@
         <div class="menu-inner">
             <h1 class="menu-title">PAUSED</h1>
             <div class="menu-btn-col">
-                <button class="menu-btn w-menu-btn" onclick="resumeGame()">â–¶ RESUME</button>
-                <button class="menu-btn w-menu-btn" onclick="location.reload()">đŸ  MAIN MENU</button>
+                <button class="menu-btn w-menu-btn" onclick="resumeGame()">▶ RESUME</button>
+                <button class="menu-btn w-menu-btn" onclick="location.reload()">🏠 MAIN MENU</button>
             </div>
         </div>
     </div>
@@ -301,7 +314,7 @@
             <h2 class="end-stats-text" id="end-stats">KILLS: 5</h2>
             <div class="menu-btn-col">
                 <button id="play-again-btn" class="menu-btn w-menu-btn" onclick="finishGameAndSendToDiscord()">
-                    đŸ  QUAY Láº I MENU
+                    🏠 QUAY LẠI MENU
                 </button>
             </div>
         </div>
@@ -314,17 +327,17 @@
 
 
     <!-- External Game Logic -->
-    <!-- THĂ™NG GĂ“P Ă -->
+    <!-- THÙNG GÓP Ý -->
     <div id="feedback-modal" class="hidden">
         <div class="feedback-content">
-            <h3>đŸ“ GĂ“P Ă & BĂO Lá»–I</h3>
+            <h3>📝 GÓP Ý & BÁO LỖI</h3>
             <textarea id="feedback-text"
-                placeholder="BĂ¡c gáº·p lá»—i gĂ¬ hay muá»‘n thĂªm tĂ­nh nÄƒng gĂ¬ cá»© ghi vĂ o Ä‘Ă¢y nhĂ©..."></textarea>
+                placeholder="Bác gặp lỗi gì hay muốn thêm tính năng gì cứ ghi vào đây nhé..."></textarea>
             <div style="display:flex; gap:10px; justify-content:center; margin-top:15px">
                 <button id="close-feedback-btn" class="menu-btn"
-                    style="width:auto; padding: 10px 20px; font-size: 16px;">ÄĂ“NG</button>
+                    style="width:auto; padding: 10px 20px; font-size: 16px;">ĐÓNG</button>
                 <button id="send-feedback-btn" class="menu-btn"
-                    style="width:auto; padding: 10px 20px; font-size: 16px; background: rgba(0,255,0,0.3)">Gá»¬I</button>
+                    style="width:auto; padding: 10px 20px; font-size: 16px; background: rgba(0,255,0,0.3)">GỬI</button>
             </div>
         </div>
     </div>
@@ -337,21 +350,21 @@
     <script src="game.js?v=19.1.5"></script>
     <script src="discord.js?v=19.1.5"></script>
 
-    <!-- Script giáº£m thĂ´ng bĂ¡o truy cáº­p: request Fullscreen trÆ°á»›c Pointer Lock -->
+    <!-- Script giảm thông báo truy cập: request Fullscreen trước Pointer Lock -->
     <script>
         (function () {
             'use strict';
 
-            // HĂ m request fullscreen cross-browser
+            // Hàm request fullscreen cross-browser
             function requestFullscreen(el) {
                 if (el.requestFullscreen) return el.requestFullscreen({ navigationUI: 'hide' });
                 if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
                 if (el.mozRequestFullScreen) return el.mozRequestFullScreen();
                 if (el.msRequestFullscreen) return el.msRequestFullscreen();
-                return Promise.resolve(); // thiáº¿t bá»‹ khĂ´ng há»— trá»£
+                return Promise.resolve(); // thiết bị không hỗ trợ
             }
 
-            // Sau khi game.js load xong, wrap startGame() Ä‘á»ƒ yĂªu cáº§u fullscreen trÆ°á»›c
+            // Sau khi game.js load xong, wrap startGame() để yêu cầu fullscreen trước
             window.addEventListener('load', function () {
                 var originalStartGame = window.startGame;
                 if (typeof originalStartGame !== 'function') return;
@@ -364,7 +377,7 @@
 
                     if (!isAlreadyFullscreen) {
                         requestFullscreen(docEl)
-                            .catch(function () { /* bá» qua náº¿u user tá»« chá»‘i fullscreen */ })
+                            .catch(function () { /* bỏ qua nếu user từ chối fullscreen */ })
                             .finally(function () {
                                 originalStartGame();
                             });
@@ -374,16 +387,16 @@
                 };
             });
 
-            // Táº¯t thĂ´ng bĂ¡o "Leave site?" khi á»Ÿ trong game
+            // Tắt thông báo "Leave site?" khi ở trong game
             window.addEventListener('beforeunload', function (e) {
-                // Chá»‰ cháº·n khi game Ä‘ang cháº¡y (ui-layer Ä‘ang hiá»‡n)
+                // Chỉ chặn khi game đang chạy (ui-layer đang hiện)
                 var uiLayer = document.getElementById('ui-layer');
                 if (uiLayer && uiLayer.style.display !== 'none' && uiLayer.style.display !== '') {
-                    // Bá» kĂ´ng Ä‘áº·t e.returnValue - trĂ¡nh lĂ m phĂ©p dÆ° Ä‘á»ƒ khĂ´ng lĂ m cháº­m trang
+                    // Bỏ kông đặt e.returnValue - tránh làm phép dư để không làm chậm trang
                 }
             });
 
-            // Khi canvas Ä‘Æ°á»£c click láº§n Ä‘áº§u, autoplay audio sáº½ Ä‘Æ°á»£c má»Ÿ khĂ³a
+            // Khi canvas được click lần đầu, autoplay audio sẽ được mở khóa
             document.addEventListener('click', function unlock() {
                 var ctx = window.AudioContext || window.webkitAudioContext;
                 if (ctx) {

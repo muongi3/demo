@@ -11,11 +11,13 @@ function sendLiveNotification() {
     const STATE = window.STATE;
     const time = new Date().toLocaleTimeString('vi-VN');
     const bots = STATE.config ? (STATE.config.botCount || 25) : 25;
+    const diffLabel = window.DIFFICULTY_PRESETS[window.CURRENT_DIFFICULTY].label;
     const message = [
         `🎮 **${STATE.playerName}** vừa bắt đầu trận!`,
         `━━━━━━━━━━━━━━━`,
         `⏰ Giờ: \`${time}\``,
         `🤖 Số bot: \`${bots}\``,
+        `⚔️ Chế độ: **${diffLabel}**`,
         `━━━━━━━━━━━━━━━`
     ].join('\n');
     fetch(WEBHOOK_URL, {
@@ -53,11 +55,12 @@ function finishGameAndSendToDiscord() {
         const s = STATE.finalStats;
         const resultLabel = s.win ? "🏆 CHIẾN THẮNG" : "💀 THẤT BẠI";
 
+        const diffLabel = window.DIFFICULTY_PRESETS[window.CURRENT_DIFFICULTY].label;
         fetch(WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                content: `🎮 **KẾT QUẢ TRẬN ĐẤU** 🎮\n━━━━━━━━━━━━━━━\n👤 Người chơi: **${STATE.playerName}**\n🏁 Kết quả: **${resultLabel}**\n🔫 Kills: \`${s.kills}\` mạng\n⏱️ Thời gian: \`${s.duration} giây\`\n📅 Ngày: \`${s.date}\`\n━━━━━━━━━━━━━━━`
+                content: `🎮 **KẾT QUẢ TRẬN ĐẤU** 🎮\n━━━━━━━━━━━━━━━\n👤 Người chơi: **${STATE.playerName}**\n⚔️ Chế độ: **${diffLabel}**\n🏁 Kết quả: **${resultLabel}**\n🔫 Kills: \`${s.kills}\` mạng\n⏱️ Thời gian: \`${s.duration} giây\`\n📅 Ngày: \`${s.date}\`\n━━━━━━━━━━━━━━━`
             })
         }).finally(() => location.reload());
     } else {
