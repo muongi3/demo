@@ -48,44 +48,44 @@ function getQuestPool() {
     // Cân cấu hình mục tiêu cụ thể theo từng độ khó để đảm bảo chơi vui, dễ thở mà không bị quá tải
     const config = {
         easy: {
-            kill: 5,
-            barrel_kill: 5,
+            kill: 1,
+            barrel_kill: 3,
             ultimate: 1,
             pickup_powerup: 1,
             purple_time: 15,
             survive: 30,
             heal: 400,
-            headshot: 20
+            headshot: 5
         },
         normal: {
-            kill: 10,
-            barrel_kill: 8,
+            kill: 3,
+            barrel_kill: 5,
             ultimate: 4,
             pickup_powerup: 2,
             purple_time: 30,
             survive: 60,
             heal: 800,
-            headshot: 30
+            headshot: 7
         },
         hard: {
-            kill: 15,
-            barrel_kill: 12,
+            kill: 5,
+            barrel_kill: 7,
             ultimate: 7,
             pickup_powerup: 3,
             purple_time: 45,
             survive: 90,
             heal: 1200,
-            headshot: 40
+            headshot: 9
         },
         extreme: {
-            kill: 20,
-            barrel_kill: 15,
+            kill: 7,
+            barrel_kill: 9,
             ultimate: 10,
             pickup_powerup: 4,
             purple_time: 60,
             survive: 130,
             heal: 1600,
-            headshot: 50
+            headshot: 11
         }
     };
 

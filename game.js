@@ -1105,7 +1105,7 @@ function update(dt) {
                 playAudio('ammo');
 
                 if (window.QuestManager) {
-                    window.QuestManager.totalCollected = getLoreFragments().length; // Đạt tối đa!
+                    window.QuestManager.totalCollected = Math.min(window.QuestManager.totalCollected + 1, getLoreFragments().length);
                     window.QuestManager.totalCompleted = Math.min(window.QuestManager.totalCompleted + 1, getLoreFragments().length);
                     window.QuestManager.updateUI();
                 }
@@ -2048,7 +2048,7 @@ function killBoss() {
 
     b.dead = true;
     b.active = false;
-    STATE.player.kills += 10;
+    STATE.player.kills += 1;
     showGlobalAnnouncement("HAKARI ĐÃ BỊ TRIỆT TIÊU!", 5000);
 
     // DỌN DẸP MESH KHI BOSS CHẾT
