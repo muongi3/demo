@@ -9,7 +9,8 @@ const STORY_LINES = [
     "Đó là manh mối duy nhất dẫn đường đến một vùng hoang đảo bị lãng quên.",
     "Bạn tin rằng, có thể nơi đó ẩn chứa nguồn thông tin cứu chữa mà bạn cần.",
     "",
-    "Nhưng khi vừa tiếp cận ranh giới của vùng hoang tàn ấy...",
+    "Nhưng khi vừa tiếp cận thứ nhìn như một CÁNH CỬA ĐỎ RỰC đó, tại sao nó lại có ở đây?...",
+    "tôi nghĩ mình không còn nhiều thời gian nữa và đã bước vào cánh cửa",
     "Trời đất đột nhiên tối sầm lại. Bạn hoàn toàn mất đi ý thức.",
     "",
     "Khi tỉnh lại... bạn bỗng thấy mình đang rơi tự do từ trên cao xuống.",
@@ -71,7 +72,7 @@ window.startStory = function () {
     // Đè vào màn hình để tua nhanh
     const speedUp = () => { charSpeed = 10; lineSpeed = 400; };
     const slowDown = () => { charSpeed = 45; lineSpeed = 2200; };
-    
+
     storyScreen.addEventListener('mousedown', speedUp);
     storyScreen.addEventListener('touchstart', speedUp);
     storyScreen.addEventListener('mouseup', slowDown);

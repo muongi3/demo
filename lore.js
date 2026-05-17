@@ -105,6 +105,7 @@ function getQuestPool() {
 
 window.QuestManager = {
     totalCollected: 0,           // Số mảnh giấy đã nhặt
+    totalCompleted: 0,           // Số nhiệm vụ đã hoàn thành
     activeQuests: [],            // Hàng đợi nhiệm vụ đang làm song song
     completedTypes: [],          // Lưu các loại nhiệm vụ đã hoàn thành để KHÔNG trùng lặp
     damageTracker: 0,            // Theo dõi sát thương cho task damage
@@ -115,13 +116,17 @@ window.QuestManager = {
     /* --- Gán nhiệm vụ khi nhặt mảnh giấy --- */
     assignQuest: function () {
         if (this.totalCollected >= getLoreFragments().length) return;
+        this.totalCollected++; // Nhặt hộp là được cộng 1 ngay lập tức
 
         const pool = getQuestPool();
         const available = pool.filter(q =>
             !this.activeQuests.some(a => a.type === q.type) &&
             !this.completedTypes.includes(q.type)
         );
-        if (available.length === 0) return;
+        if (available.length === 0) {
+            this.updateUI();
+            return;
+        }
 
         const qData = available[Math.floor(Math.random() * available.length)];
         
@@ -182,13 +187,12 @@ window.QuestManager = {
         done.forEach(q => this.completeQuest(q));
     },
 
-    /* --- Hoàn thành 1 nhiệm vụ --- */
     completeQuest: function (quest) {
         this.activeQuests = this.activeQuests.filter(q => q.id !== quest.id);
         if (!this.completedTypes.includes(quest.type)) {
             this.completedTypes.push(quest.type);
         }
-        this.totalCollected = Math.min(this.totalCollected + 1, getLoreFragments().length);
+        this.totalCompleted = Math.min(this.totalCompleted + 1, getLoreFragments().length);
 
         // Thưởng theo loại
         if (window.STATE && window.GAME_CONFIG) {
@@ -212,7 +216,7 @@ window.QuestManager = {
         }
 
         // Hiện Lore Fragment
-        const frag = getLoreFragments()[this.totalCollected - 1];
+        const frag = getLoreFragments()[this.totalCompleted - 1];
         if (frag) {
             const container = document.getElementById('lore-container');
             if (container) {

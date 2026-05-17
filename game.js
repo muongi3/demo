@@ -843,7 +843,7 @@ const HAKARI_DANCE = { spawned: false, active: false };
 function startGame() {
     const chillSound = document.getElementById('chill-theme-sound');
     if (chillSound) chillSound.pause();
-    
+
     const combatSound1 = document.getElementById('combat-theme1-sound');
     if (combatSound1) {
         combatSound1.currentTime = 0;
@@ -895,6 +895,7 @@ function startGame() {
     // Reset QuestManager
     if (window.QuestManager) {
         window.QuestManager.totalCollected = 0;
+        window.QuestManager.totalCompleted = 0;
         window.QuestManager.activeQuests = [];
         window.QuestManager.completedTypes = []; // Cực kỳ quan trọng để bắt đầu game mới không bị kẹt quest cũ!
         window.QuestManager.damageTracker = 0;
@@ -1081,7 +1082,7 @@ function update(dt) {
             const angle = Math.random() * Math.PI * 2;
             const r = 0.3 + Math.random() * 0.6;
             STATE.particles.push({
-                pos: V3.create(q.pos.x + Math.cos(angle)*r, q.pos.y + 0.2, q.pos.z + Math.sin(angle)*r),
+                pos: V3.create(q.pos.x + Math.cos(angle) * r, q.pos.y + 0.2, q.pos.z + Math.sin(angle) * r),
                 vel: V3.create((Math.random() - 0.5) * 0.4, 8.0 + Math.random() * 6.0, (Math.random() - 0.5) * 0.4),
                 life: 1.8 + Math.random() * 1.2,
                 color: [1.0, 0.7, 0.0], // Rực rỡ màu cam vàng dễ thấy từ xa
@@ -1102,9 +1103,10 @@ function update(dt) {
                 STATE.finalPaper.pickedUp = true;
                 STATE.finalPaper.active = false;
                 playAudio('ammo');
-                
+
                 if (window.QuestManager) {
                     window.QuestManager.totalCollected = getLoreFragments().length; // Đạt tối đa!
+                    window.QuestManager.totalCompleted = Math.min(window.QuestManager.totalCompleted + 1, getLoreFragments().length);
                     window.QuestManager.updateUI();
                 }
 
@@ -1247,7 +1249,7 @@ function update(dt) {
             const rd = document.getElementById('ammo-current');
             if (rd) { rd.style.color = ''; rd.style.animation = ''; }
             const wn2 = document.getElementById('weapon-name');
-            if (wn2) wn2.innerText = ['ASSAULT RIFLE','SMG','SNIPER'][p.weaponIdx] || '';
+            if (wn2) wn2.innerText = ['ASSAULT RIFLE', 'SMG', 'SNIPER'][p.weaponIdx] || '';
         }
     }
     STATE.projectiles.forEach((proj, i) => {
@@ -1519,8 +1521,8 @@ function update(dt) {
     STATE.barrels = STATE.barrels.filter(b => b.hp > 0);
 
     if (STATE.bots.length < prevCount) {
-        const killsMade = prevCount - STATE.bots.length; 
-        p.kills += killsMade; 
+        const killsMade = prevCount - STATE.bots.length;
+        p.kills += killsMade;
         if (window.QuestManager) {
             window.QuestManager.onEvent('kill', killsMade);
         }
@@ -2059,7 +2061,7 @@ function killBoss() {
     }
 
     document.getElementById('boss-hp-container').style.display = 'none';
-    
+
     // Tạo chiếc hộp rực đỏ cuối cùng rơi tại vị trí của Boss
     STATE.finalPaper = {
         pos: V3.create(b.pos.x, b.pos.y + 0.2, b.pos.z),
@@ -2222,20 +2224,20 @@ function endGame(win) {
         const pcScreen = document.getElementById('post-credit-screen');
         const pcContent = document.getElementById('post-credit-content');
         if (pcScreen && pcContent) {
-            document.exitPointerLock(); 
+            document.exitPointerLock();
             document.getElementById('ui-layer').style.display = 'none';
             pcScreen.style.display = 'flex';
-            
+
             // DỪNG CÁC ÂM THANH RÈ (Oscillators/Boss synthesized drones)
             if (window.bossOsc) {
-                try { window.bossOsc.stop(); } catch(e) {}
+                try { window.bossOsc.stop(); } catch (e) { }
                 window.bossOsc = null;
             }
             if (window.bossNodes && window.bossNodes.length > 0) {
-                window.bossNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+                window.bossNodes.forEach(n => { try { n.stop(); } catch (e) { } });
                 window.bossNodes = [];
             }
-            
+
             // PHÁT NHẠC NỀN COMBAT 1 HÀO HÙNG CHO CẢ 2 ENDING
             const combatSound1 = document.getElementById('combat-theme1-sound');
             const combatSound2 = document.getElementById('combat-theme2-sound');
@@ -2244,56 +2246,63 @@ function endGame(win) {
                 combatSound1.volume = 0.55;
                 combatSound1.currentTime = 0;
                 combatSound1.loop = true;
-                combatSound1.play().catch(() => {});
+                combatSound1.play().catch(() => { });
             }
-            
+
             let lines = [];
             const totalExtreme = 9; // Tổng số thông tin bí ẩn cao nhất
             const currentFragments = getLoreFragments();
             const currentMax = currentFragments.length;
             const collectedCount = window.QuestManager ? window.QuestManager.totalCollected : 0;
+            const completedCount = window.QuestManager ? window.QuestManager.totalCompleted : 0;
             const pName = STATE.playerName || "bạn";
-            
-            lines.push(`--- BÁO CÁO GIẢI MÃ THÔNG TIN CỦA ${pName.toUpperCase()} (${collectedCount}/${totalExtreme}) ---`);
-            
+
+            lines.push(`--- BÁO CÁO GIẢI MÃ THÔNG TIN CỦA ${pName.toUpperCase()} ---`);
+            lines.push(`📦 Hộp đã nhặt: ${collectedCount}/${totalExtreme} | ✅ Nhiệm vụ hoàn thành: ${completedCount}/${totalExtreme}`);
+            lines.push("");
+
             for (let i = 0; i < totalExtreme; i++) {
-                if (i < collectedCount) {
-                    lines.push(`[PHẦN ${i + 1}]: ${currentFragments[i].text}`);
-                } else if (i < currentMax) {
-                    lines.push(`[PHẦN ${i + 1}]: ??????????????????? (Yêu cầu hoàn thành thêm nhiệm vụ để giải mã)`);
+                if (i < currentMax) {
+                    if (i < completedCount) {
+                        lines.push(`[PHẦN ${i + 1}]: ${currentFragments[i].text}`);
+                    } else if (i < collectedCount) {
+                        lines.push(`[PHẦN ${i + 1}]: 🔒 [NHIỆM VỤ CHƯA HOÀN THÀNH] — ??? (Cần hoàn thành thử thách để giải mã)`);
+                    } else {
+                        lines.push(`[PHẦN ${i + 1}]: 📦 [CHƯA NHẶT HỘP] — ??? (Tìm kiếm và nhặt hộp trên bản đồ)`);
+                    }
                 } else {
                     lines.push(`[PHẦN ${i + 1}]: ⚠ DỮ LIỆU BỊ MÃ HÓA CẤP CAO ⚠ (Yêu cầu chơi chế độ Khó hơn để mở khóa)`);
                 }
             }
-            
+
             lines.push("");
-            
-            if (collectedCount >= currentMax) {
+
+            if (completedCount >= currentMax) {
                 lines = lines.concat([
-                    "Mảnh giấy rực đỏ cuối cùng đã phơi bày toàn bộ sự thật...",
-                    "Thực thể bóng tối canh giữ nơi đây thực chất là chốt chặn cuối cùng ngăn rò rỉ.",
-                    "Sự thật đã được phơi bày trọn vẹn, bạn đã có đủ công thức hóa giải!",
-                    "Người thân cận và tất cả những người mất tích đã được cứu sống hoàn hảo.",
-                    "Sứ mệnh giải cứu của bạn kết thúc vô cùng thành công mỹ mãn!"
+                    "Những chiếc hộp thông tin là gì tại sao nó lại rải khắp nơi trên đảo hoang này?",
+                    "Liệu có là là tôi của trước đây mắc kẹt và để lại những chiếc hộp này chăng?",
+                    "Vậy ra những kỹ năng của tôi được luyện tập qua những lần tôi mất trí nhớ và chiến đấu ở đây.",
+                    "Điều gì đã xảy ra trước khi tôi đặt chân đến nơi này?, những vũ khí và trang bị rải rác khắp mọi nơi là của ai?",
+                    "tôi cần tập trung hơn để tìm ra sự thật về hòn đảo cũng như thứ gọi là CÁNH CỬA KHÔNG GIAN"
                 ]);
             } else {
                 lines = lines.concat([
-                    `Thông tin giải mã bị đứt gãy nghiêm trọng (${collectedCount}/${maxFrag} Hộp)!`,
-                    "Bạn chưa thể hóa giải hoàn toàn triệu chứng kỳ dị cho người thân cận.",
-                    "Hãy quay lại vùng hoang tàn và hoàn thành mọi thử thách để giải khóa sự thật tối thượng!"
+                    "vẫn còn quá nhìu bí ẩn vẫn chưa thể giải đáp...",
+                    "Vì sao lại có những vũ khí và trang bị rải rác khắp mọi nơi trên hòn đảo hoang này?",
+                    "Rốt cuộc ai đã để lại nó và với mục đích gì?"
                 ]);
             }
-            
+
             let endingTimeout = null;
             let ended = false;
-            
+
             const btnSkipEnding = document.getElementById('btn-skip-ending');
             if (btnSkipEnding) {
                 // Thiết lập nhãn ban đầu của nút là BỎ QUA
                 btnSkipEnding.innerText = 'BỎ QUA ⏭';
                 btnSkipEnding.style.opacity = '0';
                 btnSkipEnding.style.pointerEvents = 'none';
-                
+
                 // Đợi 5 giây mới hiển thị nút Bỏ qua Ending để kích thích sự tò mò
                 setTimeout(() => {
                     if (!ended) {
@@ -2306,30 +2315,30 @@ function endGame(win) {
                     if (ended) return;
                     ended = true;
                     if (endingTimeout) clearTimeout(endingTimeout);
-                    
+
                     // Tắt nhạc lặp khi thoát ra bảng điểm
                     if (combatSound1) combatSound1.loop = false;
-                    
+
                     showRealEndScreen(win, duration);
                 };
             }
-            
+
             // Đè màn hình để tua nhanh chữ, thả ra sẽ chạy chậm lại
             let endingLineSpeed = 3500;
             const speedUpEnding = () => { endingLineSpeed = 800; };
             const slowDownEnding = () => { endingLineSpeed = 3500; };
-            
+
             pcScreen.addEventListener('mousedown', speedUpEnding);
             pcScreen.addEventListener('touchstart', speedUpEnding);
             pcScreen.addEventListener('mouseup', slowDownEnding);
             pcScreen.addEventListener('mouseleave', slowDownEnding);
             pcScreen.addEventListener('touchend', slowDownEnding);
             pcScreen.addEventListener('touchcancel', slowDownEnding);
-            
+
             setTimeout(() => {
                 pcScreen.style.opacity = '1';
                 let lineIdx = 0;
-                
+
                 function showLine() {
                     if (ended) return;
                     if (lineIdx >= lines.length) {
@@ -2345,14 +2354,14 @@ function endGame(win) {
                     p.className = 'post-credit-text';
                     p.innerText = lines[lineIdx];
                     pcContent.appendChild(p);
-                    
+
                     // Trigger reflow to animate opacity
                     void p.offsetWidth;
                     p.style.opacity = '1';
-                    
+
                     // Auto-scroll the credits to keep the latest text visible
                     pcContent.scrollTop = pcContent.scrollHeight;
-                    
+
                     lineIdx++;
                     endingTimeout = setTimeout(showLine, endingLineSpeed);
                 }
@@ -2418,7 +2427,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const pxVal = parseFloat(settings.top);
                     settings.top = ((pxVal / window.innerHeight) * 100).toFixed(3) + '%';
                 }
-                
+
                 Object.assign(btn.style, settings);
                 if (settings.scale) btn.style.setProperty('--btn-scale', settings.scale);
                 // Triệt tiêu translateX(-50%) của bảng đạn khi có vị trí kéo thả tuỳ chỉnh
@@ -2661,12 +2670,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const t = e.changedTouches[0];
         draggedBtn.style.position = 'fixed';
         draggedBtn.style.bottom = 'auto'; draggedBtn.style.right = 'auto';
-        
+
         // Tính toán vị trí theo phần trăm màn hình (%) để đồng bộ tuyệt đối giữa PC và Mobile
         const rect = draggedBtn.getBoundingClientRect();
         const pctLeft = ((t.clientX - rect.width / 2) / window.innerWidth) * 100;
         const pctTop = ((t.clientY - rect.height / 2) / window.innerHeight) * 100;
-        
+
         draggedBtn.style.left = Math.max(0, Math.min(95, pctLeft)).toFixed(3) + '%';
         draggedBtn.style.top = Math.max(0, Math.min(95, pctTop)).toFixed(3) + '%';
         draggedBtn.style.transform = 'none'; // Bỏ các transform scale để dùng kích thước thật trong CSS
@@ -2691,12 +2700,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!window.isEditingHUD || !draggedBtn) return;
         draggedBtn.style.position = 'fixed';
         draggedBtn.style.bottom = 'auto'; draggedBtn.style.right = 'auto';
-        
+
         // Tính toán vị trí theo phần trăm màn hình (%) để đồng bộ tuyệt đối giữa PC và Mobile
         const rect = draggedBtn.getBoundingClientRect();
         const pctLeft = ((e.clientX - rect.width / 2) / window.innerWidth) * 100;
         const pctTop = ((e.clientY - rect.height / 2) / window.innerHeight) * 100;
-        
+
         draggedBtn.style.left = Math.max(0, Math.min(95, pctLeft)).toFixed(3) + '%';
         draggedBtn.style.top = Math.max(0, Math.min(95, pctTop)).toFixed(3) + '%';
         draggedBtn.style.transform = 'none'; // Bỏ các transform scale để dùng kích thước thật trong CSS
@@ -2854,18 +2863,18 @@ function draw() {
         if (b.isEvolvingLv3) gl.uniform3f(locs.fogColor, fogCol[0], fogCol[1], fogCol[2]);
     });
     STATE.barrels.forEach(b => drawMeshActual(ASSETS.barrel, b.pos, 3, 0));
-    
+
     // Draw Quest Items — dạng hình thoi nổi
     STATE.questItems.forEach(q => {
         const bob = Math.sin(Date.now() / 400) * 0.3;
         drawMeshActual(ASSETS.lootAmmo, { x: q.pos.x, y: q.pos.y + bob + 1.2, z: q.pos.z }, 2.0, Date.now() / 500);
-        
+
         // Hạt vàng bay lên thay vì cột sáng cứng
         if (Math.random() < 0.35) {
             const angle = Math.random() * Math.PI * 2;
             const r = Math.random() * 0.6;
             STATE.particles.push({
-                pos: V3.create(q.pos.x + Math.cos(angle)*r, q.pos.y + bob + 1.2, q.pos.z + Math.sin(angle)*r),
+                pos: V3.create(q.pos.x + Math.cos(angle) * r, q.pos.y + bob + 1.2, q.pos.z + Math.sin(angle) * r),
                 vel: V3.create((Math.random() - 0.5) * 0.5, 6.0 + Math.random() * 5.0, (Math.random() - 0.5) * 0.5),
                 life: 1.5 + Math.random() * 1.0,
                 color: [1.0, 0.8, 0.0], // Vàng óng
@@ -2878,13 +2887,13 @@ function draw() {
     if (STATE.finalPaper && STATE.finalPaper.active && !STATE.finalPaper.pickedUp) {
         const bob = Math.sin(Date.now() / 250) * 0.4;
         drawMeshActual(ASSETS.lootAmmo, { x: STATE.finalPaper.pos.x, y: STATE.finalPaper.pos.y + bob + 1.2, z: STATE.finalPaper.pos.z }, 2.8, Date.now() / 300);
-        
+
         // Hạt đỏ bay lên với tốc độ và số lượng lớn thay vì cột cứng
         if (Math.random() < 0.6) {
             const angle = Math.random() * Math.PI * 2;
             const r = Math.random() * 0.8;
             STATE.particles.push({
-                pos: V3.create(STATE.finalPaper.pos.x + Math.cos(angle)*r, STATE.finalPaper.pos.y + bob + 1.2, STATE.finalPaper.pos.z + Math.sin(angle)*r),
+                pos: V3.create(STATE.finalPaper.pos.x + Math.cos(angle) * r, STATE.finalPaper.pos.y + bob + 1.2, STATE.finalPaper.pos.z + Math.sin(angle) * r),
                 vel: V3.create((Math.random() - 0.5) * 0.6, 12.0 + Math.random() * 8.0, (Math.random() - 0.5) * 0.6),
                 life: 2.0 + Math.random() * 1.5,
                 color: [1.0, 0.05, 0.05], // Đỏ rực rỡ đặc trưng của Hộp Kẻ Gác Cổng
@@ -3812,7 +3821,7 @@ window.addEventListener('DOMContentLoaded', () => {
         btnInteract.addEventListener('touchstart', onInteract);
         btnInteract.addEventListener('mousedown', onInteract);
     }
-    
+
     // Bấm thẳng vào dòng chữ thông báo nhặt hộp trên màn hình cũng nhặt được
     const interMsg = document.getElementById('interaction-msg');
     if (interMsg) {

@@ -63,7 +63,7 @@ function finishGameAndSendToDiscord() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                content: `🎮 **KẾT QUẢ TRẬN ĐẤU** 🎮\n━━━━━━━━━━━━━━━\n👤 Người chơi: **${STATE.playerName}**\n⚔️ Chế độ: **${diffLabel}**\n🏁 Kết quả: **${resultLabel}**\n🔫 Kills: \`${s.kills}\` mạng\n📦 Hộp giải mã: \`${window.QuestManager ? window.QuestManager.totalCollected : 0}/${window.getLoreFragments ? window.getLoreFragments().length : '?'}\` hộp\n⏱️ Thời gian: \`${s.duration} giây\`\n📅 Ngày: \`${s.date}\`\n━━━━━━━━━━━━━━━`
+                content: `🎮 **KẾT QUẢ TRẬN ĐẤU** 🎮\n━━━━━━━━━━━━━━━\n👤 Người chơi: **${STATE.playerName}**\n⚔️ Chế độ: **${diffLabel}**\n🏁 Kết quả: **${resultLabel}**\n🔫 Kills: \`${s.kills}\` mạng\n📦 Hộp đã nhặt: \`${window.QuestManager ? window.QuestManager.totalCollected : 0}/${window.getLoreFragments ? window.getLoreFragments().length : '?'}\` hộp\n✅ Nhiệm vụ hoàn thành: \`${window.QuestManager ? window.QuestManager.totalCompleted : 0}/${window.getLoreFragments ? window.getLoreFragments().length : '?'}\` nhiệm vụ\n⏱️ Thời gian: \`${s.duration} giây\`\n📅 Ngày: \`${s.date}\`\n━━━━━━━━━━━━━━━`
             })
         }).finally(() => location.reload());
     } else {
