@@ -3,14 +3,14 @@
 // Kho Lore theo độ khó: Càng khó thì thông tin bí ẩn càng tăng chi tiết và hấp dẫn!
 const LORE_BY_DIFFICULTY = {
     easy: [
-        { idx: 0, text: "\"Vết nứt không gian này đang lớn dần... Nó hút cạn sinh khí của mọi sinh vật tới gần.\"" },
-        { idx: 1, text: "\"Những kẻ mất trí nhớ thường lặp lại một câu duy nhất: 'Mắt đỏ... đừng nhìn vào mắt đỏ...'.\"" },
-        { idx: 2, text: "\"Thứ đang canh gác trung tâm hòn đảo không phải cỗ máy, mà là một sinh mệnh hấp thụ nỗi đau.\"" }
+        { idx: 0, text: "\"Mọi thứ ngày càng tệ luồng khí tỏa ra từ Cánh Cửa Đỏ ngày càng lớn.\"" },
+        { idx: 1, text: "\"Những kẻ mất trí nhớ thường lặp lại một câu duy nhất: 'Phải dừng lại, phải ngăn lại. PHẢI NGĂN LẠI BẰNG MỌI GIÁ!!'.\"" },
+        { idx: 2, text: "\"Thứ đang canh gác trung tâm hòn đảo không phải cỗ máy, mà là một kẻ gác cổng vĩnh cửu.\"" }
     ],
     normal: [
         { idx: 0, text: "\"Bản ghi cũ: Bức xạ ở đây làm biến đổi cấu trúc phân tử của sắt. Giáp trụ đang dần hòa làm một với xương thịt.\"" },
-        { idx: 1, text: "\"Bản ghi cũ: Hộp tiếp tế không phải từ phe ta thả xuống. Có kẻ đang thao túng chúng ta như những con cờ.\"" },
-        { idx: 2, text: "\"Bản ghi cũ: Sinh vật khổng lồ đó mang hình hài của Kẻ Phán Xét. Khi nó gục ngã, một 'Sự Thật' sẽ rơi ra.\"" },
+        { idx: 1, text: "\"Bản ghi cũ: Hộp tiếp tế chứa đầy Crimson nhưng không ai dám đụng vào nó.\"" },
+        { idx: 2, text: "\"Bản ghi cũ: Sinh vật khổng lồ đó mang hình hài của Kẻ Gác Cổng, nhưng không ai biết liệu có phải nó hay là...\"" },
         { idx: 3, text: "\"Bản ghi cũ: Cánh Cửa Đỏ chưa bao giờ đóng lại. Nó chỉ tạm thời bị bão hòa năng lượng khi kẻ canh giữ sụp đổ.\"" },
         { idx: 4, text: "\"Bản ghi cũ: Những người đi trước đã tìm thấy lõi nguồn... nhưng không ai trở về. Lõi nguồn đó hình như có màu đỏ tía...\"" }
     ],
@@ -25,14 +25,14 @@ const LORE_BY_DIFFICULTY = {
     ],
     extreme: [
         { idx: 0, text: "\"DỮ LIỆU CẤM: Vòng lặp hiện tại: 849,204. Tỷ lệ đồng hóa vật chủ: 99.8%. Trạng thái: Sắp thức tỉnh.\"" },
-        { idx: 1, text: "\"DỮ LIỆU CẤM: Hòn đảo này không tồn tại trên Trái Đất. Nó là một vùng giả lập bị bỏ hoang của một nền văn minh đã diệt vong.\"" },
+        { idx: 1, text: "\"DỮ LIỆU CẤM: Hòn đảo này không tồn tại trên Trái Đất. Nó là một vùng giả lập bị lãng quên lâu đời từ không gian khác.\"" },
         { idx: 2, text: "\"DỮ LIỆU CẤM: Bọn quái vật không cố giết bạn. Chúng đang cố ngăn bạn kích hoạt Cánh Cửa Đỏ để bảo vệ vũ trụ bên ngoài.\"" },
-        { idx: 3, text: "\"DỮ LIỆU CẤM: Phương trình hỗn mang: Tâm trí nguyên vẹn + Máu Crimson + Sụp đổ Không thời gian = Điểm Kỳ Dị.\"" },
+        { idx: 3, text: "\"DỮ LIỆU CẤM: Phương trình hỗn mang: những chiếc hộp tăng sức mạnh đó mang chất khiến người sử dụng liên tục dần lãng quên đi mọi thứ." },
         { idx: 4, text: "\"DỮ LIỆU CẤM: Khi bạn hấp thụ Crimson (Trạng thái Tím), bạn đang dần hợp nhất với tâm trí của Kẻ Gác Cổng.\"" },
         { idx: 5, text: "\"DỮ LIỆU CẤM: Giải mã thành công 'Nghịch lý Dữ liệu' sẽ gây ra một vụ nổ khái niệm, xóa bỏ sự tồn tại của hòn đảo này khỏi mọi dòng thời gian.\"" },
         { idx: 6, text: "\"DỮ LIỆU CẤM: Kẻ mà bạn gọi là 'Boss' thực chất là phiên bản tương lai của chính bạn, kẻ đã chọn hy sinh để làm chốt chặn \"" },
-        { idx: 7, text: "\"DỮ LIỆU CẤM: Nếu bạn đọc được dòng này, Cánh Cửa Đỏ đã bắt đầu đảo ngược quy trình. Đừng để hắn ta hoàn thành điệu nhảy tế lễ.\"" },
-        { idx: 8, text: "\"DỮ LIỆU CẤM: Chiếc hộp cuối cùng chứa đựng ký ức nguyên thủy của bạn. Mở nó ra đồng nghĩa với việc chấp nhận phá vỡ Vòng Lặp Vĩnh Cửu.\"" }
+        { idx: 7, text: "\"DỮ LIỆU CẤM: Nếu bạn đọc được dòng này, Cánh Cửa Đỏ đã bắt đầu đảo ngược quy trình. Hãy ngăn chính bản thân ở tương lai hoặc nếu không đây sẽ là vòng lặp không hồi kết!!.\"" },
+        { idx: 8, text: "\"DỮ LIỆU CẤM: Chiếc hộp cuối cùng chứa đựng ký ức nguyên thủy của bạn. Mở nó ra đồng nghĩa với việc cơ thể bị hợp nhất với Kẻ Gác Cổng và trở thành một với hòn đảo Vĩnh Cửu.\"" }
     ]
 };
 
@@ -129,7 +129,7 @@ window.QuestManager = {
         }
 
         const qData = available[Math.floor(Math.random() * available.length)];
-        
+
         // Tích hợp pre-tracked progress từ đầu trận
         let startVal = 0;
         if (qData.type === 'kill') startVal = this.cumulativeKills;

@@ -2289,7 +2289,9 @@ function endGame(win) {
                 lines = lines.concat([
                     "vẫn còn quá nhìu bí ẩn vẫn chưa thể giải đáp...",
                     "Vì sao lại có những vũ khí và trang bị rải rác khắp mọi nơi trên hòn đảo hoang này?",
-                    "Rốt cuộc ai đã để lại nó và với mục đích gì?"
+                    "Rốt cuộc ai đã để lại nó và với mục đích gì?",
+                    "Cánh cửa đỏ rực đó vẫn còn là một bí ẩn",
+                    "Tôi cần phải tìm hiểu sự thật..."
                 ]);
             }
 
