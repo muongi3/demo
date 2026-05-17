@@ -1523,9 +1523,6 @@ function update(dt) {
         p.kills += killsMade; 
         if (window.QuestManager) {
             window.QuestManager.onEvent('kill', killsMade);
-            if (barrelKills > 0) {
-                window.QuestManager.onEvent('barrel_kill', barrelKills);
-            }
         }
         const n = performance.now(); if (n - p.lastKillTime < 5000) p.streak += killsMade; else p.streak = killsMade; p.lastKillTime = n;
         const sm = document.getElementById('streak-msg'); if (p.streak > 1) { sm.innerText = p.streak === 2 ? "DOUBLE KILL!" : (p.streak === 3 ? "TRIPLE KILL!" : "RAMPAGE!"); sm.style.transform = "translate(-50%, -50%) scale(1.5)"; setTimeout(() => sm.style.transform = "translate(-50%, -50%) scale(0)", 1500); }
@@ -2116,12 +2113,18 @@ function createExplosion(pos, customRange, customDamage, isFriendly = false, noC
             b.hp -= finalDmg;
             spawnDamageNumber(V3.add(b.pos, V3.create(0, 1, 0)), Math.round(finalDmg), false);
             if (!noCharge) STATE.player.damageDealt += finalDmg;
+            if (!isFriendly && window.QuestManager) {
+                window.QuestManager.onEvent('barrel_kill', 1);
+            }
         }
     });
     if (STATE.boss && STATE.boss.active && V3.dist(pos, STATE.boss.pos) < range + 5) {
         STATE.boss.hp -= damage;
         spawnDamageNumber(V3.add(STATE.boss.pos, V3.create(0, 5, 0)), damage, false);
         if (!noCharge) STATE.player.damageDealt += damage;
+        if (!isFriendly && window.QuestManager) {
+            window.QuestManager.onEvent('barrel_kill', 1);
+        }
     }
 }
 

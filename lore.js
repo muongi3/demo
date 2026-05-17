@@ -93,7 +93,7 @@ function getQuestPool() {
 
     return [
         { type: 'kill', target: c.kill, desc: `Hạ gục ${c.kill} sinh vật biến dị (bất kỳ cách nào)`, reward: '"Hồi 500 máu"' },
-        { type: 'barrel_kill', target: c.barrel_kill, desc: `Dùng thùng nổ tiêu diệt ${c.barrel_kill} sinh vật`, reward: '"Hồi đầy máu"' },
+        { type: 'barrel_kill', target: c.barrel_kill, desc: `Gây sát thương bằng thùng nổ lên sinh vật ${c.barrel_kill} lần`, reward: '"Hồi đầy máu"' },
         { type: 'use_ultimate', target: c.ultimate, desc: `Kích hoạt Kỹ năng Nổ (Ultimate) ${c.ultimate} lần`, reward: '"Hồi đầy giáp"' },
         { type: 'pickup_powerup', target: c.pickup_powerup, desc: `Nhặt bình kỹ năng (Loot box cam) ${c.pickup_powerup} lần`, reward: '"Hồi đầy máu & giáp"' },
         { type: 'purple_time', target: c.purple_time, desc: `Duy trì Trạng thái Siêu cấp (Dạng Tím) trong ${c.purple_time}s`, reward: '"Hồi 500 máu"' },
