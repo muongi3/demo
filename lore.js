@@ -108,6 +108,9 @@ window.QuestManager = {
     activeQuests: [],            // Hàng đợi nhiệm vụ đang làm song song
     completedTypes: [],          // Lưu các loại nhiệm vụ đã hoàn thành để KHÔNG trùng lặp
     damageTracker: 0,            // Theo dõi sát thương cho task damage
+    cumulativeKills: 0,          // Tích lũy số quái đã tiêu diệt từ đầu trận
+    cumulativeBarrelKills: 0,    // Tích lũy số quái nổ bình từ đầu trận
+    cumulativeHeadshots: 0,      // Tích lũy số headshots từ đầu trận
 
     /* --- Gán nhiệm vụ khi nhặt mảnh giấy --- */
     assignQuest: function () {
@@ -121,15 +124,23 @@ window.QuestManager = {
         if (available.length === 0) return;
 
         const qData = available[Math.floor(Math.random() * available.length)];
+        
+        // Tích hợp pre-tracked progress từ đầu trận
+        let startVal = 0;
+        if (qData.type === 'kill') startVal = this.cumulativeKills;
+        if (qData.type === 'barrel_kill') startVal = this.cumulativeBarrelKills;
+        if (qData.type === 'headshot') startVal = this.cumulativeHeadshots;
+
         const quest = {
             id: Date.now(),
             type: qData.type,
             target: qData.target,
-            current: 0,
+            current: Math.min(startVal, qData.target), // Khởi điểm bằng số lượng đã làm từ trước (tối đa bằng target)
             desc: qData.desc,
             reward: qData.reward
         };
         this.activeQuests.push(quest);
+        this.checkCompletion(); // Kiểm tra xem nếu đủ rồi thì hoàn thành luôn lập tức
         this.updateUI();
         document.getElementById('quest-tracker-ui').classList.remove('hidden');
     },
@@ -150,6 +161,11 @@ window.QuestManager = {
 
     /* --- Hook sự kiện từ game.js --- */
     onEvent: function (type, amount) {
+        // Tích lũy sẵn từ đầu trận cho các nhiệm vụ liên quan đến quái (để tránh bị kẹt nếu người chơi giết quái trước khi nhận quest)
+        if (type === 'kill') this.cumulativeKills += amount;
+        if (type === 'barrel_kill') this.cumulativeBarrelKills += amount;
+        if (type === 'headshot') this.cumulativeHeadshots += amount;
+
         this.activeQuests.forEach(q => {
             if (q.type === type) {
                 q.current += amount;

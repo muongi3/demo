@@ -898,6 +898,9 @@ function startGame() {
         window.QuestManager.activeQuests = [];
         window.QuestManager.completedTypes = []; // Cực kỳ quan trọng để bắt đầu game mới không bị kẹt quest cũ!
         window.QuestManager.damageTracker = 0;
+        window.QuestManager.cumulativeKills = 0;
+        window.QuestManager.cumulativeBarrelKills = 0;
+        window.QuestManager.cumulativeHeadshots = 0;
         const qt = document.getElementById('quest-tracker-ui');
         if (qt) qt.classList.add('hidden');
         window.QuestManager.updateUI();
