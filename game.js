@@ -840,36 +840,39 @@ document.addEventListener("contextmenu", e => e.preventDefault());
 
 const HAKARI_DANCE = { spawned: false, active: false };
 
-window.SPECTATOR_ROOM_ID = Math.floor(1000 + Math.random() * 9000);
-
-function initSpectatorHost() {
-    const canvas = document.getElementById('glcanvas');
-    if (!canvas || typeof Peer !== 'function') return;
-    
-    // Bắt lấy luồng video từ Canvas 3D WebGL (30 khung hình / giây)
-    const stream = canvas.captureStream(30);
-    const peerId = "lostisland_live_" + window.SPECTATOR_ROOM_ID;
-    
-    window.spectatorPeer = new Peer(peerId, { debug: 0 });
-    
-    window.spectatorPeer.on('open', (id) => {
-        console.log("[Livestream] Đã mở cổng phát sóng PeerJS với ID:", id);
-    });
-
-    // Tự động trả lời bất kỳ Khán giả nào gọi tới và gửi video stream
-    window.spectatorPeer.on('call', (call) => {
-        console.log("[Livestream] Có khán giả kết nối, đang truyền video WebGL 3D...");
-        call.answer(stream);
-    });
-
-    window.spectatorPeer.on('error', (err) => {
-        console.error("[Livestream] Lỗi phát sóng PeerJS:", err);
-    });
+// --- HỆ THỐNG ĐÓNG GÓI DỮ LIỆU SPECTATOR (STATE PACKET) ---
+function getGameStatePacket() {
+    if (!window.STATE || !window.STATE.player || !window.STATE.player.pos) return {};
+    const p = window.STATE.player;
+    const camRot = window.STATE.camera.rot;
+    return {
+        ts: performance.now(),
+        player: {
+            pos: { x: p.pos.x, y: p.pos.y, z: p.pos.z },
+            rot: { x: camRot.x, y: camRot.y },
+            hp: p.hp,
+            maxHp: p.maxHp,
+            kills: p.kills,
+            weaponIdx: p.weaponIdx
+        },
+        bots: window.STATE.bots ? window.STATE.bots.map(b => ({
+            id: b.id,
+            pos: { x: b.pos.x, y: b.pos.y, z: b.pos.z },
+            yaw: b.yaw,
+            hp: b.hp,
+            maxHp: b.maxHp,
+            state: b.state
+        })) : [],
+        projectiles: window.STATE.projectiles ? window.STATE.projectiles.map(pr => ({ pos: { x: pr.pos.x, y: pr.pos.y, z: pr.pos.z } })) : [],
+        loot: window.STATE.loot ? window.STATE.loot.map(l => ({ pos: { x: l.pos.x, y: l.pos.y, z: l.pos.z }, type: l.type })) : [],
+        stats: { alive: window.STATE.bots ? (window.STATE.bots.length + 1) : 25 }
+    };
 }
 
 function startGame() {
-    // Kích hoạt luồng truyền video WebRTC cho khán giả
-    initSpectatorHost();
+    // Kích hoạt luồng Broadcast P2P DataChannel cho khán giả
+    if (window.SpectatorNetwork) window.SpectatorNetwork.initHost();
+
 
     const chillSound = document.getElementById('chill-theme-sound');
     if (chillSound) chillSound.pause();
@@ -3538,6 +3541,13 @@ function spawnHakariDance() {
 }
 
 function loop(now) {
+    if (window.IS_SPECTATOR) {
+        if (window.SpectatorEngine) window.SpectatorEngine.syncLoop(now);
+        if (typeof draw === 'function') draw();
+        requestAnimationFrame(window.loop);
+        return;
+    }
+
     if (!STATE.lastTime) STATE.lastTime = now;
     const dt = Math.min((now - STATE.lastTime) / 1000, 0.1);
     STATE.lastTime = now;
@@ -3545,9 +3555,20 @@ function loop(now) {
     update(dt);
     draw();
     updateHUD();
-    // Dùng window.loop để chạy qua wrapper đồng bộ khán giả mỗi frame
+
+    // Broadcast dữ liệu liên tục cho khán giả (30 FPS)
+    if (window.SpectatorNetwork && window.SpectatorNetwork.isHost) {
+        if (!STATE.lastBroadcast) STATE.lastBroadcast = 0;
+        if (now - STATE.lastBroadcast > 33) {
+            STATE.lastBroadcast = now;
+            const packet = getGameStatePacket();
+            window.SpectatorNetwork.broadcastState(packet);
+        }
+    }
+
     requestAnimationFrame(window.loop);
 }
+window.loop = loop;
 
 function showClickAnywhere(delay = 1000) {
     setTimeout(() => {

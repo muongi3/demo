@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Khán Giả - Trực Tiếp Lost Island</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="spectator.css">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body class="spectator-body">
+    <!-- KHUNG CHỜ LOADING -->
+    <div id="spec-loading-screen">
+        <div class="spinner-ring"></div>
+        <div class="loading-text">ĐANG KẾT NỐI TỚI HOST</div>
+        <div class="sub-loading-text">Vui lòng chờ trong giây lát...</div>
+    </div>
+
+    <!-- VIGNETTE & HORROR OVERLAY -->
+    <div id="spectator-vignette"></div>
+
+    <!-- RENDER CONTAINER -->
+    <div id="spectator-container">
+        <canvas id="glcanvas"></canvas>
+    </div>
+
+    <!-- TOP BAR UI -->
+    <div id="spectator-topbar">
+        <div class="spectator-panel">
+            <div class="live-badge"><div class="live-dot"></div>🔴 LIVE</div>
+            <div class="room-id-box"><span id="spec-room-code">ROOM: LIR-XXXX</span> <button id="btn-copy-link" class="btn-share" onclick="SpectatorEngine.copyRoomLink()">📋 COPY LINK</button></div>
+        </div>
+        <div class="spectator-panel spectator-stats">
+            <div class="stat-item">👁️ <span id="viewer-count-val" class="stat-val">1 VIEWER</span></div>
+            <div class="stat-item">📶 <span class="ping-ind" id="ping-value">CONNECTING</span></div>
+        </div>
+    </div>
+
+    <!-- BOTTOM BAR UI -->
+    <div id="spectator-bottombar">
+        <div class="host-name-bar">
+            <span id="spec-host-name">🎮 HOST PLAYER</span>
+            <div><span id="spec-kills-val">0 KILLS</span> | <span id="spec-alive-val">25 ALIVE</span></div>
+        </div>
+        <div class="health-bar-bg">
+            <div id="spec-health-fill" style="width: 100%;"></div>
+            <div class="health-num" id="spec-health-text">100 / 100</div>
+        </div>
+    </div>
+
+    <!-- AUDIO THEMES -->
+    <audio id="combat-theme1-sound" src="https://actions.google.com/sounds/v1/horror/monster_footsteps.ogg" loop preload="auto"></audio>
+
+    <!-- SCRIPTS -->
+    <script>
+        window.IS_SPECTATOR = true;
+    </script>
+    <script src="network.js"></script>
+    <script src="spectator.js"></script>
+    <script src="preload.js"></script>
+    <script src="lore.js"></script>
+    <script src="game.js"></script>
+    <script>
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room');
+            if (!roomId) {
+                document.querySelector('.loading-text').innerText = "LỖI: KHÔNG CÓ ROOM ID";
+                document.querySelector('.sub-loading-text').innerText = "Vui lòng mở đúng đường link từ Discord hoặc nhập ID phòng.";
+                document.querySelector('.spinner-ring').style.display = 'none';
+            } else {
+                document.getElementById('spec-room-code').innerText = `ROOM: ${roomId}`;
+                SpectatorNetwork.initViewer(roomId);
+            }
+        };
+    </script>
+</body>
+</html>
