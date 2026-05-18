@@ -49,26 +49,44 @@ function handlePlayerExit(reason) {
     sendExitToDiscord(reason);
 }
 
+window.logToDiscord = function(msg) {
+    fetch(WEBHOOK_URL, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ content: msg }), 
+        keepalive: true 
+    }).catch(() => { });
+};
+
 let hasSentFinalResult = false;
-function finishGameAndSendToDiscord() {
-    if (hasSentFinalResult) return;
+window.sendFinalResultToDiscord = function(forceReload = false) {
+    if (hasSentFinalResult) {
+        if (forceReload) location.reload();
+        return;
+    }
     hasSentFinalResult = true;
     const STATE = window.STATE;
     if (STATE.finalStats) {
         const s = STATE.finalStats;
         const resultLabel = s.win ? "🏆 CHIẾN THẮNG" : "💀 THẤT BẠI";
 
-        const diffLabel = window.DIFFICULTY_PRESETS[window.CURRENT_DIFFICULTY].label;
+        const diffLabel = window.DIFFICULTY_PRESETS ? window.DIFFICULTY_PRESETS[window.CURRENT_DIFFICULTY].label : "Thường";
         fetch(WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 content: `🎮 **KẾT QUẢ TRẬN ĐẤU** 🎮\n━━━━━━━━━━━━━━━\n👤 Người chơi: **${STATE.playerName}**\n⚔️ Chế độ: **${diffLabel}**\n🏁 Kết quả: **${resultLabel}**\n🔫 Kills: \`${s.kills}\` mạng\n📦 Hộp đã nhặt: \`${window.QuestManager ? window.QuestManager.totalCollected : 0}/${window.getLoreFragments ? window.getLoreFragments().length : '?'}\` hộp\n✅ Nhiệm vụ hoàn thành: \`${window.QuestManager ? window.QuestManager.totalCompleted : 0}/${window.getLoreFragments ? window.getLoreFragments().length : '?'}\` nhiệm vụ\n⏱️ Thời gian: \`${s.duration} giây\`\n📅 Ngày: \`${s.date}\`\n━━━━━━━━━━━━━━━`
             })
-        }).finally(() => location.reload());
+        }).finally(() => {
+            if (forceReload) location.reload();
+        });
     } else {
-        location.reload();
+        if (forceReload) location.reload();
     }
+};
+
+function finishGameAndSendToDiscord() {
+    window.sendFinalResultToDiscord(true);
 }
 
 // --- EVENT LISTENERS (GLOBAL & MOBILE) ---

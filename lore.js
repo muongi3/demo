@@ -26,12 +26,12 @@ const LORE_BY_DIFFICULTY = {
     extreme: [
         { idx: 0, text: "\"DỮ LIỆU CẤM: Vòng lặp hiện tại: 849,204. Tỷ lệ đồng hóa vật chủ: 99.8%. Trạng thái: Sắp thức tỉnh.\"" },
         { idx: 1, text: "\"DỮ LIỆU CẤM: Hòn đảo này không tồn tại trên Trái Đất. Nó là một vùng giả lập bị lãng quên lâu đời từ không gian khác.\"" },
-        { idx: 2, text: "\"DỮ LIỆU CẤM: Bọn quái vật không cố giết bạn. Chúng đang cố ngăn bạn kích hoạt Cánh Cửa Đỏ để bảo vệ vũ trụ bên ngoài.\"" },
+        { idx: 2, text: "\"DỮ LIỆU CẤM: Bọn quái vật không cố giết bạn. Chúng thực chất đang cố bảo vệ sự an toàn của chính bạn.\"" },
         { idx: 3, text: "\"DỮ LIỆU CẤM: Phương trình hỗn mang: những chiếc hộp tăng sức mạnh đó mang chất khiến người sử dụng liên tục dần lãng quên đi mọi thứ." },
         { idx: 4, text: "\"DỮ LIỆU CẤM: Khi bạn hấp thụ Crimson (Trạng thái Tím), bạn đang dần hợp nhất với tâm trí của Kẻ Gác Cổng.\"" },
         { idx: 5, text: "\"DỮ LIỆU CẤM: Giải mã thành công 'Nghịch lý Dữ liệu' sẽ gây ra một vụ nổ khái niệm, xóa bỏ sự tồn tại của hòn đảo này khỏi mọi dòng thời gian.\"" },
-        { idx: 6, text: "\"DỮ LIỆU CẤM: Kẻ mà bạn gọi là 'Boss' thực chất là phiên bản tương lai của chính bạn, kẻ đã chọn hy sinh để làm chốt chặn \"" },
-        { idx: 7, text: "\"DỮ LIỆU CẤM: Nếu bạn đọc được dòng này, Cánh Cửa Đỏ đã bắt đầu đảo ngược quy trình. Hãy ngăn chính bản thân ở tương lai hoặc nếu không đây sẽ là vòng lặp không hồi kết!!.\"" },
+        { idx: 6, text: "\"DỮ LIỆU CẤM: Kẻ mà bạn gọi là 'Boss' thực chất chính là bạn ở quá khứ, người đã bị mất hoàn toàn ký ức và chỉ còn nhớ duy nhất mục tiêu ngăn chặn bạn ở hiện tại kích hoạt Cánh Cửa Đỏ.\"" },
+        { idx: 7, text: "\"DỮ LIỆU CẤM: Nếu bạn đọc được dòng này, Cánh Cửa Đỏ đã bắt đầu đảo ngược quy trình. Hãy đối đầu với chính bản thân ở quá khứ hoặc nếu không đây sẽ là vòng lặp không hồi kết!!.\"" },
         { idx: 8, text: "\"DỮ LIỆU CẤM: Chiếc hộp cuối cùng chứa đựng ký ức nguyên thủy của bạn. Mở nó ra đồng nghĩa với việc cơ thể bị hợp nhất với Kẻ Gác Cổng và trở thành một với hòn đảo Vĩnh Cửu.\"" }
     ]
 };

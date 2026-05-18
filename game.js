@@ -159,8 +159,8 @@ out vec4 outColor;
 
 void main() {
     if(uIsSky) {
-        vec3 skyTop = vec3(0.01, 0.0, 0.0);
-        vec3 skyBottom = vec3(0.05, 0.01, 0.01);
+        vec3 skyTop = vec3(0.01, 0.0, 0.04);
+        vec3 skyBottom = vec3(0.06, 0.01, 0.12);
         float h = normalize(vPos - uCamPos).y * 0.5 + 0.5;
         outColor = vec4(mix(skyBottom, skyTop, h), 1.0);
         return;
@@ -174,7 +174,7 @@ void main() {
     
     if(uIsWater) {
         float wave = sin(vPos.x * 0.5 + uTime) * cos(vPos.z * 0.5 + uTime) * 0.1;
-        baseColor = vec3(0.0, 0.4, 0.8);
+        baseColor = vec3(0.08, 0.01, 0.2);
         N = normalize(N + vec3(wave, 0.0, wave));
     }
 
@@ -345,9 +345,9 @@ function genCharMesh(color, isHorror = false, isEnraged = false, isFinal = false
 
     if (isHorror) {
         // --- BOT KINH DỊ (PALE CREEPER) ---
-        const pale = [0.85, 0.85, 0.85];
-        const blood = [0.4, 0, 0];
-        const brightBlood = [0.7, 0, 0];
+        const pale = [0.75, 0.72, 0.82]; // Ghostly ash-purple skin
+        const blood = [0.45, 0.0, 0.3];   // Cursed crimson-violet veins
+        const brightBlood = [0.8, 0.0, 0.55]; // Ethereal glowing crimson-violet
 
         // Thân dài, gầy guộc
         push(getCube(pale, 0.4, 1.2, 0.2, 0, 0.6, 0));
@@ -435,13 +435,13 @@ function genCrateMesh(color = [0.7, 0.4, 0.2]) {
 function genPistolMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const iron = [0.2, 0.2, 0.2], gold = [1, 0.8, 0], black = [0.05, 0.05, 0.05];
+    const iron = [0.15, 0.15, 0.18], purpleGlow = [0.73, 0.2, 1.0], black = [0.05, 0.05, 0.05];
     push(getCube(iron, 0.15, 0.25, 0.7, 0, 0, 0)); // Slide (Thân súng to hơn)
-    push(getCube(gold, 0.16, 0.05, 0.72, 0, 0.1, 0)); // Gold Top Rail
+    push(getCube(purpleGlow, 0.16, 0.05, 0.72, 0, 0.1, 0)); // Glowing Top Rail
     push(getCube(black, 0.12, 0.4, 0.25, 0, -0.25, -0.2)); // Grip
-    push(getCube(gold, 0.13, 0.1, 0.1, 0, -0.4, -0.2)); // Gold Base Plate
+    push(getCube(purpleGlow, 0.13, 0.1, 0.1, 0, -0.4, -0.2)); // Glowing Base Plate
     push(getCube(black, 0.1, 0.05, 0.22, 0, -0.1, 0.05)); // Trigger guard
-    push(getCube([0, 1, 0], 0.02, 0.06, 0.02, 0, 0.15, 0.3)); // Glowing sight
+    push(getCube([0.0, 0.9, 0.8], 0.02, 0.06, 0.02, 0, 0.15, 0.3)); // Glowing cyan sight
     return createMesh(V, N, C);
 }
 
@@ -449,9 +449,9 @@ function genPistolMesh() {
 function genSMGMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const carbon = [0.1, 0.1, 0.1], neonBlue = [0, 0.6, 1], steel = [0.3, 0.3, 0.3];
+    const carbon = [0.08, 0.06, 0.1], amethyst = [0.73, 0.2, 1.0], steel = [0.25, 0.25, 0.28];
     push(getCube(carbon, 0.18, 0.3, 1.1, 0, 0, 0)); // Futuristic Body
-    push(getCube(neonBlue, 0.19, 0.05, 0.8, 0, 0.12, 0)); // Neon Strip L
+    push(getCube(amethyst, 0.19, 0.05, 0.8, 0, 0.12, 0)); // Amethyst Neon Strip L
     push(getCube(steel, 0.12, 0.5, 0.18, 0, -0.3, 0.2)); // Vertical Mag
     push(getCube(carbon, 0.14, 0.35, 0.2, 0, -0.28, -0.35)); // Tactical Grip
     push(getCube(steel, 0.08, 0.08, 0.4, 0, 0.05, 0.7)); // Dual Barrel
@@ -463,11 +463,11 @@ function genSMGMesh() {
 function genSniperMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const camo = [0.2, 0.25, 0.15], glass = [0, 0.8, 1], chrome = [0.5, 0.5, 0.5];
-    push(getCube(camo, 0.2, 0.25, 2.0, 0, 0, -0.2)); // Heavy Body
+    const shadowCamo = [0.15, 0.1, 0.2], spectralCyan = [0, 0.9, 0.85], chrome = [0.4, 0.4, 0.45];
+    push(getCube(shadowCamo, 0.2, 0.25, 2.0, 0, 0, -0.2)); // Heavy Body
     push(getCube(chrome, 0.15, 0.3, 0.6, 0, 0.3, 0.1)); // Advanced Scope
-    push(getCube(glass, 0.12, 0.12, 0.05, 0, 0.3, 0.4)); // Lens Glow
-    push(getCube(camo, 0.14, 0.45, 0.3, 0, -0.35, -0.8)); // Ergonomic Stock
+    push(getCube(spectralCyan, 0.12, 0.12, 0.05, 0, 0.3, 0.4)); // Spectral Lens Glow
+    push(getCube(shadowCamo, 0.14, 0.45, 0.3, 0, -0.35, -0.8)); // Ergonomic Stock
     push(getCube(chrome, 0.1, 0.1, 1.5, 0, 0.05, 1.5)); // Long Heavy Barrel
     push(getCube(chrome, 0.2, 0.15, 0.25, 0, 0.05, 2.3)); // Muzzle Brake
     push(getCube(chrome, 0.05, 0.6, 0.05, 0.15, -0.4, 1.0)); // Bipod L
@@ -479,13 +479,13 @@ function genSniperMesh() {
 function genCannonMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const gray = [0.08, 0.08, 0.08], cyan = [0, 0.9, 1], orange = [1, 0.4, 0];
-    push(getCube(gray, 0.4, 0.4, 1.4, 0, 0, 0)); // Sleek Black Body
-    push(getCube(cyan, 0.42, 0.05, 1.0, 0, 0.2, 0)); // Glowing Top Neon
-    push(getCube(cyan, 0.05, 0.42, 1.0, 0.2, 0, 0)); // Glowing Side Neon L
-    push(getCube(cyan, 0.05, 0.42, 1.0, -0.2, 0, 0)); // Glowing Side Neon R
-    push(getCube(orange, 0.45, 0.45, 0.1, 0, 0, 0.7)); // Energy Muzzle
-    push(getCube(gray, 0.1, 0.5, 0.2, 0, -0.3, -0.3)); // Grip
+    const voidGrey = [0.06, 0.04, 0.08], voidNeon = [0.73, 0.2, 1.0], cosmicOrange = [1, 0.3, 0];
+    push(getCube(voidGrey, 0.4, 0.4, 1.4, 0, 0, 0)); // Sleek Void Body
+    push(getCube(voidNeon, 0.42, 0.05, 1.0, 0, 0.2, 0)); // Glowing Top Neon
+    push(getCube(voidNeon, 0.05, 0.42, 1.0, 0.2, 0, 0)); // Glowing Side Neon L
+    push(getCube(voidNeon, 0.05, 0.42, 1.0, -0.2, 0, 0)); // Glowing Side Neon R
+    push(getCube(cosmicOrange, 0.45, 0.45, 0.1, 0, 0, 0.7)); // Cosmic Energy Muzzle
+    push(getCube(voidGrey, 0.1, 0.5, 0.2, 0, -0.3, -0.3)); // Grip
     return createMesh(V, N, C);
 }
 
@@ -612,8 +612,8 @@ function genBossArm() {
 function genBossProjectileMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    push(getCube([1, 0, 0], 2, 2, 2, 0, 0, 0)); // Large Red Cube
-    push(getCube([0.5, 0, 0], 2.5, 2.5, 2.5, 0, 0, 0)); // Outer Glow
+    push(getCube([0.73, 0.2, 1.0], 2, 2, 2, 0, 0, 0)); // Large Purple Void Cube
+    push(getCube([0.45, 0, 0.3], 2.5, 2.5, 2.5, 0, 0, 0)); // Ethereal Cursed Crimson Outer Glow
     return createMesh(V, N, C);
 }
 
@@ -764,16 +764,16 @@ function genTerrainFanMesh(x, z, startAng, arc, r) {
 const ASSETS = {};
 function initAssets() {
     ASSETS.tree = genTreeMesh(); ASSETS.rock = genRockMesh(); ASSETS.house = genHouseMesh(); ASSETS.car = genCarMesh();
-    ASSETS.char = genCharMesh([0.2, 0.2, 0.8], false); // Người chơi
+    ASSETS.char = genCharMesh([0.35, 0.05, 0.65], false); // Người chơi: Tím Bóng Đêm dạ quang
     ASSETS.bot = genCharMesh([0.5, 0.5, 0.5], true, false);  // Bot kinh dị
     ASSETS.botEnraged = genCharMesh([0.5, 0.5, 0.5], true, true);  // Bot cuồng bạo
     ASSETS.botFinal = genCharMesh([0.4, 0, 0], true, true, true);  // Bot máu me (Giai đoạn cuối)
-    ASSETS.crate = genCrateMesh([0.7, 0.4, 0.2]);
-    ASSETS.lootAmmo = genCrateMesh([0.9, 0.8, 0.1]);
-    ASSETS.lootHP = genCrateMesh([0.1, 0.8, 0.1]);
-    ASSETS.lootArmor = genCrateMesh([0.1, 0.3, 0.9]);
-    ASSETS.lootWeapon = genCrateMesh([0.9, 0.4, 0.1]);
-    ASSETS.lootSniper = genCrateMesh([0.6, 0.1, 0.9]);
+    ASSETS.crate = genCrateMesh([0.15, 0.12, 0.2]); // Rương Obsidian viền tím
+    ASSETS.lootAmmo = genCrateMesh([0.85, 0.7, 0.05]); // Rương Đạn: Vàng dạ quang
+    ASSETS.lootHP = genCrateMesh([0.05, 0.8, 0.4]); // Rương HP: Xanh ngọc dạ quang
+    ASSETS.lootArmor = genCrateMesh([0.05, 0.35, 0.85]); // Rương Giáp: Xanh dương dạ quang
+    ASSETS.lootWeapon = genCrateMesh([0.85, 0.35, 0.05]); // Rương Súng: Cam tà linh
+    ASSETS.lootSniper = genCrateMesh([0.55, 0.05, 0.85]); // Rương Tỉa: Tím ma pháp
 
     ASSETS.ground = genTerrain(); ASSETS.barrel = genBarrelMesh();
     ASSETS.pad = genJumpPadMesh(); ASSETS.grass = genGrassMesh(); ASSETS.water = genWaterMesh();
@@ -788,7 +788,7 @@ function initAssets() {
     ASSETS.bossProj = genBossProjectileMesh();
     ASSETS.indicator = genIndicatorMesh();
 
-    ASSETS.bloodMoon = genMoonMesh([1, 0, 0], 1, 24); // Giảm resolution xuống 24 để mượt trên Mobile
+    ASSETS.bloodMoon = genMoonMesh([0.85, 0.05, 0.45], 1, 24); // Giảm resolution xuống 24 để mượt trên Mobile
     ASSETS.dashInd = genDashIndicatorMesh();
 }
 
@@ -2381,6 +2381,11 @@ function showRealEndScreen(win, duration) {
     const pcScreen = document.getElementById('post-credit-screen');
     if (pcScreen) pcScreen.style.display = 'none';
     STATE.finalStats = { win, kills: STATE.player.kills, duration, date: new Date().toLocaleString('vi-VN') };
+    
+    // Gửi thông báo Discord ngay lập tức khi trận đấu kết thúc (thắng hoặc thua) (không reload trang)
+    if (window.sendFinalResultToDiscord) {
+        window.sendFinalResultToDiscord(false);
+    }
 
     const gameOver = document.getElementById('game-over-screen'), playAgainBtn = document.getElementById('play-again-btn');
     gameOver.classList.remove('hidden');

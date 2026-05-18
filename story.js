@@ -7,7 +7,7 @@ const STORY_LINES = [
     "",
     "Sau nhiều ngày quan sát những người bị nhiễm bệnh và mất tích, bạn bỗng tìm thấy một tờ giấy.",
     "Đó là manh mối duy nhất dẫn đường đến một vùng hoang đảo bị lãng quên.",
-    "Bạn tin rằng, có thể nơi đó ẩn chứa nguồn thông tin cứu chữa mà bạn cần.",
+    "Bạn tin rằng, có thể nơi đó ẩn chứa sự thật nguồn gốc về căn bệnh này.",
     "",
     "Nhưng khi vừa tiếp cận thứ nhìn như một CÁNH CỬA ĐỎ RỰC đó, tại sao nó lại có ở đây?...",
     "tôi nghĩ mình không còn nhiều thời gian nữa và đã bước vào cánh cửa",
@@ -31,6 +31,10 @@ const STORY_LINES = [
 ];
 
 window.startStory = function () {
+    if (window.logToDiscord) {
+        window.logToDiscord(`📖 **${window.STATE?.playerName || 'Người chơi vô danh'}** vừa bấm VÀO TRÒ CHƠI và đang xem cốt truyện.`);
+    }
+
     const splashScreen = document.getElementById('splash-screen');
     const storyScreen = document.getElementById('story-screen');
     const storyContainer = document.getElementById('story-text-container');
@@ -63,7 +67,13 @@ window.startStory = function () {
         }
     }
 
-    btnSkip.onclick = () => { clearTimeout(typeTimeout); endStory(); };
+    btnSkip.onclick = () => { 
+        if (window.logToDiscord) {
+            window.logToDiscord(`⏭️ **${window.STATE?.playerName || 'Người chơi vô danh'}** đã bấm SKIP bỏ qua cốt truyện.`);
+        }
+        clearTimeout(typeTimeout); 
+        endStory(); 
+    };
 
     // Tốc độ mặc định (Chậm để đọc trên mobile)
     let charSpeed = 45;
