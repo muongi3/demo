@@ -12,12 +12,18 @@ function sendLiveNotification() {
     const time = new Date().toLocaleTimeString('vi-VN');
     const bots = STATE.config ? (STATE.config.botCount || 25) : 25;
     const diffLabel = window.DIFFICULTY_PRESETS[window.CURRENT_DIFFICULTY].label;
+    
+    // Tạo link Spectator chuẩn của GitHub Pages để gửi cho người khác
+    const githubPagesBaseUrl = "https://muongi3.github.io/demo/";
+    const spectatorLink = `${githubPagesBaseUrl}spectator.html?room=${window.SPECTATOR_ROOM_ID || '0000'}`;
+
     const message = [
         `🎮 **${STATE.playerName}** vừa bắt đầu trận!`,
         `━━━━━━━━━━━━━━━`,
         `⏰ Giờ: \`${time}\``,
         `🤖 Số bot: \`${bots}\``,
         `⚔️ Chế độ: **${diffLabel}**`,
+        `📺 **Xem trực tiếp:** ${spectatorLink}`,
         `━━━━━━━━━━━━━━━`
     ].join('\n');
     fetch(WEBHOOK_URL, {
