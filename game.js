@@ -953,6 +953,10 @@ document.addEventListener("contextmenu", e => e.preventDefault());
 const HAKARI_DANCE = { spawned: false, active: false };
 
 function startGame() {
+    if (!gl) {
+        alert("Thiết bị hoặc trình duyệt của bác không hỗ trợ WebGL2. Vui lòng chuyển sang trình duyệt/thiết bị khác!");
+        return;
+    }
     const chillSound = document.getElementById('chill-theme-sound');
     if (chillSound) chillSound.pause();
 
@@ -3735,8 +3739,10 @@ function activateUltimate() {
 
 
 
-const AudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+const AudioCtx = AudioContextClass ? new AudioContextClass() : null;
 function playAudio(type) {
+    if (!AudioCtx) return;
     if (AudioCtx.state === 'suspended') AudioCtx.resume();
     const osc = AudioCtx.createOscillator(), gain = AudioCtx.createGain(); osc.connect(gain); gain.connect(AudioCtx.destination); const now = AudioCtx.currentTime;
     if (type === 'shoot') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.1); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
@@ -3902,6 +3908,7 @@ let ambientLoop = null;
 
 let bossNodes = [];
 function playBossSound() {
+    if (!AudioCtx) return;
     if (AudioCtx.state === 'suspended') AudioCtx.resume();
     if (bossNodes.length > 0) return;
 
@@ -3973,8 +3980,9 @@ function loop(now) {
     draw();
     updateHUD();
     // Dùng window.loop để chạy qua wrapper đồng bộ khán giả mỗi frame
-    requestAnimationFrame(window.loop);
+    requestAnimationFrame(window.loop || loop);
 }
+window.loop = loop;
 
 function showClickAnywhere(delay = 1000) {
     setTimeout(() => {

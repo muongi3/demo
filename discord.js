@@ -31,7 +31,7 @@ function sendLiveNotification() {
 // --- EXIT DETECTION & DISCORD ---
 function sendExitToDiscord(reason) {
     const STATE = window.STATE;
-    if (STATE.hasExited) return;
+    if (!STATE || STATE.hasExited) return;
     const time = new Date().toLocaleTimeString('vi-VN');
     const message = `📡 **NGƯỜI CHƠI THOÁT GAME**\n━━━━━━━━━━━━━━━\n👤 Player: **${STATE.playerName}**\n⏰ Time: \`${time}\` \n🚪 Reason: \`${reason}\`\n━━━━━━━━━━━━━━━`;
     fetch(WEBHOOK_URL, {
@@ -44,7 +44,7 @@ function sendExitToDiscord(reason) {
 
 function handlePlayerExit(reason) {
     const STATE = window.STATE;
-    if (STATE.hasExited) return;
+    if (!STATE || STATE.hasExited) return;
     STATE.hasExited = true;
     sendExitToDiscord(reason);
 }
@@ -66,7 +66,9 @@ window.sendFinalResultToDiscord = function(forceReload = false) {
     }
     hasSentFinalResult = true;
     const STATE = window.STATE;
-    if (STATE.finalStats) {
+    if (STATE) STATE.hasExited = true; // Ngăn chặn gửi thêm thông báo thoát game khi chuyển trang/reload sau khi kết thúc trận
+
+    if (STATE && STATE.finalStats) {
         const s = STATE.finalStats;
         const resultLabel = s.win ? "🏆 CHIẾN THẮNG" : "💀 THẤT BẠI";
 
@@ -76,7 +78,8 @@ window.sendFinalResultToDiscord = function(forceReload = false) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 content: `🎮 **KẾT QUẢ TRẬN ĐẤU** 🎮\n━━━━━━━━━━━━━━━\n👤 Người chơi: **${STATE.playerName}**\n⚔️ Chế độ: **${diffLabel}**\n🏁 Kết quả: **${resultLabel}**\n🔫 Kills: \`${s.kills}\` mạng\n📦 Hộp đã nhặt: \`${window.QuestManager ? window.QuestManager.totalCollected : 0}/${window.getLoreFragments ? window.getLoreFragments().length : '?'}\` hộp\n✅ Nhiệm vụ hoàn thành: \`${window.QuestManager ? window.QuestManager.totalCompleted : 0}/${window.getLoreFragments ? window.getLoreFragments().length : '?'}\` nhiệm vụ\n⏱️ Thời gian: \`${s.duration} giây\`\n📅 Ngày: \`${s.date}\`\n━━━━━━━━━━━━━━━`
-            })
+            }),
+            keepalive: true
         }).finally(() => {
             if (forceReload) location.reload();
         });

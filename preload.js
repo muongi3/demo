@@ -1,4 +1,60 @@
 // preload.js
+// LocalStorage Polyfill for restricted/incognito environments
+(function() {
+    try {
+        var testKey = '__test_localstorage__';
+        window.localStorage.setItem(testKey, testKey);
+        window.localStorage.removeItem(testKey);
+    } catch (e) {
+        console.warn("localStorage is blocked or not supported. Using in-memory fallback.");
+        var storage = {};
+        var mockLocalStorage = {
+            getItem: function(key) {
+                return storage.hasOwnProperty(key) ? storage[key] : null;
+            },
+            setItem: function(key, value) {
+                storage[key] = String(value);
+            },
+            removeItem: function(key) {
+                delete storage[key];
+            },
+            clear: function() {
+                storage = {};
+            },
+            key: function(index) {
+                var keys = Object.keys(storage);
+                return keys[index] || null;
+            },
+            get length() {
+                return Object.keys(storage).length;
+            }
+        };
+        try {
+            Object.defineProperty(window, 'localStorage', {
+                value: mockLocalStorage,
+                writable: true,
+                configurable: true
+            });
+        } catch (err) {
+            window.localStorage = mockLocalStorage;
+        }
+    }
+})();
+
+// Pointer Lock Polyfill for mobile browsers
+(function() {
+    if (typeof Element !== 'undefined' && typeof Element.prototype.requestPointerLock !== 'function') {
+        Element.prototype.requestPointerLock = function() {
+            console.warn("Pointer lock is not supported on this device.");
+        };
+    }
+    if (typeof document !== 'undefined' && typeof document.exitPointerLock !== 'function') {
+        document.exitPointerLock = function() {
+            console.warn("Exit pointer lock is not supported on this device.");
+        };
+    }
+})();
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const assetsToLoad = document.querySelectorAll('[data-src]');
