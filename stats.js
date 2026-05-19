@@ -189,7 +189,7 @@ window.DIFFICULTY_PRESETS = {
     extreme: {
         label: '💀 CỰC KHÓ', color: '#ff0033',
         questCount: 9, // CỰC KHÓ: 9 nhiệm vụ để mở khóa sự thật tối thượng
-        botHpMult: 2.0, botDmgMult: 2.2, botSpeedMult: 1.4,
+        botHpMult: 2.15, botDmgMult: 2.2, botSpeedMult: 1.4,
         enrageLv2Pct: 0.70, lv3Count: 10,
         bossHpMult: 2.2, bossDmgMult: 1.2, bossSkillCdMult: 0.55, bossSpeedMult: 1.6,
         bossSkillPreTimeMult: 0.65, // Boss tung chiêu cực chớp nhoáng (Sít)
