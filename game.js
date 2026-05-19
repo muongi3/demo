@@ -181,8 +181,8 @@ void main() {
 
     vec3 emissive = uEmitColor;
     if (vColor.r > 0.95 && vColor.g < 0.05 && vColor.b < 0.05) {
-        // Các chi tiết đỏ thuần khiết (như mắt của Bot) sẽ tự động phát sáng rực rỡ
-        emissive += vec3(2.5, 0.0, 0.0);
+        // Các chi tiết đỏ thuần khiết (như mắt của Bot) sẽ tự động phát sáng rực rỡ siêu cấp
+        emissive += vec3(4.0, 0.0, 0.0);
     }
 
     float diff = dot(N, L);
@@ -209,10 +209,15 @@ void main() {
     float fogNoise = sin(vPos.x * 0.5 + uTime) * cos(vPos.z * 0.5 - uTime) * 0.5 + 0.5;
     float totalFog = clamp(max(distFog, heightFog * 0.8 * fogNoise), 0.0, 1.0);
     
+    // Giảm sương mù đối với các thành phần phát sáng để chúng có thể xuyên qua sương mù (Glow cuts through fog)
+    float glowBrightness = max(emissive.r, max(emissive.g, emissive.b));
+    float fogReduction = clamp(glowBrightness * 0.22, 0.0, 0.85);
+    float fogFactor = totalFog * (1.0 - fogReduction);
+    
     vec3 cosmicFogColor = mix(vec3(0.1, 0.0, 0.2), vec3(0.0, 0.1, 0.2), clamp(vY / 10.0, 0.0, 1.0));
     
     float alpha = uIsWater ? 0.7 : 1.0;
-    outColor = vec4(mix(finalColor, cosmicFogColor, totalFog), alpha);
+    outColor = vec4(mix(finalColor, cosmicFogColor, fogFactor), alpha);
 }`;
 
 function createShader(src, type) {
@@ -3176,10 +3181,10 @@ function draw() {
 
         drawMeshActual(mesh, drawPos, scale, ang);
 
-        // Vẽ Outline Viền Trắng nổi bật theo thân hình Bot để phân biệt rõ rệt với mặt đất tối
+        // Vẽ Outline Viền Trắng nổi bật theo thân hình Bot để phân biệt rõ rệt với mặt đất tối (Tăng độ dày và độ sáng để nhìn siêu rõ)
         gl.cullFace(gl.FRONT);
-        gl.uniform3f(locs.emitColor, 2.5, 2.5, 2.5); // Sáng trắng dạ quang rực rỡ
-        drawMeshActual(mesh, drawPos, scale * 1.05, ang);
+        gl.uniform3f(locs.emitColor, 5.0, 5.0, 5.0); // Sáng trắng dạ quang cực đại (xuyên thấu sương mù)
+        drawMeshActual(mesh, drawPos, scale * 1.08, ang);
         gl.cullFace(gl.BACK);
 
         gl.uniform3f(locs.emitColor, 0, 0, 0); // Reset emit
@@ -3350,10 +3355,10 @@ function draw() {
         gl.bindVertexArray(ASSETS.bossBody.vao);
         gl.drawArrays(gl.TRIANGLES, 0, ASSETS.bossBody.count);
 
-        // Vẽ Outline Viền Trắng nổi bật theo thân hình Boss
+        // Vẽ Outline Viền Trắng nổi bật theo thân hình Boss (Tăng độ dày và độ sáng để nhìn siêu rõ)
         gl.cullFace(gl.FRONT);
-        gl.uniform3f(locs.emitColor, 2.5, 2.5, 2.5); // Sáng trắng dạ quang rực rỡ
-        let mBodyOutline = M4.multiply(mBody, M4.scaling(1.03, 1.03, 1.03)); // Phóng to nhẹ khung thân
+        gl.uniform3f(locs.emitColor, 5.0, 5.0, 5.0); // Sáng trắng dạ quang cực đại
+        let mBodyOutline = M4.multiply(mBody, M4.scaling(1.05, 1.05, 1.05)); // Phóng to nhẹ khung thân
         gl.uniformMatrix4fv(locs.model, false, mBodyOutline);
         gl.drawArrays(gl.TRIANGLES, 0, ASSETS.bossBody.count);
         gl.cullFace(gl.BACK);
@@ -3416,10 +3421,10 @@ function draw() {
             gl.bindVertexArray(ASSETS.bossArm.vao); gl.drawArrays(gl.TRIANGLES, 0, ASSETS.bossArm.count);
             if (armColor) gl.uniform3f(locs.emitColor, 0, 0, 0);
 
-            // Vẽ Outline Viền Trắng nổi bật theo cánh tay Boss
+            // Vẽ Outline Viền Trắng nổi bật theo cánh tay Boss (Tăng độ dày và độ sáng để nhìn siêu rõ)
             gl.cullFace(gl.FRONT);
-            gl.uniform3f(locs.emitColor, 2.5, 2.5, 2.5); // Sáng trắng dạ quang rực rỡ
-            let mArmOutline = M4.multiply(mArm, M4.scaling(1.05, 1.05, 1.05)); // Phóng to nhẹ khung cánh tay
+            gl.uniform3f(locs.emitColor, 5.0, 5.0, 5.0); // Sáng trắng dạ quang cực đại
+            let mArmOutline = M4.multiply(mArm, M4.scaling(1.08, 1.08, 1.08)); // Phóng to nhẹ khung cánh tay
             gl.uniformMatrix4fv(locs.model, false, mArmOutline);
             gl.drawArrays(gl.TRIANGLES, 0, ASSETS.bossArm.count);
             gl.cullFace(gl.BACK);
