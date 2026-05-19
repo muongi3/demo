@@ -3175,17 +3175,19 @@ function draw() {
             scale = 1.0;
         }
 
-        // Đảm bảo quái vật phát dạ quang đỏ nhẹ trong bóng tối để người chơi dễ nhìn thấy và định vị (Tăng nhẹ độ sáng phát quang)
+        // 1. Vẽ Outline Viền Trắng xuyên vật thể (X-Ray/Wallhack) trước để phân biệt rõ rệt kể cả khi bị che khuất
+        gl.disable(gl.DEPTH_TEST);
+        gl.cullFace(gl.FRONT);
+        gl.uniform3f(locs.emitColor, 5.0, 5.0, 5.0); // Sáng trắng dạ quang cực đại (xuyên thấu vật thể/sương mù)
+        drawMeshActual(mesh, drawPos, scale * 1.08, ang);
+        gl.cullFace(gl.BACK);
+        gl.enable(gl.DEPTH_TEST);
+
+        // 2. Đảm bảo quái vật phát dạ quang đỏ nhẹ trong bóng tối để người chơi dễ nhìn thấy và định vị (Tăng nhẹ độ sáng phát quang)
         let emitVal = isLv3 ? [0.45, 0.02, 0.02] : (isLv2 ? [0.3, 0.02, 0.02] : [0.15, 0.02, 0.02]);
         gl.uniform3f(locs.emitColor, emitVal[0], emitVal[1], emitVal[2]);
 
         drawMeshActual(mesh, drawPos, scale, ang);
-
-        // Vẽ Outline Viền Trắng nổi bật theo thân hình Bot để phân biệt rõ rệt với mặt đất tối (Tăng độ dày và độ sáng để nhìn siêu rõ)
-        gl.cullFace(gl.FRONT);
-        gl.uniform3f(locs.emitColor, 5.0, 5.0, 5.0); // Sáng trắng dạ quang cực đại (xuyên thấu sương mù)
-        drawMeshActual(mesh, drawPos, scale * 1.08, ang);
-        gl.cullFace(gl.BACK);
 
         gl.uniform3f(locs.emitColor, 0, 0, 0); // Reset emit
 
@@ -3351,18 +3353,23 @@ function draw() {
         let mBody = M4.translation(b.pos.x, b.pos.y + b.bodyY, b.pos.z);
         mBody = M4.multiply(mBody, M4.rotationY(b.rotY || ang));
         mBody = M4.multiply(mBody, M4.rotationX(b.bodyRot));
-        gl.uniformMatrix4fv(locs.model, false, mBody);
-        gl.bindVertexArray(ASSETS.bossBody.vao);
-        gl.drawArrays(gl.TRIANGLES, 0, ASSETS.bossBody.count);
 
-        // Vẽ Outline Viền Trắng nổi bật theo thân hình Boss (Tăng độ dày và độ sáng để nhìn siêu rõ)
+        // 1. Vẽ Outline Viền Trắng xuyên vật thể (X-Ray/Wallhack) cho Boss Body trước
+        gl.disable(gl.DEPTH_TEST);
         gl.cullFace(gl.FRONT);
         gl.uniform3f(locs.emitColor, 5.0, 5.0, 5.0); // Sáng trắng dạ quang cực đại
         let mBodyOutline = M4.multiply(mBody, M4.scaling(1.05, 1.05, 1.05)); // Phóng to nhẹ khung thân
         gl.uniformMatrix4fv(locs.model, false, mBodyOutline);
+        gl.bindVertexArray(ASSETS.bossBody.vao);
         gl.drawArrays(gl.TRIANGLES, 0, ASSETS.bossBody.count);
         gl.cullFace(gl.BACK);
+        gl.enable(gl.DEPTH_TEST);
         gl.uniform3f(locs.emitColor, 0, 0, 0); // Reset emit
+
+        // 2. Vẽ Boss Body bình thường
+        gl.uniformMatrix4fv(locs.model, false, mBody);
+        gl.bindVertexArray(ASSETS.bossBody.vao);
+        gl.drawArrays(gl.TRIANGLES, 0, ASSETS.bossBody.count);
 
         // Hiệu ứng tụ năng lượng ở ngực (Chiêu 2)
         if (b.state === 'shoot_prepare' || b.state === 'shooting') {
@@ -3416,19 +3423,23 @@ function draw() {
             mArm = M4.multiply(mArm, M4.rotationX(lift)); // Cử động cánh tay từ khớp vai
             mArm = M4.multiply(mArm, M4.scaling(armScale, armScale, armScale)); // Phóng to cánh tay từ khớp
 
-            if (armColor) gl.uniform3f(locs.emitColor, armColor[0], armColor[1], armColor[2]);
-            gl.uniformMatrix4fv(locs.model, false, mArm);
-            gl.bindVertexArray(ASSETS.bossArm.vao); gl.drawArrays(gl.TRIANGLES, 0, ASSETS.bossArm.count);
-            if (armColor) gl.uniform3f(locs.emitColor, 0, 0, 0);
-
-            // Vẽ Outline Viền Trắng nổi bật theo cánh tay Boss (Tăng độ dày và độ sáng để nhìn siêu rõ)
+            // 1. Vẽ Outline Viền Trắng xuyên vật thể (X-Ray/Wallhack) cho Boss Arm trước
+            gl.disable(gl.DEPTH_TEST);
             gl.cullFace(gl.FRONT);
             gl.uniform3f(locs.emitColor, 5.0, 5.0, 5.0); // Sáng trắng dạ quang cực đại
             let mArmOutline = M4.multiply(mArm, M4.scaling(1.08, 1.08, 1.08)); // Phóng to nhẹ khung cánh tay
             gl.uniformMatrix4fv(locs.model, false, mArmOutline);
+            gl.bindVertexArray(ASSETS.bossArm.vao);
             gl.drawArrays(gl.TRIANGLES, 0, ASSETS.bossArm.count);
             gl.cullFace(gl.BACK);
+            gl.enable(gl.DEPTH_TEST);
             gl.uniform3f(locs.emitColor, 0, 0, 0); // Reset emit
+
+            // 2. Vẽ Boss Arm bình thường
+            if (armColor) gl.uniform3f(locs.emitColor, armColor[0], armColor[1], armColor[2]);
+            gl.uniformMatrix4fv(locs.model, false, mArm);
+            gl.bindVertexArray(ASSETS.bossArm.vao); gl.drawArrays(gl.TRIANGLES, 0, ASSETS.bossArm.count);
+            if (armColor) gl.uniform3f(locs.emitColor, 0, 0, 0);
         };
         drawArm(-1); drawArm(1);
 
