@@ -651,33 +651,16 @@ function genCrateMesh(color = [0.7, 0.4, 0.2]) {
 function genPistolMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const obsidian = [0.08, 0.08, 0.09];
-    const metal = [0.3, 0.3, 0.35];
+    const obsidian = [0.05, 0.05, 0.06];
     const neonCyan = [0.0, 0.95, 1.0];
-    const plasmaCore = [0.8, 0.0, 1.0]; 
+    const plasmaCore = [0.8, 0.0, 1.0]; // Amethyst Plasma
 
-    // Thân súng (Upper Receiver / Slide)
-    push(getCube(obsidian, 0.16, 0.25, 0.85, 0, 0, 0));
-    push(getCube(metal, 0.18, 0.2, 0.4, 0, 0.05, -0.2)); // Rãnh sắt phía sau
-    
-    // Nòng súng & Giảm thanh (Barrel & Silencer)
-    push(getCube(metal, 0.1, 0.1, 1.2, 0, -0.05, 0.3));
-    push(getCube(obsidian, 0.14, 0.14, 0.4, 0, -0.05, 0.6)); // Silencer tip
-
-    // Đèn Laser dưới nòng (Underbarrel Laser)
-    push(getCube(obsidian, 0.12, 0.1, 0.4, 0, -0.2, 0.2));
-    push(getCube(neonCyan, 0.04, 0.04, 0.42, 0, -0.2, 0.21)); // Laser lens glow
-
-    // Báng súng & Vành cò (Grip & Trigger Guard)
-    push(getCube(obsidian, 0.14, 0.5, 0.25, 0, -0.35, -0.25)); 
-    push(getCube(plasmaCore, 0.15, 0.1, 0.26, 0, -0.5, -0.25)); // Base plate phát sáng
-    push(getCube(metal, 0.04, 0.2, 0.04, 0, -0.25, -0.1)); // Cò súng (Trigger)
-    push(getCube(obsidian, 0.04, 0.04, 0.15, 0, -0.3, -0.05)); // Vành cò dưới
-
-    // Ống ngắm Holo nhỏ (Mini Holo Sight)
-    push(getCube(metal, 0.1, 0.12, 0.15, 0, 0.15, -0.1));
-    push(getCube([0, 1, 1], 0.08, 0.1, 0.02, 0, 0.18, -0.05)); // Kính ngắm
-
+    push(getCube(obsidian, 0.14, 0.22, 0.75, 0, 0, 0)); // Sleek Slide
+    push(getCube(plasmaCore, 0.08, 0.08, 0.5, 0, 0, 0.1)); // Glowing Plasma Core exposed on slide
+    push(getCube(neonCyan, 0.15, 0.04, 0.78, 0, 0.11, 0)); // Glowing Top Laser Rail
+    push(getCube(obsidian, 0.11, 0.42, 0.22, 0, -0.25, -0.18)); // Grip
+    push(getCube(neonCyan, 0.12, 0.06, 0.24, 0, -0.46, -0.18)); // Battery Pack base
+    push(getCube([0, 0.95, 1.0], 0.03, 0.06, 0.03, 0, 0.15, 0.35)); // Holographic Sight
     return createMesh(V, N, C);
 }
 
@@ -685,24 +668,20 @@ function genPistolMesh() {
 function genSMGMesh() {
     let V = [], N = [], C = [];
     const push = (m) => { V.push(...m.v); N.push(...m.n); C.push(...m.c); };
-    const carbon = [0.05, 0.05, 0.06];
-    const neonAmethyst = [0.7, 0.2, 1.0];
-    const steel = [0.25, 0.25, 0.28];
-    const neonCyan = [0.0, 1.0, 0.8];
+    const carbon = [0.03, 0.03, 0.04];
+    const neonAmethyst = [0.6, 0.0, 1.0];
+    const steel = [0.15, 0.15, 0.16];
+    const neonCyan = [0.0, 0.95, 1.0];
 
-    // Thân súng bự kiểu P90 (Bulky Cyber-SMG Body)
-    push(getCube(carbon, 0.2, 0.35, 1.0, 0, 0, 0));
-    push(getCube(steel, 0.22, 0.15, 0.7, 0, 0.1, 0.1));
-    push(getCube(carbon, 0.16, 0.25, 0.25, 0, -0.25, 0.2));
-    push(getCube(neonAmethyst, 0.18, 0.2, 0.2, 0, -0.25, 0.2)); // Băng đạn
-    push(getCube(carbon, 0.12, 0.4, 0.25, 0, -0.3, -0.3)); // Grip
-    push(getCube(carbon, 0.12, 0.35, 0.2, 0, -0.3, -0.7)); // Stock
-    push(getCube(steel, 0.05, 0.05, 0.6, -0.05, 0.05, 0.7)); // Barrel L
-    push(getCube(steel, 0.05, 0.05, 0.6, 0.05, 0.05, 0.7)); // Barrel R
-    push(getCube(neonCyan, 0.06, 0.02, 0.5, 0, 0.05, 0.8)); // Barrel glow
-    push(getCube(steel, 0.08, 0.12, 0.15, 0, 0.25, -0.1)); // Sight
-    push(getCube(neonAmethyst, 0.06, 0.08, 0.02, 0, 0.28, -0.05));
-
+    push(getCube(carbon, 0.16, 0.28, 1.15, 0, 0, 0)); // Main Receiver
+    push(getCube(neonAmethyst, 0.18, 0.06, 0.9, 0, 0.14, 0.05)); // Energy Rail (Top)
+    push(getCube(neonCyan, 0.18, 0.06, 0.4, 0, -0.05, 0.3)); // Heat Sink Vent (Side Glow)
+    push(getCube(carbon, 0.1, 0.5, 0.15, 0, -0.32, 0.25)); // Slanted Mag
+    push(getCube(neonAmethyst, 0.11, 0.05, 0.16, 0, -0.58, 0.25)); // Mag base glow
+    push(getCube(carbon, 0.12, 0.38, 0.22, 0, -0.25, -0.38)); // Grip
+    push(getCube(steel, 0.06, 0.06, 0.6, 0, 0.04, 0.8)); // Dual Pulse Barrels
+    push(getCube(neonCyan, 0.07, 0.02, 0.5, 0, 0.04, 0.85)); // Barrel underglow
+    push(getCube(carbon, 0.14, 0.24, 0.5, 0, -0.05, -0.75)); // Ergonomic Minimalist Stock
     return createMesh(V, N, C);
 }
 
