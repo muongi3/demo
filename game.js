@@ -1992,37 +1992,53 @@ function update(dt) {
     const isMoving = (move.x !== 0 || move.z !== 0);
 
     // === HỆ THỐNG THỂ LỰC (STAMINA) ===
-    if (p.stamina === undefined) { p.stamina = 100; p.maxStamina = 100; p.staminaRegenDelay = 0; }
+    if (p.stamina === undefined) { p.stamina = 100; p.maxStamina = 100; p.staminaRegenDelay = 0; p.exhausted = false; }
     
-    // Nếu bấm chạy, đang di chuyển và không cầm súng ngắm (weaponIdx 2) và đã tỉnh dậy
-    if (STATE.keys['ShiftLeft'] && isMoving && p.weaponIdx !== 2 && (p.standUpTimer || 0) <= 0) {
+    // Nếu bấm chạy, đang di chuyển và không cầm súng ngắm (weaponIdx 2) và đã tỉnh dậy và KHÔNG bị kiệt sức
+    if (STATE.keys['ShiftLeft'] && isMoving && p.weaponIdx !== 2 && (p.standUpTimer || 0) <= 0 && !p.exhausted) {
         if (p.stamina > 0) {
             p.stamina -= (100 / 6.0) * dt; // 6 giây để cạn kiệt
             p.staminaRegenDelay = 0.5; // Chờ 0.5s sau khi dừng chạy mới hồi
             if (p.stamina <= 0) {
                 p.stamina = 0;
+                p.exhausted = true; // Rơi vào trạng thái kiệt sức
                 STATE.keys['ShiftLeft'] = false; // Buộc dừng chạy
                 const btnSprint = document.getElementById('btn-sprint');
                 if (btnSprint) btnSprint.classList.remove('pressed');
             }
-        } else {
+        }
+    } else {
+        // Hủy trạng thái chạy nếu đang kiệt sức mà người chơi vẫn cố bấm phím
+        if (p.exhausted) {
             STATE.keys['ShiftLeft'] = false;
             const btnSprint = document.getElementById('btn-sprint');
             if (btnSprint) btnSprint.classList.remove('pressed');
         }
-    } else {
+
         // Hồi phục thể lực
         if (p.staminaRegenDelay > 0) {
             p.staminaRegenDelay -= dt;
         } else if (p.stamina < p.maxStamina) {
             p.stamina += (100 / 3.0) * dt; // 3 giây để hồi đầy
-            if (p.stamina > p.maxStamina) p.stamina = p.maxStamina;
+            if (p.stamina >= p.maxStamina) {
+                p.stamina = p.maxStamina;
+                p.exhausted = false; // Hồi đầy bình thì hết kiệt sức
+            }
         }
     }
     
     // Cập nhật giao diện UI thanh thể lực
     const staminaFill = document.getElementById('stamina-fill');
-    if (staminaFill) staminaFill.style.width = (p.stamina / p.maxStamina * 100) + '%';
+    if (staminaFill) {
+        staminaFill.style.width = (p.stamina / p.maxStamina * 100) + '%';
+        if (p.exhausted) {
+            staminaFill.style.background = 'linear-gradient(90deg, #ff6666, #ff0000)'; // Đỏ nhạt
+            staminaFill.style.boxShadow = '0 -2px 8px rgba(255, 0, 0, 0.6)';
+        } else {
+            staminaFill.style.background = 'linear-gradient(90deg, #00f3ff, #0099ff)'; // Xanh lơ nhạt
+            staminaFill.style.boxShadow = '0 -2px 8px rgba(0, 243, 255, 0.6)';
+        }
+    }
 
     if (STATE.keys['ShiftLeft'] && p.stamina > 0) speedMult *= window.GAME_CONFIG.player.sprintMultiplier;
     
@@ -2030,7 +2046,7 @@ function update(dt) {
     const moveSpeed = (p.weaponIdx === 2 ? window.GAME_CONFIG.player.sniperSpeed : window.GAME_CONFIG.player.walkSpeed) * speedMult;
 
     // === STRAFE TILT: Camera nghiêng nhẹ khi di chuyển ngang (AAA FPS feel) ===
-    const targetTilt = (STATE.keys['KeyA'] ? 1 : 0) - (STATE.keys['KeyD'] ? 1 : 0);
+    const targetTilt = (STATE.keys['KeyD'] ? 1 : 0) - (STATE.keys['KeyA'] ? 1 : 0);
     STATE.strafeTilt = (STATE.strafeTilt || 0) + (targetTilt * 0.035 - (STATE.strafeTilt || 0)) * 6.0 * dt;
 
     // === LANDING IMPACT: Camera dập + bụi khi rơi từ bật nhảy/nhảy cao (không tính lúc tỉnh dậy) ===
@@ -6111,7 +6127,7 @@ function updatePingDisplay(dt) {
         let currentScale = 1.0;
         el.addEventListener('wheel', e => {
             e.preventDefault();
-            currentScale = Math.max(0.4, Math.min(2.5, currentScale - e.deltaY * 0.001));
+            currentScale = Math.max(0.5, Math.min(2.0, currentScale - e.deltaY * 0.001));
             el.style.transform = 'scale(' + currentScale.toFixed(2) + ')';
         }, { passive: false });
     };
