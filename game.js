@@ -1328,13 +1328,13 @@ function continueStartGame() {
     STATE.player.pos = V3.create(0, _spawnH, 0);
     STATE.player.vel = V3.create(0, 0, 0);
     STATE.player.alive = true; STATE.player.kills = 0; STATE.player.streak = 0; STATE.player.damageFlash = 0;
-    STATE.player.standUpTimer = 5.0; // 5 giây animation tỉnh dậy realistic
+    STATE.player.standUpTimer = 8.0; // 8 giây animation tỉnh dậy realistic & tự nhiên
     STATE.player.isInvincible = true; // Bất tử trong khi đang nằm/đứng dậy
-    STATE.player.weaponSwitchTime = 0; // Reset equip animation
-    STATE.camera.rot.x = -1.2; // Camera nhìn lên trời — đang nằm ngửa trên đất
+    STATE.player.weaponSwitchTime = 0;
+    STATE.camera.rot.x = -1.3; // Camera nhìn lên trời — đang nằm ngửa bất tỉnh
     STATE.camera.rot.y = 0;
 
-    // === EYE BLINK CINEMATIC (5-second wake-up) ===
+    // === EYE BLINK CINEMATIC (8-second wake-up) ===
     const _blinkOverlay = document.getElementById('eye-blink-overlay');
     const _doEyeBlink = (openClass = 'opening', closeDur = 110, openDelay = 130) => {
         if (!_blinkOverlay) return;
@@ -1349,7 +1349,7 @@ function continueStartGame() {
     };
 
     if (_blinkOverlay) {
-        // 0.0s–0.5s: Mắt đóng hoàn toàn (đang nằm bất tỉnh)
+        // 0.0s–1.0s: Mắt đóng hoàn toàn (đang nằm bất tỉnh, chỉ có tiếng thở nhẹ)
         _blinkOverlay.style.display = 'block';
         _blinkOverlay.className = '';
         const eTop = document.getElementById('eyelid-top');
@@ -1357,19 +1357,21 @@ function continueStartGame() {
         if (eTop) eTop.style.cssText = 'transform:scaleY(1);transition:none';
         if (eBot) eBot.style.cssText = 'transform:scaleY(1);transition:none';
 
-        // 0.5s–0.8s: Mở mắt rất chậm (tỉnh dậy từ hôn mê)
+        // 1.0s–1.5s: Mở mắt rất chậm (tỉnh dậy từ hôn mê, mọi thứ mờ nhạt)
         setTimeout(() => {
             if (eTop) eTop.style.cssText = '';
             if (eBot) eBot.style.cssText = '';
             _blinkOverlay.classList.add('waking');
-        }, 500);
+        }, 1000);
 
-        // 0.95s: Chớp mắt lần 1 (phản xạ tự nhiên)
-        setTimeout(() => _doEyeBlink('opening', 100, 120), 950);
-        // 1.2s: Chớp mắt lần 2 (đang điều chỉnh thị lực)
-        setTimeout(() => _doEyeBlink('opening', 100, 140), 1200);
+        // 1.8s: Chớp mắt lần 1 — phản xạ đầu tiên, cố gắng lấy nét
+        setTimeout(() => _doEyeBlink('opening', 100, 150), 1800);
+        // 2.1s: Chớp mắt lần 2 — mắt cay vì ánh sáng
+        setTimeout(() => _doEyeBlink('opening', 90, 130), 2100);
+        // 2.5s: Chớp mắt lần 3 — đã quen hơn, chớp ngắn
+        setTimeout(() => _doEyeBlink('opening', 80, 100), 2500);
 
-        // 4.8s: Ẩn overlay hoàn toàn — animation xong
+        // 7.0s: Ẩn overlay hoàn toàn — đã đứng vững
         setTimeout(() => {
             if (_blinkOverlay) {
                 _blinkOverlay.classList.remove('opening', 'waking', 'blinking');
@@ -1377,13 +1379,13 @@ function continueStartGame() {
                 if (eTop) eTop.style.cssText = '';
                 if (eBot) eBot.style.cssText = '';
             }
-        }, 4800);
+        }, 7000);
     }
     // === END EYE BLINK CINEMATIC ===
 
     // Hiện thông báo theo timeline
-    setTimeout(() => showGlobalAnnouncement('😵 ĐANG TỈNH DẬY...', 2000), 800);
-    setTimeout(() => showGlobalAnnouncement('⚔️ BẮT ĐẦU SINH TỒN!', 2500), 5000);
+    setTimeout(() => showGlobalAnnouncement('😵 ĐANG TỈNH DẬY...', 2500), 1200);
+    setTimeout(() => showGlobalAnnouncement('⚔️ BẮT ĐẦU SINH TỒN!', 2500), 8000);
 
     STATE.bots = []; STATE.loot = []; STATE.barrels = []; STATE.pads = []; STATE.projectiles = [];
 
@@ -1669,81 +1671,99 @@ function update(dt) {
     // Phase 3: Hit-pause system
     if (STATE.hitPause > 0) { STATE.hitPause -= dt; return; }
 
-    // === WAKE-UP ANIMATION 5s: Realistic human motion ===
+    // === WAKE-UP ANIMATION 8s: Realistic, natural human motion ===
     const p = STATE.player;
     if ((p.standUpTimer || 0) > 0) {
         p.standUpTimer -= dt;
-        const TOTAL = 5.0;
+        const TOTAL = 8.0;
         const elapsed = TOTAL - Math.max(0, p.standUpTimer);
-        const progress = elapsed / TOTAL; // 0→1
 
-        // Smooth easing helper
+        // Smooth easing helpers
         const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        const easeOut = (t) => 1 - Math.pow(1 - t, 3);
 
-        // === CAMERA PITCH (rot.x) — controlled by timeline ===
-        // 0.0–0.5s: Lying on ground, looking up at sky (rot.x = -1.2, set in init)
-        // 0.5–1.3s: Eyes open, still lying, slight pitch adjustment
-        // 1.3–2.2s: Push up to sitting — pitch goes from -1.2 to -0.15
-        // 2.2–3.2s: Sitting, looking around — pitch stays ~-0.15
-        // 3.2–4.8s: Standing up — pitch goes from -0.15 to 0
-        // 4.8–5.0s: Settle into idle — pitch = 0
-        if (elapsed < 0.5) {
-            // Lying still — don't touch pitch
-        } else if (elapsed < 1.3) {
-            // Still mostly lying, very slight pitch change (adjusting focus)
-            const t = easeInOut((elapsed - 0.5) / 0.8);
-            STATE.camera.rot.x = -1.2 + t * 0.15; // -1.2 → -1.05
-        } else if (elapsed < 2.2) {
-            // Pushing up to sitting position
-            const t = easeInOut((elapsed - 1.3) / 0.9);
-            STATE.camera.rot.x = -1.05 + t * 0.9; // -1.05 → -0.15
-        } else if (elapsed < 3.2) {
-            // Sitting — looking around, pitch stays
+        // === CAMERA PITCH (rot.x) — natural head movement ===
+        // 0.0–1.0s: Lying still, unconscious (rot.x = -1.3)
+        // 1.0–2.0s: Eyes open, still lying, tiny head micro-movements
+        // 2.0–3.0s: Very slowly place hand on ground, head starts tilting forward
+        // 3.0–4.0s: Push upper body up to supported sitting (slow, groggy)
+        // 4.0–5.5s: Sitting position, looking around (head turns left then right)
+        // 5.5–7.2s: Standing up gradually (longest phase, most effort)
+        // 7.2–8.0s: Spine straightens, settle into idle pose
+        if (elapsed < 1.0) {
+            // Unconscious — subtle breathing micro-movement
+            const breathe = Math.sin(elapsed * 4.0) * 0.015;
+            STATE.camera.rot.x = -1.3 + breathe;
+        } else if (elapsed < 2.0) {
+            // Eyes opening, slight confused head movement
+            const t = easeOut((elapsed - 1.0) / 1.0);
+            const breathe = Math.sin(elapsed * 3.5) * 0.01;
+            STATE.camera.rot.x = -1.3 + t * 0.1 + breathe; // -1.3 → -1.2
+        } else if (elapsed < 3.0) {
+            // Placing hand on ground, head starts to tilt
+            const t = easeInOut((elapsed - 2.0) / 1.0);
+            STATE.camera.rot.x = -1.2 + t * 0.3; // -1.2 → -0.9
+        } else if (elapsed < 4.0) {
+            // Pushing up to sitting — main effort
+            const t = easeInOut((elapsed - 3.0) / 1.0);
+            STATE.camera.rot.x = -0.9 + t * 0.75; // -0.9 → -0.15
+        } else if (elapsed < 5.5) {
+            // Sitting, looking around
             STATE.camera.rot.x = -0.15;
-        } else if (elapsed < 4.8) {
-            // Standing up — pitch goes to 0
-            const t = easeInOut((elapsed - 3.2) / 1.6);
+        } else if (elapsed < 7.2) {
+            // Standing up — gradual, realistic
+            const t = easeInOut((elapsed - 5.5) / 1.7);
             STATE.camera.rot.x = -0.15 + t * 0.15; // -0.15 → 0
         } else {
-            STATE.camera.rot.x = 0;
+            // Final settle — tiny overshoot correction
+            const t = easeOut((elapsed - 7.2) / 0.8);
+            STATE.camera.rot.x = 0.02 * (1 - t); // tiny overshoot → 0
         }
 
-        // === YAW OFFSET: Look left → pause → look right (2.2s–3.2s) ===
+        // === YAW OFFSET: Look left → pause → look right (4.0s–5.5s) ===
         let _yawOff = 0;
-        if (elapsed >= 2.2 && elapsed < 2.6) {
-            // Turn head left smoothly
-            const t = easeInOut((elapsed - 2.2) / 0.4);
-            _yawOff = -0.35 * t;
-        } else if (elapsed >= 2.6 && elapsed < 2.7) {
-            // Pause at left
-            _yawOff = -0.35;
-        } else if (elapsed >= 2.7 && elapsed < 3.1) {
-            // Turn from left to right
-            const t = easeInOut((elapsed - 2.7) / 0.4);
-            _yawOff = -0.35 + t * 0.65; // -0.35 → +0.30
-        } else if (elapsed >= 3.1 && elapsed < 3.2) {
-            // Brief pause at right, then return
-            const t = easeInOut((elapsed - 3.1) / 0.1);
-            _yawOff = 0.30 * (1 - t); // 0.30 → 0
+        if (elapsed >= 4.0 && elapsed < 4.5) {
+            // Turn head left slowly
+            const t = easeInOut((elapsed - 4.0) / 0.5);
+            _yawOff = -0.38 * t;
+        } else if (elapsed >= 4.5 && elapsed < 4.7) {
+            // Pause at left — scanning environment
+            _yawOff = -0.38;
+        } else if (elapsed >= 4.7 && elapsed < 5.2) {
+            // Turn from left to right — smooth sweep
+            const t = easeInOut((elapsed - 4.7) / 0.5);
+            _yawOff = -0.38 + t * 0.70; // -0.38 → +0.32
+        } else if (elapsed >= 5.2 && elapsed < 5.35) {
+            // Pause at right — brief check
+            _yawOff = 0.32;
+        } else if (elapsed >= 5.35 && elapsed < 5.5) {
+            // Return to center
+            const t = easeInOut((elapsed - 5.35) / 0.15);
+            _yawOff = 0.32 * (1 - t); // 0.32 → 0
         }
         p.standUpYawOffset = _yawOff;
 
-        // === VIGNETTE: Dark edges during wake-up, fading as we stand ===
+        // === VIGNETTE: Heavy while lying, fading as we stand ===
         const vignetteEl = document.getElementById('screen-vignette');
-        if (elapsed < 1.3) {
-            // Heavy vignette while lying/waking
-            if (vignetteEl) vignetteEl.style.opacity = 0.6;
-        } else if (elapsed < 4.8) {
-            // Gradually reduce vignette
-            const t = (elapsed - 1.3) / 3.5;
-            if (vignetteEl) vignetteEl.style.opacity = 0.6 - t * 0.6;
+        if (elapsed < 2.0) {
+            // Heavy dark vignette — just woke up, vision blurry
+            if (vignetteEl) vignetteEl.style.opacity = 0.7;
+        } else if (elapsed < 7.2) {
+            // Gradually clear up vision
+            const t = (elapsed - 2.0) / 5.2;
+            if (vignetteEl) vignetteEl.style.opacity = 0.7 - t * 0.7;
         } else {
             if (vignetteEl) vignetteEl.style.opacity = '';
         }
 
-        // === SUBTLE CAMERA SHAKE: Only during push-up effort (1.3–2.2s) ===
-        if (elapsed >= 1.3 && elapsed < 2.2) {
-            const intensity = Math.sin((elapsed - 1.3) / 0.9 * Math.PI) * 0.04;
+        // === CAMERA SHAKE: Effort during push-up and standing ===
+        if (elapsed >= 3.0 && elapsed < 4.0) {
+            // Push-up effort shake
+            const intensity = Math.sin((elapsed - 3.0) / 1.0 * Math.PI) * 0.035;
+            STATE.camera.shake = intensity;
+        } else if (elapsed >= 5.5 && elapsed < 6.5) {
+            // Standing effort shake (lighter)
+            const intensity = Math.sin((elapsed - 5.5) / 1.0 * Math.PI) * 0.02;
             STATE.camera.shake = intensity;
         } else {
             STATE.camera.shake = 0;
@@ -3782,25 +3802,29 @@ function draw() {
     let camHeightOffset = 1.1;
     let standUpPitchOffset = 0;
     if ((p.standUpTimer || 0) > 0) {
-        const TOTAL = 5.0;
+        const TOTAL = 8.0;
         const elapsed = TOTAL - p.standUpTimer;
         const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-        // Camera height timeline:
-        // 0.0–1.3s: Lying on ground (height = 0.15, near ground level)
-        // 1.3–2.2s: Push up to sitting (0.15 → 0.55)
-        // 2.2–3.2s: Sitting position (height = 0.55)
-        // 3.2–4.8s: Standing up (0.55 → 1.1)
-        // 4.8–5.0s: Settle (height = 1.1)
-        if (elapsed < 1.3) {
+        // Camera height timeline for 8s:
+        // 0.0–2.0s: Lying on ground (height = 0.15)
+        // 2.0–3.0s: Placing hand and slight head raise (0.15 → 0.25)
+        // 3.0–4.0s: Pushing up to sitting (0.25 → 0.55)
+        // 4.0–5.5s: Sitting position (height = 0.55)
+        // 5.5–7.2s: Standing up gradually (0.55 → 1.1)
+        // 7.2–8.0s: Settle (height = 1.1)
+        if (elapsed < 2.0) {
             camHeightOffset = 0.15;
-        } else if (elapsed < 2.2) {
-            const t = easeInOut((elapsed - 1.3) / 0.9);
-            camHeightOffset = 0.15 + t * 0.4; // 0.15 → 0.55
-        } else if (elapsed < 3.2) {
+        } else if (elapsed < 3.0) {
+            const t = easeInOut((elapsed - 2.0) / 1.0);
+            camHeightOffset = 0.15 + t * 0.10; // 0.15 → 0.25
+        } else if (elapsed < 4.0) {
+            const t = easeInOut((elapsed - 3.0) / 1.0);
+            camHeightOffset = 0.25 + t * 0.30; // 0.25 → 0.55
+        } else if (elapsed < 5.5) {
             camHeightOffset = 0.55;
-        } else if (elapsed < 4.8) {
-            const t = easeInOut((elapsed - 3.2) / 1.6);
+        } else if (elapsed < 7.2) {
+            const t = easeInOut((elapsed - 5.5) / 1.7);
             camHeightOffset = 0.55 + t * 0.55; // 0.55 → 1.1
         } else {
             camHeightOffset = 1.1;
