@@ -1328,12 +1328,62 @@ function continueStartGame() {
     STATE.player.pos = V3.create(0, _spawnH, 0);
     STATE.player.vel = V3.create(0, 0, 0);
     STATE.player.alive = true; STATE.player.kills = 0; STATE.player.streak = 0; STATE.player.damageFlash = 0;
-    STATE.player.standUpTimer = 0; // Đã xóa animation ngồi dậy
-    STATE.player.isInvincible = false;
+    STATE.player.standUpTimer = 5.0; // 5 giây animation tỉnh dậy realistic
+    STATE.player.isInvincible = true; // Bất tử trong khi đang nằm/đứng dậy
     STATE.player.weaponSwitchTime = 0; // Reset equip animation
-    STATE.camera.rot.x = 0; // Camera nhìn thẳng
+    STATE.camera.rot.x = -1.2; // Camera nhìn lên trời — đang nằm ngửa trên đất
+    STATE.camera.rot.y = 0;
 
-    showGlobalAnnouncement('⚔️ BẮT ĐẦU SINH TỒN!', 2500);
+    // === EYE BLINK CINEMATIC (5-second wake-up) ===
+    const _blinkOverlay = document.getElementById('eye-blink-overlay');
+    const _doEyeBlink = (openClass = 'opening', closeDur = 110, openDelay = 130) => {
+        if (!_blinkOverlay) return;
+        _blinkOverlay.classList.remove('opening', 'waking', 'blinking');
+        void _blinkOverlay.offsetWidth;
+        _blinkOverlay.classList.add('blinking');
+        setTimeout(() => {
+            _blinkOverlay.classList.remove('blinking');
+            void _blinkOverlay.offsetWidth;
+            _blinkOverlay.classList.add(openClass);
+        }, openDelay);
+    };
+
+    if (_blinkOverlay) {
+        // 0.0s–0.5s: Mắt đóng hoàn toàn (đang nằm bất tỉnh)
+        _blinkOverlay.style.display = 'block';
+        _blinkOverlay.className = '';
+        const eTop = document.getElementById('eyelid-top');
+        const eBot = document.getElementById('eyelid-bottom');
+        if (eTop) eTop.style.cssText = 'transform:scaleY(1);transition:none';
+        if (eBot) eBot.style.cssText = 'transform:scaleY(1);transition:none';
+
+        // 0.5s–0.8s: Mở mắt rất chậm (tỉnh dậy từ hôn mê)
+        setTimeout(() => {
+            if (eTop) eTop.style.cssText = '';
+            if (eBot) eBot.style.cssText = '';
+            _blinkOverlay.classList.add('waking');
+        }, 500);
+
+        // 0.95s: Chớp mắt lần 1 (phản xạ tự nhiên)
+        setTimeout(() => _doEyeBlink('opening', 100, 120), 950);
+        // 1.2s: Chớp mắt lần 2 (đang điều chỉnh thị lực)
+        setTimeout(() => _doEyeBlink('opening', 100, 140), 1200);
+
+        // 4.8s: Ẩn overlay hoàn toàn — animation xong
+        setTimeout(() => {
+            if (_blinkOverlay) {
+                _blinkOverlay.classList.remove('opening', 'waking', 'blinking');
+                _blinkOverlay.style.display = 'none';
+                if (eTop) eTop.style.cssText = '';
+                if (eBot) eBot.style.cssText = '';
+            }
+        }, 4800);
+    }
+    // === END EYE BLINK CINEMATIC ===
+
+    // Hiện thông báo theo timeline
+    setTimeout(() => showGlobalAnnouncement('😵 ĐANG TỈNH DẬY...', 2000), 800);
+    setTimeout(() => showGlobalAnnouncement('⚔️ BẮT ĐẦU SINH TỒN!', 2500), 5000);
 
     STATE.bots = []; STATE.loot = []; STATE.barrels = []; STATE.pads = []; STATE.projectiles = [];
 
@@ -1619,62 +1669,102 @@ function update(dt) {
     // Phase 3: Hit-pause system
     if (STATE.hitPause > 0) { STATE.hitPause -= dt; return; }
 
-    // === STAND-UP ANIMATION: Đếm ngược khi người chơi đang ngồi dậy ===
+    // === WAKE-UP ANIMATION 5s: Realistic human motion ===
     const p = STATE.player;
     if ((p.standUpTimer || 0) > 0) {
         p.standUpTimer -= dt;
+        const TOTAL = 5.0;
+        const elapsed = TOTAL - Math.max(0, p.standUpTimer);
+        const progress = elapsed / TOTAL; // 0→1
 
-        // Animation mũi ngón: Từ 3s -> 0s, tính progress 0->1
-        const standup_progress = 1.0 - Math.max(0, p.standUpTimer) / 3.0;
-        const elapsed = 3.0 - Math.max(0, p.standUpTimer);
+        // Smooth easing helper
+        const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-        // === YAW: Ngó trái → phải → về giữa (pha 0.4s – 1.8s) ===
-        // elapsed 0.4→0.9s: xoay trái (yaw -= 0.32 rad max)
-        // elapsed 0.9→1.4s: xoay sang phải (yaw += 0.32 rad max)
-        // elapsed 1.4→1.9s: về giữa
+        // === CAMERA PITCH (rot.x) — controlled by timeline ===
+        // 0.0–0.5s: Lying on ground, looking up at sky (rot.x = -1.2, set in init)
+        // 0.5–1.3s: Eyes open, still lying, slight pitch adjustment
+        // 1.3–2.2s: Push up to sitting — pitch goes from -1.2 to -0.15
+        // 2.2–3.2s: Sitting, looking around — pitch stays ~-0.15
+        // 3.2–4.8s: Standing up — pitch goes from -0.15 to 0
+        // 4.8–5.0s: Settle into idle — pitch = 0
+        if (elapsed < 0.5) {
+            // Lying still — don't touch pitch
+        } else if (elapsed < 1.3) {
+            // Still mostly lying, very slight pitch change (adjusting focus)
+            const t = easeInOut((elapsed - 0.5) / 0.8);
+            STATE.camera.rot.x = -1.2 + t * 0.15; // -1.2 → -1.05
+        } else if (elapsed < 2.2) {
+            // Pushing up to sitting position
+            const t = easeInOut((elapsed - 1.3) / 0.9);
+            STATE.camera.rot.x = -1.05 + t * 0.9; // -1.05 → -0.15
+        } else if (elapsed < 3.2) {
+            // Sitting — looking around, pitch stays
+            STATE.camera.rot.x = -0.15;
+        } else if (elapsed < 4.8) {
+            // Standing up — pitch goes to 0
+            const t = easeInOut((elapsed - 3.2) / 1.6);
+            STATE.camera.rot.x = -0.15 + t * 0.15; // -0.15 → 0
+        } else {
+            STATE.camera.rot.x = 0;
+        }
+
+        // === YAW OFFSET: Look left → pause → look right (2.2s–3.2s) ===
         let _yawOff = 0;
-        if (elapsed >= 0.4 && elapsed < 0.9) {
-            // Ngó trái: sin từ 0 → peak → 0 trong nửa chu kỳ
-            const t = (elapsed - 0.4) / 0.5; // 0→1
-            _yawOff = -0.32 * Math.sin(t * Math.PI);
-        } else if (elapsed >= 0.9 && elapsed < 1.4) {
-            // Ngó phải
-            const t = (elapsed - 0.9) / 0.5; // 0→1
-            _yawOff = 0.28 * Math.sin(t * Math.PI);
-        } else if (elapsed >= 1.4 && elapsed < 1.9) {
-            // Hồi về trung tâm mượt
-            const t = (elapsed - 1.4) / 0.5; // 0→1
-            _yawOff = 0.0; // Về 0 qua lerp bên dưới
+        if (elapsed >= 2.2 && elapsed < 2.6) {
+            // Turn head left smoothly
+            const t = easeInOut((elapsed - 2.2) / 0.4);
+            _yawOff = -0.35 * t;
+        } else if (elapsed >= 2.6 && elapsed < 2.7) {
+            // Pause at left
+            _yawOff = -0.35;
+        } else if (elapsed >= 2.7 && elapsed < 3.1) {
+            // Turn from left to right
+            const t = easeInOut((elapsed - 2.7) / 0.4);
+            _yawOff = -0.35 + t * 0.65; // -0.35 → +0.30
+        } else if (elapsed >= 3.1 && elapsed < 3.2) {
+            // Brief pause at right, then return
+            const t = easeInOut((elapsed - 3.1) / 0.1);
+            _yawOff = 0.30 * (1 - t); // 0.30 → 0
         }
         p.standUpYawOffset = _yawOff;
 
-        // Pulse vignette mạnh lúc đang đứng dậy
-        const vignette_pulse = Math.sin(standup_progress * Math.PI) * 0.3;
+        // === VIGNETTE: Dark edges during wake-up, fading as we stand ===
         const vignetteEl = document.getElementById('screen-vignette');
-        if (vignetteEl) vignetteEl.style.opacity = 0.4 + vignette_pulse;
-
-        // Shake camera nhẹ lúc bắt đầu đứng dậy
-        if (standup_progress < 0.4) {
-            STATE.camera.shake = 0.08 * (1.0 - standup_progress / 0.4);
+        if (elapsed < 1.3) {
+            // Heavy vignette while lying/waking
+            if (vignetteEl) vignetteEl.style.opacity = 0.6;
+        } else if (elapsed < 4.8) {
+            // Gradually reduce vignette
+            const t = (elapsed - 1.3) / 3.5;
+            if (vignetteEl) vignetteEl.style.opacity = 0.6 - t * 0.6;
+        } else {
+            if (vignetteEl) vignetteEl.style.opacity = '';
         }
 
+        // === SUBTLE CAMERA SHAKE: Only during push-up effort (1.3–2.2s) ===
+        if (elapsed >= 1.3 && elapsed < 2.2) {
+            const intensity = Math.sin((elapsed - 1.3) / 0.9 * Math.PI) * 0.04;
+            STATE.camera.shake = intensity;
+        } else {
+            STATE.camera.shake = 0;
+        }
+
+        // === ANIMATION COMPLETE ===
         if (p.standUpTimer <= 0) {
             p.standUpTimer = 0;
             p.standUpYawOffset = 0;
-            p.isInvincible = false; // Hết bất tử sau khi đứng dậy xong
-            p.weaponSwitchTime = 0;  // Trigger equip slide animation
-            if (vignetteEl) vignetteEl.style.opacity = '';
+            p.isInvincible = false;
+            p.weaponSwitchTime = 0; // Trigger equip slide
+            STATE.camera.rot.x = 0;
             STATE.camera.shake = 0;
-            // Đảm bảo blink overlay bị ẩn khi animation kết thúc (safety fallback)
+            if (vignetteEl) vignetteEl.style.opacity = '';
             const _bo = document.getElementById('eye-blink-overlay');
             if (_bo) _bo.style.display = 'none';
         }
-        // Khóa hoàn toàn di chuyển & bắn trong lúc đứng dậy
+        // Lock all movement & shooting during wake-up
         return;
     }
-    p.standUpYawOffset = 0; // Đảm bảo reset khi không trong animation
-
-    // === EYE BLINK ANIMATION REMOVED BY USER REQUEST ===
+    p.standUpYawOffset = 0;
 
     if (!STATE.gameEnded && STATE.screen === 'game' && Math.random() < 0.0005) {
 
@@ -3692,16 +3782,30 @@ function draw() {
     let camHeightOffset = 1.1;
     let standUpPitchOffset = 0;
     if ((p.standUpTimer || 0) > 0) {
-        const elapsed = 3.0 - p.standUpTimer;
-        if (elapsed < 1.5) {
-            const ratio = elapsed / 1.5;
-            camHeightOffset = 0.15 + ratio * (0.6 - 0.15);
-            standUpPitchOffset = (1.0 - ratio) * 0.8;
+        const TOTAL = 5.0;
+        const elapsed = TOTAL - p.standUpTimer;
+        const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+        // Camera height timeline:
+        // 0.0–1.3s: Lying on ground (height = 0.15, near ground level)
+        // 1.3–2.2s: Push up to sitting (0.15 → 0.55)
+        // 2.2–3.2s: Sitting position (height = 0.55)
+        // 3.2–4.8s: Standing up (0.55 → 1.1)
+        // 4.8–5.0s: Settle (height = 1.1)
+        if (elapsed < 1.3) {
+            camHeightOffset = 0.15;
+        } else if (elapsed < 2.2) {
+            const t = easeInOut((elapsed - 1.3) / 0.9);
+            camHeightOffset = 0.15 + t * 0.4; // 0.15 → 0.55
+        } else if (elapsed < 3.2) {
+            camHeightOffset = 0.55;
+        } else if (elapsed < 4.8) {
+            const t = easeInOut((elapsed - 3.2) / 1.6);
+            camHeightOffset = 0.55 + t * 0.55; // 0.55 → 1.1
         } else {
-            const ratio = (elapsed - 1.5) / 1.5;
-            camHeightOffset = 0.6 + ratio * (1.1 - 0.6);
-            standUpPitchOffset = 0.0;
+            camHeightOffset = 1.1;
         }
+        standUpPitchOffset = 0; // Pitch is handled in update() now
     }
 
     const yaw = STATE.camera.rot.y + (p.standUpYawOffset || 0);
