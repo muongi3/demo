@@ -3824,7 +3824,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         draggedBtn.style.left = Math.max(0, Math.min(95, pctLeft)).toFixed(3) + '%';
         draggedBtn.style.top = Math.max(0, Math.min(95, pctTop)).toFixed(3) + '%';
-        draggedBtn.style.transform = 'none'; // Bỏ các transform scale để dùng kích thước thật trong CSS
+        draggedBtn.style.transform = 'scale(var(--btn-scale, 1.0))'; // Giữ nguyên tỉ lệ thu phóng khi di chuyển
     }, { passive: false });
 
     document.addEventListener('touchend', () => { draggedBtn = null; });
@@ -3854,7 +3854,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         draggedBtn.style.left = Math.max(0, Math.min(95, pctLeft)).toFixed(3) + '%';
         draggedBtn.style.top = Math.max(0, Math.min(95, pctTop)).toFixed(3) + '%';
-        draggedBtn.style.transform = 'none'; // Bỏ các transform scale để dùng kích thước thật trong CSS
+        draggedBtn.style.transform = 'scale(var(--btn-scale, 1.0))'; // Giữ nguyên tỉ lệ thu phóng khi di chuyển
     });
     document.addEventListener('mouseup', () => { draggedBtn = null; });
 });
