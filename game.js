@@ -1997,7 +1997,10 @@ function update(dt) {
     // Nếu bấm chạy, đang di chuyển và không cầm súng ngắm (weaponIdx 2) và đã tỉnh dậy và KHÔNG bị kiệt sức
     if (STATE.keys['ShiftLeft'] && isMoving && p.weaponIdx !== 2 && (p.standUpTimer || 0) <= 0 && !p.exhausted) {
         if (p.stamina > 0) {
-            p.stamina -= (100 / 6.0) * dt; // 6 giây để cạn kiệt
+            // Nếu đang có powerup Tốc Độ (type 0) hoặc Siêu Cấp (type 3) → chạy được 15 giây
+            const hasSpeedPowerup = p.powerup && p.powerup.time > 0 && (p.powerup.type === 0 || p.powerup.type === 3);
+            const staminaDrainTime = hasSpeedPowerup ? 15.0 : 8.0; // 15s khi có powerup, 8s bình thường
+            p.stamina -= (100 / staminaDrainTime) * dt;
             p.staminaRegenDelay = 0.5; // Chờ 0.5s sau khi dừng chạy mới hồi
             if (p.stamina <= 0) {
                 p.stamina = 0;
@@ -2619,6 +2622,12 @@ function update(dt) {
                 p.powerup = { type: puType, time: 15 };
                 pickedName = puType === 0 ? "⚡ TĂNG TỐC!" : "🔥 X2 SÁT THƯƠNG!";
             }
+
+            // Khi nhặt được powerup Tốc Độ hoặc Siêu Cấp → Hồi đầy thể lực ngay lập tức
+            if (p.powerup.type === 0 || p.powerup.type === 3) {
+                p.stamina = p.maxStamina || 100;
+                p.exhausted = false;
+            }
         }
 
         const pMsg = document.getElementById('pickup-msg');
@@ -3087,8 +3096,8 @@ function update(dt) {
 function killBoss() {
     const combatSound1 = document.getElementById('combat-theme1-sound');
     if (combatSound1) combatSound1.pause();
-    const combatSound2 = document.getElementById('combat-theme2-sound');
-    if (combatSound2) combatSound2.pause();
+    const combatSound3 = document.getElementById('combat-theme3-sound');
+    if (combatSound3) combatSound3.pause();
     const b = STATE.boss;
     if (!b || b.dead) return;
 
@@ -3289,8 +3298,8 @@ function spawnParticles(pos, count, color, speedMult = 1.0, type = 'fire') {
 function endGame(win) {
     const combatSound1 = document.getElementById('combat-theme1-sound');
     if (combatSound1) combatSound1.pause();
-    const combatSound2 = document.getElementById('combat-theme2-sound');
-    if (combatSound2) combatSound2.pause();
+    const combatSound3 = document.getElementById('combat-theme3-sound');
+    if (combatSound3) combatSound3.pause();
     if (STATE.gameEnded) return;
     STATE.gameEnded = true;
 
@@ -3316,8 +3325,8 @@ function endGame(win) {
 
             // PHÁT NHẠC NỀN COMBAT 1 HÀO HÙNG CHO CẢ 2 ENDING
             const combatSound1 = document.getElementById('combat-theme1-sound');
-            const combatSound2 = document.getElementById('combat-theme2-sound');
-            if (combatSound2) combatSound2.pause();
+            const combatSound3 = document.getElementById('combat-theme3-sound');
+            if (combatSound3) combatSound3.pause();
             if (combatSound1) {
                 combatSound1.volume = 0.55;
                 combatSound1.currentTime = 0;
@@ -5224,10 +5233,10 @@ function triggerBossEvent() {
 
     const combatSound1 = document.getElementById('combat-theme1-sound');
     if (combatSound1) combatSound1.pause();
-    const combatSound2 = document.getElementById('combat-theme2-sound');
-    if (combatSound2) {
-        combatSound2.currentTime = 0;
-        combatSound2.play().catch(e => console.log(e));
+    const combatSound3 = document.getElementById('combat-theme3-sound');
+    if (combatSound3) {
+        combatSound3.currentTime = 0;
+        combatSound3.play().catch(e => console.log(e));
     }
 
     STATE.inputLocked = true;
